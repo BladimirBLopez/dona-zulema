@@ -530,7 +530,7 @@ export default function NuevaVenta() {
                 ))}
               </div>
 
-              {f.metodo === 'efectivo' && (
+              {false && (
                 <div className="rounded-2xl bg-stone-50 p-3">
                   <p className="text-xs font-semibold text-stone-500">El cliente paga con</p>
                   <div className="mt-2 flex flex-wrap gap-2">
