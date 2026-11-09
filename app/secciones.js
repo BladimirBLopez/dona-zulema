@@ -61,7 +61,7 @@ export function Info({ n, wa }) {
     <>
       <section className="bg-crema py-16">
         <div className="mx-auto max-w-5xl px-4">
-          <Reveal><H2 eyebrow="Así de simple">Pedir es muy fácil</H2></Reveal>
+          <div id="como-pedir" className="scroll-mt-20"><Reveal><H2 eyebrow="Así de simple">Pedir es muy fácil</H2></Reveal></div>
           <div className="grid gap-4 md:grid-cols-3">
             {PASOS.map(([Icon, t, d], i) => (
               <Reveal key={t} delay={i * 0.1}>
@@ -95,7 +95,7 @@ export function Info({ n, wa }) {
       {n.faq.length > 0 && (
         <section className="bg-crema py-16">
           <div className="mx-auto max-w-3xl px-4">
-            <Reveal><H2 eyebrow="Resolvemos tus dudas">Preguntas frecuentes</H2></Reveal>
+            <div id="preguntas" className="scroll-mt-20"><Reveal><H2 eyebrow="Resolvemos tus dudas">Preguntas frecuentes</H2></Reveal></div>
             <div className="space-y-3">
               {n.faq.map(([q, a]) => (
                 <details key={q} className="group rounded-2xl bg-white p-5 shadow-card">
@@ -114,7 +114,7 @@ export function Info({ n, wa }) {
       {hayUbicacion && (
         <section className="bg-white py-16">
           <div className="mx-auto max-w-5xl px-4">
-            <Reveal><H2 eyebrow="Encuéntranos">Visítanos</H2></Reveal>
+            <div id="visitanos" className="scroll-mt-20"><Reveal><H2 eyebrow="Encuéntranos">Visítanos</H2></Reveal></div>
             <div className="grid gap-6 md:grid-cols-2">
               <div className="space-y-5">
                 {n.direccion && (

@@ -2,8 +2,9 @@ import { getBanners } from '@/lib/banners';
 import Ofertas from '@/components/Ofertas';
 import JsonLd from '@/components/JsonLd';
 import Marca from '@/components/Marca';
-import { Scale, Snowflake } from 'lucide-react';
+import { Scale, Snowflake, MapPin } from 'lucide-react';
 import WhatsApp from '@/components/WhatsApp';
+import Menu from '@/components/Menu';
 import { sql } from '@/lib/db';
 import { thumb } from '@/lib/cloudinary';
 import { getNegocio, makeWa } from '@/lib/negocio';
@@ -43,17 +44,24 @@ export default async function Home() {
   try { productos = await getProductos(); } catch (e) { console.error('catalogo', e?.message); }
   const pedido = wa('Hola, quiero hacer un pedido');
   const tel = N.whatsapp.replace(/^591/, '');
+  const menu = [
+    ['Catálogo', '#catalogo'],
+    ['Cómo pedir', '#como-pedir'],
+    ...(N.faq.length > 0 ? [['Preguntas frecuentes', '#preguntas']] : []),
+    ...((N.direccion || N.horarios.length || N.mapa) ? [['Visítanos', '#visitanos']] : []),
+  ];
 
   return (
     <>
       <header className="sticky top-0 z-30 border-b border-white/10 bg-vino-950/95 text-white backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
+          <Menu items={menu} pedido={pedido} />
           <a href="#" className="flex items-center gap-3">
             <Marca N={N} />
             <span className="font-serif text-xl font-extrabold tracking-tight">{N.nombre}</span>
           </a>
           <a href={pedido} className="flex items-center gap-2 rounded-full bg-green-500 px-4 py-2 text-sm font-bold shadow transition hover:bg-green-600">
-            <WhatsApp size={18} /> Escríbenos
+            <WhatsApp size={18} /> <span className="hidden min-[400px]:inline">Escríbenos</span>
           </a>
         </div>
       </header>
@@ -76,6 +84,11 @@ export default async function Home() {
             {N.subtitulo && <p className="mx-auto mt-5 max-w-xl text-lg text-vino-100">{N.subtitulo}</p>}
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <a href="#catalogo" className="rounded-full bg-oro-400 px-8 py-3.5 font-bold text-vino-950 shadow-lift transition hover:bg-oro-300">Ver catálogo</a>
+              {(N.direccion || N.mapa) && (
+                <a href="#visitanos" className="flex items-center gap-2 rounded-full border border-white/30 px-8 py-3.5 font-semibold transition hover:bg-white/10">
+                  <MapPin size={20} /> Cómo llegar
+                </a>
+              )}
               <a href={pedido} className="flex items-center gap-2 rounded-full border border-white/30 px-8 py-3.5 font-semibold transition hover:bg-white/10">
                 <WhatsApp size={20} /> Pedir por WhatsApp
               </a>
