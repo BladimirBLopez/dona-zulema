@@ -2,7 +2,8 @@ import { getBanners } from '@/lib/banners';
 import Ofertas from '@/components/Ofertas';
 import JsonLd from '@/components/JsonLd';
 import Marca from '@/components/Marca';
-import { Scale, Snowflake, MessageCircle } from 'lucide-react';
+import { Scale, Snowflake } from 'lucide-react';
+import WhatsApp from '@/components/WhatsApp';
 import { sql } from '@/lib/db';
 import { thumb } from '@/lib/cloudinary';
 import { getNegocio, makeWa } from '@/lib/negocio';
@@ -52,7 +53,7 @@ export default async function Home() {
             <span className="font-serif text-xl font-extrabold tracking-tight">{N.nombre}</span>
           </a>
           <a href={pedido} className="flex items-center gap-2 rounded-full bg-green-500 px-4 py-2 text-sm font-bold shadow transition hover:bg-green-600">
-            <MessageCircle size={16} /> Escríbenos
+            <WhatsApp size={18} /> Escríbenos
           </a>
         </div>
       </header>
@@ -76,13 +77,13 @@ export default async function Home() {
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <a href="#catalogo" className="rounded-full bg-oro-400 px-8 py-3.5 font-bold text-vino-950 shadow-lift transition hover:bg-oro-300">Ver catálogo</a>
               <a href={pedido} className="flex items-center gap-2 rounded-full border border-white/30 px-8 py-3.5 font-semibold transition hover:bg-white/10">
-                <MessageCircle size={18} /> Pedir por WhatsApp
+                <WhatsApp size={20} /> Pedir por WhatsApp
               </a>
             </div>
             <ul className="mt-10 flex flex-wrap justify-center gap-x-8 gap-y-3 text-sm text-oro-200">
               <li className="flex items-center gap-2"><Scale size={16} /> Mayor y menor</li>
               <li className="flex items-center gap-2"><Snowflake size={16} /> Cadena de frío</li>
-              <li className="flex items-center gap-2"><MessageCircle size={16} /> Pedidos por WhatsApp</li>
+              <li className="flex items-center gap-2"><WhatsApp size={16} /> Pedidos por WhatsApp</li>
             </ul>
           </Reveal>
         </div>
@@ -102,7 +103,7 @@ export default async function Home() {
         <p className="font-serif text-2xl font-extrabold text-white">{N.nombre}</p>
         {N.slogan && <p className="mt-1 text-sm text-vino-200">{N.slogan}</p>}
         <a href={pedido} className="mt-5 inline-flex items-center gap-2 rounded-full bg-green-500 px-6 py-2.5 font-bold text-white">
-          <MessageCircle size={18} /> {tel}
+          <WhatsApp size={20} /> {tel}
         </a>
         <p className="mt-8 text-xs text-vino-300">© {new Date().getFullYear()} {N.nombre}. Todos los derechos reservados.</p>
       </footer>

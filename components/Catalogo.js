@@ -1,7 +1,8 @@
 'use client';
 import { useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Search, Plus, Minus, X, ShoppingBag, MessageCircle, Milk, Drumstick, Trash2, PackageOpen } from 'lucide-react';
+import { Search, Plus, Minus, X, ShoppingBag, Milk, Drumstick, Trash2, PackageOpen } from 'lucide-react';
+import WhatsApp from '@/components/WhatsApp';
 
 const bs = (v) => (v == null || v === '' ? null : 'Bs ' + Number(v).toFixed(2));
 const stepOf = (u) => (String(u).toLowerCase() === 'kg' ? 0.5 : 1);
@@ -205,7 +206,7 @@ export default function Catalogo({ productos, wa }) {
       {count === 0 && (
         <a href={`https://wa.me/${wa}?text=${encodeURIComponent('Hola, quiero hacer un pedido')}`} aria-label="WhatsApp"
           className="fixed bottom-5 right-5 z-40 grid h-14 w-14 place-items-center rounded-full bg-green-500 text-white shadow-lift transition hover:scale-110">
-          <MessageCircle size={26} />
+          <WhatsApp size={30} />
         </a>
       )}
 
@@ -257,7 +258,7 @@ export default function Catalogo({ productos, wa }) {
 
               <a href={link} onClick={guardarPedido} target="_blank" rel="noopener noreferrer"
                 className="mt-4 flex items-center justify-center gap-2 rounded-full bg-green-500 py-3.5 font-bold text-white shadow-lg transition hover:bg-green-600">
-                <MessageCircle size={20} /> Enviar pedido por WhatsApp
+                <WhatsApp size={22} /> Enviar pedido por WhatsApp
               </a>
               <button onClick={() => { setCart({}); setOpen(false); }} className="mt-3 w-full text-sm text-stone-500">Vaciar pedido</button>
             </motion.div>
