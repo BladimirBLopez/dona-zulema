@@ -6,7 +6,7 @@ import { Search, Plus, Minus, X, Trash2, Check, MessageCircle, ArrowLeft, Chevro
 import { api, errMsg } from '@/lib/cliente';
 import { bs, hoyBO, reciboTexto, waLink } from '@/lib/fmt';
 
-const METODOS = [['efectivo', 'Efectivo'], ['qr', 'QR'], ['transferencia', 'Transf.'], ['fiado', 'Fiado']];
+const METODOS = [['efectivo', 'Efectivo'], ['qr', 'QR'], ['transferencia', 'Transf.']];
 const BILLETES = [10, 20, 50, 100, 200];
 const n = (v) => Number(v) || 0;
 const r2 = (x) => Math.round((x + Number.EPSILON) * 100) / 100;
@@ -25,7 +25,7 @@ const guardado = () => {
     return ['efectivo', 'qr', 'transferencia'].includes(m) ? m : 'efectivo';
   } catch { return 'efectivo'; }
 };
-const formVacio = () => ({ metodo: 'efectivo', descuento: '', nombre: '', tel: '', pagado: '', entrega: 'efectivo', nota: '', fecha: hoyBO(), recibe: '' });
+const formVacio = () => ({ metodo: 'efectivo', descuento: '', nombre: '', tel: '', nota: '', fecha: hoyBO(), recibe: '' });
 
 function precioDe(p, cant, tipo) {
   const menor = p.precio_menor != null ? Number(p.precio_menor) : null;
@@ -230,7 +230,6 @@ export default function NuevaVenta() {
   const bruto = r2(medidas.reduce((a, m) => a + m.sub, 0));
   const desc = Math.min(bruto, Math.max(0, n(f.descuento)));
   const total = r2(bruto - desc);
-  const pagadoIni = f.metodo === 'fiado' ? Math.min(total, Math.max(0, n(f.pagado))) : total;
   const recibe = n(f.recibe);
   const vuelto = f.metodo === 'efectivo' && recibe > total ? r2(recibe - total) : 0;
   const falta = f.metodo === 'efectivo' && f.recibe !== '' && recibe < total ? r2(total - recibe) : 0;
@@ -261,7 +260,6 @@ export default function NuevaVenta() {
       if (!(n(l.precio) > 0)) return setErr('"' + l.nombre + '" no tiene precio. Ponle precio desde el ticket.');
       if (!(m.cant > 0) || !(m.sub > 0)) return setErr('Revisa la cantidad o el monto de "' + l.nombre + '".');
     }
-    if (f.metodo === 'fiado' && !f.nombre.trim()) return setErr('Para fiado escribe el nombre del cliente.');
     if (falta > 0) return setErr('El monto recibido no alcanza: faltan ' + bs(falta) + '.');
     const nombre = titulo(f.nombre);
     const body = {
@@ -272,7 +270,7 @@ export default function NuevaVenta() {
           lista: l.p ? precioDe(l.p, m.cant, tipo).precio : r2(n(l.precio)), monto: l.modo === 'monto' ? m.sub : null,
         };
       }),
-      metodo: f.metodo, metodo_pago: f.entrega, tipo, descuento: desc, pagado: f.pagado, cliente_nombre: nombre, cliente_tel: f.tel, nota: f.nota,
+      metodo: f.metodo, tipo, descuento: desc, cliente_nombre: nombre, cliente_tel: f.tel, nota: f.nota,
       fecha: f.fecha && f.fecha !== hoyBO() ? f.fecha : null, pedido_id: pedidoId,
     };
     const sig = JSON.stringify(body);
@@ -282,9 +280,9 @@ export default function NuevaVenta() {
     const r = await api('/api/admin/ventas', 'POST', body);
     setBusy(false);
     if (!r.ok) return setErr(errMsg(r.data));
-    try { if (f.metodo !== 'fiado') localStorage.setItem('caja_metodo', f.metodo); } catch {}
+    try { localStorage.setItem('caja_metodo', f.metodo); } catch {}
     setHecho({
-      id: r.data.id, total: r.data.total, pagado: pagadoIni, descuento: desc, metodo: f.metodo, vuelto,
+      id: r.data.id, total: r.data.total, pagado: total, descuento: desc, metodo: f.metodo, vuelto,
       cliente_nombre: nombre, cliente_tel: f.tel, fecha: new Date().toISOString(),
       items: lineas.map((l, i) => ({ nombre: l.nombre, unidad: l.unidad, cantidad: medidas[i].cant, precio: r2(n(l.precio)), subtotal: medidas[i].sub })),
     });
@@ -314,7 +312,6 @@ export default function NuevaVenta() {
             <p className="text-3xl font-extrabold text-green-700">{bs(hecho.vuelto)}</p>
           </div>
         )}
-        {hecho.total - hecho.pagado > 0.001 && <p className="mt-2 font-semibold text-amber-700">{'Queda por cobrar ' + bs(hecho.total - hecho.pagado)}</p>}
         <div className="mx-auto mt-8 flex max-w-sm flex-col gap-3">
           <button onClick={otra} className="rounded-full bg-vino-800 py-3.5 font-bold text-white">Nueva venta</button>
           <a href={waLink(hecho.cliente_tel, reciboTexto(hecho, negocio))} target="_blank" rel="noopener noreferrer"
@@ -519,7 +516,7 @@ export default function NuevaVenta() {
                 <p className="text-5xl font-extrabold text-stone-900">{bs(total)}</p>
               </div>
 
-              <div className="grid grid-cols-4 gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {METODOS.map(([v, t]) => (
                   <button key={v} onClick={() => setF({ ...f, metodo: v })} className={`rounded-xl py-3 text-sm font-semibold ${f.metodo === v ? 'bg-vino-800 text-white' : 'bg-stone-100 text-stone-700'}`}>{t}</button>
                 ))}
@@ -546,26 +543,6 @@ export default function NuevaVenta() {
                 </div>
               )}
 
-              {f.metodo === 'fiado' && (
-                <div className="space-y-2 rounded-2xl bg-amber-50 p-3">
-                  <div className="grid grid-cols-2 gap-2">
-                    <input list="clientes" placeholder="Cliente (obligatorio)" value={f.nombre} onChange={(e) => elegirNombre(e.target.value)} />
-                    <input type="tel" inputMode="tel" placeholder="WhatsApp (opcional)" value={f.tel} onChange={(e) => setF({ ...f, tel: e.target.value })} />
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <label className="text-xs text-stone-500">Entrega inicial (Bs)
-                      <input type="number" inputMode="decimal" step="0.01" min="0" value={f.pagado} onChange={(e) => setF({ ...f, pagado: e.target.value })} />
-                    </label>
-                    <label className="text-xs text-stone-500">Entrega con
-                      <select value={f.entrega} onChange={(e) => setF({ ...f, entrega: e.target.value })}>
-                        <option value="efectivo">Efectivo</option>
-                        <option value="qr">QR</option>
-                        <option value="transferencia">Transf.</option>
-                      </select>
-                    </label>
-                  </div>
-                </div>
-              )}
 
               <button onClick={() => setMas(!mas)} className="flex w-full items-center justify-between rounded-xl bg-stone-50 px-4 py-3 text-sm font-semibold text-stone-700">
                 <span>Más opciones</span>
@@ -576,12 +553,10 @@ export default function NuevaVenta() {
                   <label className="block text-xs text-stone-500">Descuento (Bs)
                     <input type="number" inputMode="decimal" step="0.01" min="0" value={f.descuento} onChange={(e) => setF({ ...f, descuento: e.target.value })} placeholder="0" />
                   </label>
-                  {f.metodo !== 'fiado' && (
                     <div className="grid grid-cols-2 gap-2">
                       <input list="clientes" placeholder="Cliente (opcional)" value={f.nombre} onChange={(e) => elegirNombre(e.target.value)} />
                       <input type="tel" inputMode="tel" placeholder="WhatsApp (opcional)" value={f.tel} onChange={(e) => setF({ ...f, tel: e.target.value })} />
                     </div>
-                  )}
                   <input placeholder="Nota (opcional)" value={f.nota} onChange={(e) => setF({ ...f, nota: e.target.value })} />
                   <label className="block text-xs text-stone-500">Fecha de la venta
                     <input type="date" max={hoyBO()} value={f.fecha} onChange={(e) => setF({ ...f, fecha: e.target.value })} />
@@ -594,7 +569,6 @@ export default function NuevaVenta() {
             </div>
 
             <div className="space-y-2 border-t border-stone-100 p-4">
-              {f.metodo === 'fiado' && <p className="text-center text-sm font-bold text-amber-700">{'Queda por cobrar: ' + bs(r2(total - pagadoIni))}</p>}
               {err && <p className="text-center text-sm font-semibold text-red-600">{err}</p>}
               <button onClick={confirmar} disabled={busy} className="w-full rounded-full bg-vino-800 py-4 text-base font-bold text-white disabled:opacity-50">
                 {busy ? 'Guardando...' : 'Confirmar venta · ' + bs(total)}

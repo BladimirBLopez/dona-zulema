@@ -111,8 +111,7 @@ export default function Inicio() {
             </Link>
           )}
 
-          <div className="grid grid-cols-3 gap-3">
-            <Link href="/admin/ventas" className="block"><Stat label="Por cobrar" value={bs(g.por_cobrar)} tone="ambar" icon={Wallet} /></Link>
+          <div className="grid grid-cols-2 gap-3">
             <Link href="/admin/ventas" className="block"><Stat label="Pedidos" value={g.pedidos} tone="vino" icon={Inbox} /></Link>
             <Stat label="7 días" value={bs(sem)} tone="verde" icon={ShoppingCart} />
           </div>
