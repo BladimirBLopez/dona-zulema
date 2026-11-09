@@ -2,6 +2,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Search, Plus, Minus, X, ShoppingBag, Milk, Drumstick, Trash2, PackageOpen } from 'lucide-react';
+import Link from 'next/link';
 import WhatsApp from '@/components/WhatsApp';
 
 const bs = (v) => (v == null || v === '' ? null : 'Bs ' + Number(v).toFixed(2));
@@ -29,7 +30,7 @@ function Card({ p, qty, onAdd }) {
         <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-vino-800 backdrop-blur">{p.categoria}</span>
       </div>
       <div className="flex flex-1 flex-col p-4">
-        <h4 className="font-semibold leading-snug text-stone-900">{p.nombre}</h4>
+        <h4 className="font-semibold leading-snug text-stone-900"><Link href={`/producto/${p.id}`} className="hover:text-vino-700">{p.nombre}</Link></h4>
         <div className="mt-3 flex flex-wrap gap-2 text-xs">
           {menor && <span className="rounded-lg bg-vino-50 px-2 py-1 text-vino-800">Menor <b>{menor}</b>/{p.unidad}</span>}
           {mayor && <span className="rounded-lg bg-oro-200/50 px-2 py-1 text-amber-900">Mayor <b>{mayor}</b>/{p.unidad}</span>}
