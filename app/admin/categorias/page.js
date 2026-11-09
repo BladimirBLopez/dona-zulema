@@ -1,4 +1,5 @@
 'use client';
+import { confirmar } from '@/lib/avisos';
 import { useEffect, useState } from 'react';
 
 export default function Categorias() {
@@ -20,7 +21,7 @@ export default function Categorias() {
   }
 
   async function borrar(id) {
-    if (!confirm('¿Borrar esta categoría?')) return;
+    if (!(await confirmar({ titulo: '¿Borrar esta categoría?', texto: 'No se puede deshacer.', ok: 'Sí, borrar', peligro: true }))) return;
     const r = await fetch('/api/admin/categorias?id=' + id, { method: 'DELETE' });
     const j = await r.json();
     setMsg(j.error === 'tiene_productos' ? 'No se puede: tiene productos. Bórralos o muévelos antes.' : 'Borrada');

@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Package, ShoppingCart, Tags, Megaphone, Store, KeyRound, LogOut, ExternalLink, Wallet, X } from 'lucide-react';
 import Marca from '@/components/Marca';
+import Avisos from '@/components/Avisos';
 
 const Svg = ({ size = 20, children }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>
@@ -56,7 +57,7 @@ export default function Shell({ children }) {
     return () => { document.body.style.overflow = ''; window.removeEventListener('keydown', esc); };
   }, [mas]);
 
-  if (!ok) return <div className="admin min-h-screen bg-panel">{children}</div>;
+  if (!ok) return <div className="admin min-h-screen bg-panel">{children}<Avisos /></div>;
 
   const tab = (a) => `flex flex-col items-center gap-0.5 py-1.5 text-[11px] font-semibold ${a ? 'text-vino-800' : 'text-stone-500'}`;
   const pill = (a) => `grid h-7 w-12 place-items-center rounded-full transition ${a ? 'bg-vino-100' : ''}`;
@@ -123,6 +124,8 @@ export default function Shell({ children }) {
           Más
         </button>
       </nav>
+
+      <Avisos />
 
       {mas && (
         <div className="fade-in fixed inset-0 z-40 flex items-end bg-black/50 md:hidden" onClick={() => setMas(false)}>

@@ -1,4 +1,5 @@
 'use client';
+import { confirmar } from '@/lib/avisos';
 import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { X, ImagePlus, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -76,8 +77,8 @@ export default function ProductoForm({ f, setF, categorias, busy, onSubir, onGua
     setTab(i);
   }
 
-  function cerrar() {
-    if (nuevo && String(f.nombre).trim() && !confirm('¿Salir sin guardar este producto?')) return;
+  async function cerrar() {
+    if (nuevo && String(f.nombre).trim() && !(await confirmar({ titulo: '¿Salir sin guardar?', texto: 'Perderás lo que escribiste de este producto.', ok: 'Salir', cancelar: 'Seguir editando', peligro: true }))) return;
     onCerrar();
   }
 

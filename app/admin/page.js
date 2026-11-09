@@ -1,4 +1,5 @@
 'use client';
+import { confirmar } from '@/lib/avisos';
 import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Search, Plus, Pencil, Trash2, X, ImagePlus, Lock } from 'lucide-react';
@@ -102,7 +103,7 @@ export default function Admin() {
   }
 
   async function borrar(p) {
-    if (!confirm('¿Borrar "' + p.nombre + '"?')) return;
+    if (!(await confirmar({ titulo: '¿Borrar "' + p.nombre + '"?', texto: 'También se elimina su foto. No se puede deshacer.', ok: 'Sí, borrar', peligro: true }))) return;
     await fetch('/api/admin/productos?id=' + p.id, { method: 'DELETE' });
     aviso('Producto borrado');
     cargar();

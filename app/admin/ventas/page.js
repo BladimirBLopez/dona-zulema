@@ -1,4 +1,5 @@
 'use client';
+import { confirmar } from '@/lib/avisos';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { Plus, Search, ChevronDown, MessageCircle, Ban, Wallet, Inbox, ShoppingCart } from 'lucide-react';
@@ -23,7 +24,7 @@ function VentaCard({ v, negocio, onChange, aviso }) {
   const anulada = v.estado === 'anulada';
 
   async function anular() {
-    if (!confirm(`¿Anular la venta #${v.id}? Se devuelve el stock.`)) return;
+    if (!(await confirmar({ titulo: `¿Anular la venta #${v.id}?`, texto: 'Se devuelve el stock y deja de contar en tus reportes.', ok: 'Sí, anular', cancelar: 'Volver', peligro: true }))) return;
     const r = await api('/api/admin/ventas', 'PATCH', { accion: 'anular', id: v.id });
     aviso(r.ok ? 'Venta anulada' : errMsg(r.data));
     onChange();
@@ -137,7 +138,7 @@ export default function Ventas() {
   }, [deudas]);
 
   async function cancelar(p) {
-    if (!confirm('¿Cancelar este pedido?')) return;
+    if (!(await confirmar({ titulo: '¿Cancelar este pedido?', ok: 'Sí, cancelar pedido', cancelar: 'Volver', peligro: true }))) return;
     const r = await api('/api/admin/pedidos', 'PATCH', { id: p.id });
     aviso(r.ok ? 'Pedido cancelado' : errMsg(r.data));
     cargar();

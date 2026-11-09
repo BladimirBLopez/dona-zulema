@@ -1,4 +1,5 @@
 'use client';
+import { confirmar } from '@/lib/avisos';
 import { useEffect, useState } from 'react';
 import { Plus, Pencil, Trash2, Megaphone } from 'lucide-react';
 import ImageUpload from '@/components/ImageUpload';
@@ -26,7 +27,7 @@ export default function Banners() {
   }
 
   async function borrar(b) {
-    if (!confirm('¿Borrar la oferta "' + b.titulo + '"?')) return;
+    if (!(await confirmar({ titulo: '¿Borrar la oferta "' + b.titulo + '"?', texto: 'Dejará de verse en la tienda.', ok: 'Sí, borrar', peligro: true }))) return;
     await fetch('/api/admin/banners?id=' + b.id, { method: 'DELETE' });
     cargar();
   }

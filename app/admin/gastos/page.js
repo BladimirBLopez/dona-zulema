@@ -1,4 +1,5 @@
 'use client';
+import { confirmar } from '@/lib/avisos';
 import { useCallback, useEffect, useState } from 'react';
 import { Plus, Trash2, Wallet } from 'lucide-react';
 import { api, errMsg } from '@/lib/cliente';
@@ -44,7 +45,7 @@ export default function Gastos() {
   }
 
   async function borrar(g) {
-    if (!confirm(`¿Borrar "${g.concepto}"?`)) return;
+    if (!(await confirmar({ titulo: `¿Borrar "${g.concepto}"?`, texto: 'No se puede deshacer.', ok: 'Sí, borrar', peligro: true }))) return;
     const r = await api('/api/admin/gastos?id=' + g.id, 'DELETE');
     aviso(r.ok ? 'Gasto borrado' : errMsg(r.data));
     cargar();
