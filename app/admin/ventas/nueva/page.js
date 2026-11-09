@@ -365,16 +365,24 @@ export default function NuevaVenta() {
           const l = lineaDe(p.id);
           const st = p.stock != null ? Number(p.stock) : null;
           const base = precioDe(p, 0, tipo).precio;
+          const i = l ? lineas.indexOf(l) : -1;
           return (
-            <button key={p.id} onClick={() => tocar(p)}
-              className={`relative flex min-h-[88px] flex-col justify-between rounded-2xl border p-3 text-left transition ${l ? 'border-vino-800 bg-vino-50' : 'border-stone-200 bg-white'}`}>
-              <span className={`line-clamp-2 text-sm font-bold leading-tight text-stone-900 ${l ? 'pr-10' : ''}`}>{p.nombre}</span>
+            <div key={p.id} className={`flex min-h-[88px] flex-col rounded-2xl border transition ${l ? 'border-vino-800 bg-vino-50' : 'border-stone-200 bg-white'}`}>
+            <button onClick={() => tocar(p)} className="flex flex-1 flex-col justify-between p-3 text-left">
+              <span className={`line-clamp-2 text-sm font-bold leading-tight text-stone-900`}>{p.nombre}</span>
               <span className="mt-2 block">
                 <span className="block text-sm font-extrabold text-vino-800">{base > 0 ? bs(base) + '/' + uni(p) : 'Sin precio'}</span>
                 {st != null && <span className={`block text-[11px] font-semibold ${st <= 0 ? 'text-red-600' : 'text-stone-500'}`}>{'Stock ' + nf(st)}</span>}
               </span>
-              {l && <span className="absolute right-2 top-2 rounded-full bg-vino-800 px-2 py-0.5 text-[11px] font-bold text-white">{nf(cantDe(l))}</span>}
-            </button>
+              </button>
+              {l && (
+                <div className="flex items-center gap-2 px-2 pb-2">
+                  <button onClick={() => ajustar(i, -paso(l.unidad))} aria-label="Quitar uno" className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white text-vino-800 ring-1 ring-vino-800/40"><Minus size={18} /></button>
+                  <button onClick={() => abrirLinea(i)} aria-label="Escribir cantidad" className="min-w-0 flex-1 rounded-full bg-white py-2 text-center text-sm font-extrabold text-vino-800 ring-1 ring-stone-200">{nf(cantDe(l))}</button>
+                  <button onClick={() => ajustar(i, paso(l.unidad))} aria-label="Agregar uno" className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-vino-800 text-white"><Plus size={18} /></button>
+                </div>
+              )}
+            </div>
           );
         })}
         {lista.length === 0 && <p className="col-span-2 py-10 text-center text-stone-500 md:col-span-3">No hay productos con esa búsqueda.</p>}
