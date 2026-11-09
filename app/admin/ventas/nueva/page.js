@@ -1,21 +1,30 @@
 'use client';
+// caja-v3
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Search, Plus, Minus, X, Trash2, Check, MessageCircle, ArrowLeft, ChevronDown } from 'lucide-react';
 import { api, errMsg } from '@/lib/cliente';
-import { bs, qty, hoyBO, reciboTexto, waLink } from '@/lib/fmt';
+import { bs, hoyBO, reciboTexto, waLink } from '@/lib/fmt';
 
 const METODOS = [['efectivo', 'Efectivo'], ['qr', 'QR'], ['transferencia', 'Transf.'], ['fiado', 'Fiado']];
 const BILLETES = [10, 20, 50, 100, 200];
 const n = (v) => Number(v) || 0;
 const r2 = (x) => Math.round((x + Number.EPSILON) * 100) / 100;
 const r3 = (x) => Math.round(x * 1000) / 1000;
+const nf = (v) => String(r3(Number(v) || 0)).replace('.', ',');
 const esKg = (u) => ['kg', 'kilo', 'kilos'].includes(String(u || '').toLowerCase());
+const uni = (p) => p.unidad || 'kg';
 const paso = (u) => (esKg(u) ? 0.5 : 1);
 const rapidas = (u) => (esKg(u) ? [0.25, 0.5, 1, 2] : [1, 2, 3, 5]);
 const marca = (v, u) => (esKg(u) && v === 0.25 ? '¼' : esKg(u) && v === 0.5 ? '½' : String(v));
 const titulo = (s) => String(s || '').split(' ').filter(Boolean).map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
 const crearClave = () => (typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2, 10));
+const guardado = () => {
+  try {
+    const m = localStorage.getItem('caja_metodo');
+    return ['efectivo', 'qr', 'transferencia'].includes(m) ? m : 'efectivo';
+  } catch { return 'efectivo'; }
+};
 const formVacio = () => ({ metodo: 'efectivo', descuento: '', nombre: '', tel: '', pagado: '', entrega: 'efectivo', nota: '', fecha: hoyBO(), recibe: '' });
 
 function precioDe(p, cant, tipo) {
@@ -43,17 +52,50 @@ function medir(l) {
   return { cant: c, sub: r2(c * p) };
 }
 
-const chip = (a) => `rounded-full px-4 py-1.5 text-sm font-semibold transition ${a ? 'bg-vino-800 text-white' : 'bg-white text-stone-600 ring-1 ring-stone-200'}`;
-const mini = (a) => `rounded-full px-3 py-1 text-xs font-bold transition ${a ? 'bg-vino-800 text-white' : 'bg-white text-stone-700 ring-1 ring-stone-300'}`;
+const nuevaLinea = (p, cant, tipo) => aplicar({
+  producto_id: String(p.id), nombre: p.nombre, unidad: uni(p), p, cantidad: String(cant), precio: '0', manual: false, modo: 'peso', monto: '',
+}, tipo);
+
+function teclear(buf, k, max) {
+  if (k === 'del') return buf.length <= 1 ? '' : buf.slice(0, -1);
+  if (k === ',') return buf.includes('.') ? buf : buf === '' ? '0.' : buf + '.';
+  const nuevo = buf === '0' ? k : buf + k;
+  const dec = nuevo.split('.')[1];
+  if (dec && dec.length > max) return buf;
+  if (nuevo.replace('.', '').length > 8) return buf;
+  return nuevo;
+}
+
+function Teclado({ onKey }) {
+  const teclas = ['7', '8', '9', '4', '5', '6', '1', '2', '3', ',', '0', 'del'];
+  return (
+    <div className="grid grid-cols-3 gap-2">
+      {teclas.map((k) => (
+        <button key={k} type="button" onClick={() => onKey(k)} className="h-14 rounded-xl bg-stone-100 text-xl font-bold text-stone-900 active:bg-stone-200">
+          {k === 'del' ? '⌫' : k}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+const stop = (e) => e.stopPropagation();
+const chip = (a) => `shrink-0 rounded-full px-4 py-2 text-sm font-semibold transition ${a ? 'bg-vino-800 text-white' : 'bg-white text-stone-600 ring-1 ring-stone-200'}`;
+const mini = (a) => `rounded-full px-4 py-2 text-sm font-bold transition ${a ? 'bg-vino-800 text-white' : 'bg-white text-stone-700 ring-1 ring-stone-300'}`;
 
 export default function NuevaVenta() {
   const [productos, setProductos] = useState(null);
   const [negocio, setNegocio] = useState('');
   const [clientes, setClientes] = useState([]);
   const [q, setQ] = useState('');
+  const [cat, setCat] = useState('todas');
   const [tipo, setTipo] = useState('menor');
   const [lineas, setLineas] = useState([]);
-  const [abierto, setAbierto] = useState(false);
+  const [kp, setKp] = useState(null);
+  const [ticket, setTicket] = useState(false);
+  const [cobrando, setCobrando] = useState(false);
+  const [otroMonto, setOtroMonto] = useState(false);
+  const [recibeNuevo, setRecibeNuevo] = useState(true);
   const [mas, setMas] = useState(false);
   const [f, setF] = useState(formVacio());
   const [libre, setLibre] = useState(null);
@@ -69,6 +111,7 @@ export default function NuevaVenta() {
       const lista = pr.data?.productos || [];
       setProductos(lista);
       setNegocio(ng.data?.nombre || '');
+      setF((x) => ({ ...x, metodo: guardado() }));
       const mapa = new Map();
       for (const v of Array.isArray(vs.data) ? vs.data : []) {
         const nom = String(v.cliente_nombre || '').trim();
@@ -103,41 +146,85 @@ export default function NuevaVenta() {
     if (r.ok) setProductos(r.data?.productos || []);
   }
 
+  const categorias = useMemo(() => [...new Set((productos || []).map((p) => p.categoria).filter(Boolean))], [productos]);
   const lista = useMemo(() => {
     const t = q.trim().toLowerCase();
-    return (productos || []).filter((p) => !t || (p.nombre + ' ' + (p.categoria || '')).toLowerCase().includes(t)).slice(0, 60);
-  }, [productos, q]);
+    return (productos || [])
+      .filter((p) => (cat === 'todas' || p.categoria === cat) && (!t || (p.nombre + ' ' + (p.categoria || '')).toLowerCase().includes(t)))
+      .slice(0, 80);
+  }, [productos, q, cat]);
 
-  const enCarrito = (id) => lineas.find((l) => l.producto_id === String(id));
+  const lineaDe = (id) => lineas.find((l) => l.producto_id === String(id));
+  const cantDe = (l) => (l.modo === 'monto' ? medir(l).cant : n(l.cantidad));
 
-  function sumar(p, d) {
+  function abrirLinea(i) {
+    const l = lineas[i];
+    if (!l) return;
+    const inicial = l.modo === 'monto' ? l.monto : l.cantidad;
+    setKp({ idx: i, id: l.producto_id, p: l.p, nombre: l.nombre, unidad: l.unidad, modo: l.modo, buf: String(inicial || ''), fresh: true, precio: l.precio, manual: l.manual, editPrecio: false });
+  }
+
+  function tocar(p) {
+    const i = lineas.findIndex((l) => l.producto_id === String(p.id));
+    if (esKg(uni(p))) {
+      if (i >= 0) return abrirLinea(i);
+      return setKp({ idx: -1, id: String(p.id), p, nombre: p.nombre, unidad: uni(p), modo: 'peso', buf: '', fresh: false, precio: '', manual: false, editPrecio: false });
+    }
     setLineas((ls) => {
-      const i = ls.findIndex((l) => l.producto_id === String(p.id));
-      if (i < 0) {
-        if (d <= 0) return ls;
-        return [...ls, aplicar({ producto_id: String(p.id), nombre: p.nombre, unidad: p.unidad || 'kg', p, cantidad: String(paso(p.unidad)), precio: '0', manual: false, modo: 'peso', monto: '' }, tipo)];
-      }
-      const l = ls[i];
-      const base = l.modo === 'monto' ? medir(l).cant : n(l.cantidad);
-      const nueva = r3(base + d);
-      if (nueva <= 0) return ls.filter((_, x) => x !== i);
-      return ls.map((z, x) => (x === i ? aplicar({ ...l, modo: 'peso', cantidad: String(nueva) }, tipo) : z));
+      const j = ls.findIndex((l) => l.producto_id === String(p.id));
+      if (j < 0) return [...ls, nuevaLinea(p, 1, tipo)];
+      return ls.map((l, x) => (x === j ? aplicar({ ...l, modo: 'peso', cantidad: String(r3(cantDe(l) + 1)), monto: '' }, tipo) : l));
     });
   }
 
-  const setL = (i, cambios) => setLineas((ls) => ls.map((l, x) => (x === i ? aplicar({ ...l, ...cambios }, tipo) : l)));
-  const setPrecio = (i, v) => setLineas((ls) => ls.map((l, x) => (x === i ? { ...l, precio: v, manual: true } : l)));
-  const cambiarModo = (i, m) => setLineas((ls) => ls.map((l, x) => {
-    if (x !== i || l.modo === m) return l;
-    const { cant, sub } = medir(l);
-    return aplicar(m === 'monto' ? { ...l, modo: 'monto', monto: sub ? String(sub) : '' } : { ...l, modo: 'peso', cantidad: cant ? String(cant) : '' }, tipo);
-  }));
+  function ajustar(i, d) {
+    setLineas((ls) => {
+      const l = ls[i];
+      if (!l) return ls;
+      const nueva = r3(cantDe(l) + d);
+      if (nueva <= 0) return ls.filter((_, x) => x !== i);
+      return ls.map((z, x) => (x === i ? aplicar({ ...l, modo: 'peso', cantidad: String(nueva), monto: '' }, tipo) : z));
+    });
+  }
+
+  function guardarKp() {
+    const k = kp;
+    const valor = n(k.buf);
+    if (!(valor > 0)) return;
+    const campos = k.modo === 'monto'
+      ? { modo: 'monto', monto: String(r2(valor)), cantidad: '' }
+      : { modo: 'peso', cantidad: String(r3(valor)), monto: '' };
+    setLineas((ls) => {
+      const j = k.id ? ls.findIndex((l) => l.producto_id === k.id) : k.idx;
+      if (j >= 0 && ls[j]) {
+        const base = { ...ls[j], ...campos };
+        return ls.map((l, x) => (x === j ? aplicar(k.manual ? { ...base, manual: true, precio: k.precio } : { ...base, manual: false }, tipo) : l));
+      }
+      if (!k.p) return ls;
+      const base = { ...nuevaLinea(k.p, 1, tipo), ...campos };
+      return [...ls, aplicar(k.manual ? { ...base, manual: true, precio: k.precio } : { ...base, manual: false }, tipo)];
+    });
+    setKp(null);
+  }
+
   const cambiarTipo = (t) => { setTipo(t); setLineas((ls) => ls.map((l) => aplicar(l, t))); };
 
   const elegirNombre = (v) => {
     const c = clientes.find((x) => x.nombre.toLowerCase() === v.trim().toLowerCase());
     setF((x) => ({ ...x, nombre: v, tel: x.tel || (c ? c.tel : '') }));
   };
+
+  const teclaRecibe = (k) => {
+    setF((x) => ({ ...x, recibe: teclear(recibeNuevo ? '' : x.recibe, k, 2) }));
+    setRecibeNuevo(false);
+  };
+  const ponerRecibe = (v) => { setF((x) => ({ ...x, recibe: String(v) })); setRecibeNuevo(true); };
+
+  function abrirCobro() {
+    setErr(''); setTicket(false); setOtroMonto(false); setMas(false); setRecibeNuevo(true);
+    setF((x) => ({ ...x, recibe: '' }));
+    setCobrando(true);
+  }
 
   const medidas = lineas.map(medir);
   const bruto = r2(medidas.reduce((a, m) => a + m.sub, 0));
@@ -151,6 +238,19 @@ export default function NuevaVenta() {
     const s = BILLETES.filter((b) => b > total).slice(0, 4);
     return s.length ? s : total > 0 ? [Math.ceil((total + 0.01) / 100) * 100] : [];
   })();
+  const items = lineas.length;
+
+  const kpPrecio = kp ? (kp.manual || !kp.p ? n(kp.precio) : precioDe(kp.p, kp.modo === 'monto' ? 0 : n(kp.buf), tipo).precio) : 0;
+  const kpEsp = kp && kp.p && !kp.manual ? precioDe(kp.p, kp.modo === 'monto' ? 0 : n(kp.buf), tipo).esp : false;
+  const kpCant = kp ? (kp.modo === 'monto' ? (kpPrecio > 0 ? r3(n(kp.buf) / kpPrecio) : 0) : n(kp.buf)) : 0;
+  const kpSub = kp ? (kp.modo === 'monto' ? r2(n(kp.buf)) : r2(kpCant * kpPrecio)) : 0;
+  const kpStock = kp && kp.p && kp.p.stock != null ? Number(kp.p.stock) : null;
+
+  function cambiarModoKp(m) {
+    if (kp.modo === m) return;
+    const nuevo = m === 'monto' ? (kpSub > 0 ? String(kpSub) : '') : (kpCant > 0 ? String(kpCant) : '');
+    setKp({ ...kp, modo: m, buf: nuevo, fresh: true });
+  }
 
   async function confirmar() {
     setErr('');
@@ -158,10 +258,11 @@ export default function NuevaVenta() {
     for (let i = 0; i < lineas.length; i++) {
       const l = lineas[i];
       const m = medidas[i];
-      if (!(n(l.precio) > 0)) return setErr('"' + l.nombre + '" no tiene precio. Escríbelo en su casilla.');
+      if (!(n(l.precio) > 0)) return setErr('"' + l.nombre + '" no tiene precio. Ponle precio desde el ticket.');
       if (!(m.cant > 0) || !(m.sub > 0)) return setErr('Revisa la cantidad o el monto de "' + l.nombre + '".');
     }
     if (f.metodo === 'fiado' && !f.nombre.trim()) return setErr('Para fiado escribe el nombre del cliente.');
+    if (falta > 0) return setErr('El monto recibido no alcanza: faltan ' + bs(falta) + '.');
     const nombre = titulo(f.nombre);
     const body = {
       items: lineas.map((l, i) => {
@@ -181,17 +282,19 @@ export default function NuevaVenta() {
     const r = await api('/api/admin/ventas', 'POST', body);
     setBusy(false);
     if (!r.ok) return setErr(errMsg(r.data));
+    try { if (f.metodo !== 'fiado') localStorage.setItem('caja_metodo', f.metodo); } catch {}
     setHecho({
-      id: r.data.id, total: r.data.total, pagado: pagadoIni, descuento: desc, metodo: f.metodo,
+      id: r.data.id, total: r.data.total, pagado: pagadoIni, descuento: desc, metodo: f.metodo, vuelto,
       cliente_nombre: nombre, cliente_tel: f.tel, fecha: new Date().toISOString(),
       items: lineas.map((l, i) => ({ nombre: l.nombre, unidad: l.unidad, cantidad: medidas[i].cant, precio: r2(n(l.precio)), subtotal: medidas[i].sub })),
     });
-    setAbierto(false);
+    setCobrando(false);
+    setTicket(false);
     intento.current = { sig: '', clave: '' };
   }
 
   function otra() {
-    setHecho(null); setLineas([]); setF(formVacio()); setPedidoId(null); setQ(''); setErr(''); setMas(false);
+    setHecho(null); setLineas([]); setF({ ...formVacio(), metodo: guardado() }); setPedidoId(null); setQ(''); setCat('todas'); setErr(''); setMas(false);
     intento.current = { sig: '', clave: '' };
     history.replaceState(null, '', '/admin/ventas/nueva');
     recargar();
@@ -205,34 +308,44 @@ export default function NuevaVenta() {
         <span className="mx-auto grid h-20 w-20 place-items-center rounded-full bg-green-100 text-green-600"><Check size={40} /></span>
         <h1 className="mt-4 text-2xl font-bold text-stone-900">{'Venta #' + hecho.id + ' registrada'}</h1>
         <p className="mt-1 text-4xl font-extrabold text-stone-900">{bs(hecho.total)}</p>
-        {hecho.total - hecho.pagado > 0.001 && <p className="mt-1 font-semibold text-amber-700">{'Queda por cobrar ' + bs(hecho.total - hecho.pagado)}</p>}
+        {hecho.vuelto > 0 && (
+          <div className="mx-auto mt-4 max-w-sm rounded-2xl bg-green-50 py-3">
+            <p className="text-xs font-semibold text-green-700">Entrega de vuelto</p>
+            <p className="text-3xl font-extrabold text-green-700">{bs(hecho.vuelto)}</p>
+          </div>
+        )}
+        {hecho.total - hecho.pagado > 0.001 && <p className="mt-2 font-semibold text-amber-700">{'Queda por cobrar ' + bs(hecho.total - hecho.pagado)}</p>}
         <div className="mx-auto mt-8 flex max-w-sm flex-col gap-3">
+          <button onClick={otra} className="rounded-full bg-vino-800 py-3.5 font-bold text-white">Nueva venta</button>
           <a href={waLink(hecho.cliente_tel, reciboTexto(hecho, negocio))} target="_blank" rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 rounded-full bg-green-500 py-3 font-bold text-white"><MessageCircle size={18} /> Enviar recibo por WhatsApp</a>
-          <button onClick={otra} className="rounded-full bg-vino-800 py-3 font-bold text-white">Nueva venta</button>
           <Link href="/admin/ventas" className="rounded-full bg-white py-3 font-semibold text-stone-700 ring-1 ring-stone-200">Ver ventas</Link>
         </div>
       </main>
     );
   }
 
-  const items = lineas.length;
-
   return (
-    <main className="px-4 pb-32 pt-4">
-      <div className="mb-4 flex items-center gap-3">
-        <Link href="/admin/ventas" aria-label="Volver" className="grid h-9 w-9 place-items-center rounded-full bg-white shadow-card"><ArrowLeft size={18} /></Link>
-        <h1 className="text-xl font-bold text-stone-900">{'Nueva venta' + (pedidoId ? ' · pedido #' + pedidoId : '')}</h1>
+    <main className="px-4 pb-36 pt-4">
+      <div className="mb-3 flex items-center gap-3">
+        <Link href="/admin/ventas" aria-label="Volver" className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white shadow-card"><ArrowLeft size={18} /></Link>
+        <h1 className="min-w-0 flex-1 truncate text-xl font-bold text-stone-900">{'Nueva venta' + (pedidoId ? ' · pedido #' + pedidoId : '')}</h1>
+        <div className="flex shrink-0 rounded-full bg-stone-200 p-0.5">
+          <button onClick={() => cambiarTipo('menor')} className={`rounded-full px-3 py-1.5 text-xs font-bold ${tipo === 'menor' ? 'bg-white text-vino-800 shadow-sm' : 'text-stone-600'}`}>Menor</button>
+          <button onClick={() => cambiarTipo('mayor')} className={`rounded-full px-3 py-1.5 text-xs font-bold ${tipo === 'mayor' ? 'bg-white text-vino-800 shadow-sm' : 'text-stone-600'}`}>Mayor</button>
+        </div>
       </div>
 
-      <div className="mb-3 flex items-center gap-2">
-        <button onClick={() => cambiarTipo('menor')} className={chip(tipo === 'menor')}>Al menor</button>
-        <button onClick={() => cambiarTipo('mayor')} className={chip(tipo === 'mayor')}>Al mayor</button>
-        <button onClick={() => setLibre({ nombre: '', precio: '' })} className="ml-auto rounded-full bg-white px-4 py-1.5 text-sm font-semibold text-stone-600 ring-1 ring-stone-200">+ Ítem libre</button>
+      <div className="mb-2 flex gap-2">
+        <div className="relative flex-1">
+          <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar producto..." style={{ paddingLeft: '2.75rem' }} />
+        </div>
+        <button onClick={() => setLibre({ nombre: '', precio: '' })} className="shrink-0 rounded-xl bg-white px-4 text-sm font-semibold text-stone-700 ring-1 ring-stone-300">Libre</button>
       </div>
 
       {libre && (
-        <div className="mb-3 flex gap-2 rounded-2xl bg-white p-3 shadow-card">
+        <div className="mb-2 flex gap-2 rounded-2xl bg-white p-3 shadow-card">
           <input placeholder="Descripción" value={libre.nombre} onChange={(e) => setLibre({ ...libre, nombre: e.target.value })} />
           <input type="number" inputMode="decimal" placeholder="Bs" value={libre.precio} onChange={(e) => setLibre({ ...libre, precio: e.target.value })} style={{ width: '6rem' }} />
           <button onClick={() => {
@@ -243,126 +356,193 @@ export default function NuevaVenta() {
         </div>
       )}
 
-      <div className="relative mb-3">
-        <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" />
-        <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar producto..." style={{ paddingLeft: '2.75rem' }} />
-      </div>
+      {categorias.length > 1 && (
+        <div className="no-scrollbar -mx-4 mb-3 flex gap-2 overflow-x-auto px-4">
+          <button onClick={() => setCat('todas')} className={chip(cat === 'todas')}>Todas</button>
+          {categorias.map((c) => <button key={c} onClick={() => setCat(c)} className={chip(cat === c)}>{c}</button>)}
+        </div>
+      )}
 
-      <ul className="space-y-2">
+      <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
         {lista.map((p) => {
-          const l = enCarrito(p.id);
+          const l = lineaDe(p.id);
           const st = p.stock != null ? Number(p.stock) : null;
           const base = precioDe(p, 0, tipo).precio;
-          const desde = p.mayor_desde != null && Number(p.mayor_desde) > 0 && p.precio_mayor != null ? Number(p.mayor_desde) : null;
           return (
-            <li key={p.id} className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-card">
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-semibold">{p.nombre}</p>
-                <p className="text-xs text-stone-500">
-                  {base > 0 ? bs(base) + '/' + p.unidad : <span className="font-semibold text-red-600">Sin precio</span>}
-                  {st != null && <span className={st <= 0 ? 'font-semibold text-red-600' : ''}>{' · stock ' + qty(st)}</span>}
-                </p>
-                {desde != null && <p className="text-[11px] font-semibold text-amber-700">{'Desde ' + qty(desde) + ' ' + p.unidad + ': ' + bs(p.precio_mayor) + '/' + p.unidad}</p>}
-              </div>
-              {l ? (
-                <div className="flex items-center gap-1 rounded-full bg-vino-800 p-1 text-white">
-                  <button onClick={() => sumar(p, -paso(p.unidad))} aria-label="Quitar" className="grid h-8 w-8 place-items-center rounded-full hover:bg-white/15"><Minus size={15} /></button>
-                  <span className="min-w-[2.5rem] text-center text-sm font-bold">{qty(l.modo === 'monto' ? medir(l).cant : n(l.cantidad))}</span>
-                  <button onClick={() => sumar(p, paso(p.unidad))} aria-label="Agregar" className="grid h-8 w-8 place-items-center rounded-full hover:bg-white/15"><Plus size={15} /></button>
-                </div>
-              ) : (
-                <button onClick={() => sumar(p, paso(p.unidad))} aria-label={'Agregar ' + p.nombre} className="grid h-10 w-10 place-items-center rounded-full bg-vino-800 text-white"><Plus size={18} /></button>
-              )}
-            </li>
+            <button key={p.id} onClick={() => tocar(p)}
+              className={`relative flex min-h-[88px] flex-col justify-between rounded-2xl border p-3 text-left transition ${l ? 'border-vino-800 bg-vino-50' : 'border-stone-200 bg-white'}`}>
+              <span className={`line-clamp-2 text-sm font-bold leading-tight text-stone-900 ${l ? 'pr-10' : ''}`}>{p.nombre}</span>
+              <span className="mt-2 block">
+                <span className="block text-sm font-extrabold text-vino-800">{base > 0 ? bs(base) + '/' + uni(p) : 'Sin precio'}</span>
+                {st != null && <span className={`block text-[11px] font-semibold ${st <= 0 ? 'text-red-600' : 'text-stone-500'}`}>{'Stock ' + nf(st)}</span>}
+              </span>
+              {l && <span className="absolute right-2 top-2 rounded-full bg-vino-800 px-2 py-0.5 text-[11px] font-bold text-white">{nf(cantDe(l))}</span>}
+            </button>
           );
         })}
-        {lista.length === 0 && <li className="py-10 text-center text-stone-500">No hay productos con esa búsqueda.</li>}
-      </ul>
-
-      <div className="fixed inset-x-0 bottom-16 z-40 px-4 md:bottom-4 md:left-64">
-        <button disabled={!items} onClick={() => { setErr(''); setAbierto(true); }}
-          className="mx-auto flex w-full max-w-4xl items-center justify-between rounded-full bg-vino-800 px-6 py-3.5 font-bold text-white shadow-lift disabled:bg-stone-400">
-          <span>{items ? items + (items === 1 ? ' producto' : ' productos') : 'Sin productos'}</span>
-          <span>{'Cobrar ' + bs(total)}</span>
-        </button>
+        {lista.length === 0 && <p className="col-span-2 py-10 text-center text-stone-500 md:col-span-3">No hay productos con esa búsqueda.</p>}
       </div>
 
-      {abierto && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 md:items-center" onClick={() => setAbierto(false)}>
-          <div onClick={(e) => e.stopPropagation()} className="flex max-h-[94vh] w-full max-w-lg flex-col rounded-t-3xl bg-white md:rounded-3xl">
-            <div className="flex items-center justify-between px-5 pb-2 pt-5">
-              <h2 className="text-xl font-bold text-stone-900">Cobrar</h2>
-              <button onClick={() => setAbierto(false)} aria-label="Cerrar" className="grid h-9 w-9 place-items-center rounded-full bg-stone-100"><X size={18} /></button>
+      <div className="fixed inset-x-0 bottom-16 z-40 px-4 md:bottom-4 md:left-64">
+        <div className="mx-auto flex max-w-4xl items-stretch gap-2">
+          <button disabled={!items} onClick={() => setTicket(true)}
+            className="flex min-w-0 flex-1 items-center justify-between rounded-full bg-white px-5 py-3 text-left shadow-lift ring-1 ring-stone-200 disabled:opacity-60">
+            <span className="text-sm font-semibold text-stone-600">{items ? items + (items === 1 ? ' producto' : ' productos') : 'Sin productos'}</span>
+            <span className="font-extrabold text-stone-900">{bs(bruto)}</span>
+          </button>
+          <button disabled={!items} onClick={abrirCobro} className="shrink-0 rounded-full bg-vino-800 px-7 py-3 font-bold text-white shadow-lift disabled:bg-stone-400">Cobrar</button>
+        </div>
+      </div>
+
+      {ticket && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 md:items-center" onClick={() => setTicket(false)}>
+          <div onClick={stop} className="flex max-h-[88vh] w-full max-w-lg flex-col rounded-t-3xl bg-white md:rounded-3xl">
+            <div className="flex items-center justify-between px-4 pb-2 pt-4">
+              <h2 className="text-lg font-bold text-stone-900">Ticket</h2>
+              <button onClick={() => setTicket(false)} aria-label="Cerrar" className="grid h-9 w-9 place-items-center rounded-full bg-stone-100"><X size={18} /></button>
+            </div>
+            <ul className="flex-1 space-y-2 overflow-y-auto px-4 pb-3">
+              {lineas.map((l, i) => {
+                const m = medidas[i];
+                const auto = l.p ? precioDe(l.p, m.cant, tipo) : null;
+                const cambiado = auto && l.manual && Math.abs(auto.precio - n(l.precio)) > 0.001;
+                const st = l.p && l.p.stock != null ? Number(l.p.stock) : null;
+                return (
+                  <li key={l.producto_id + '-' + i} className="rounded-2xl bg-stone-50 p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <button onClick={() => abrirLinea(i)} className="min-w-0 flex-1 text-left">
+                        <p className="truncate font-semibold text-stone-900">{l.nombre}</p>
+                        <p className="text-xs text-stone-500">{nf(m.cant) + ' ' + l.unidad + ' × ' + bs(n(l.precio))}</p>
+                      </button>
+                      <p className="shrink-0 font-extrabold text-stone-900">{bs(m.sub)}</p>
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-1.5 text-[11px] font-bold">
+                      {auto && auto.esp && !l.manual && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-800">Precio por mayor</span>}
+                      {cambiado && <span className="rounded-full bg-stone-200 px-2 py-0.5 text-stone-700">{'Precio cambiado (lista ' + bs(auto.precio) + ')'}</span>}
+                      {st != null && m.cant > st && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-800">{'Solo hay ' + nf(st) + ' en stock'}</span>}
+                    </div>
+                    <div className="mt-2 flex items-center justify-between">
+                      <div className="flex items-center gap-1 rounded-full bg-white p-1 ring-1 ring-stone-200">
+                        <button onClick={() => ajustar(i, -paso(l.unidad))} aria-label="Quitar" className="grid h-9 w-9 place-items-center rounded-full bg-stone-100"><Minus size={16} /></button>
+                        <span className="min-w-[3rem] text-center text-sm font-bold">{nf(m.cant)}</span>
+                        <button onClick={() => ajustar(i, paso(l.unidad))} aria-label="Agregar" className="grid h-9 w-9 place-items-center rounded-full bg-stone-100"><Plus size={16} /></button>
+                      </div>
+                      <button onClick={() => setLineas((ls) => ls.filter((_, x) => x !== i))} aria-label="Quitar producto" className="grid h-9 w-9 place-items-center rounded-full bg-red-50 text-red-600"><Trash2 size={16} /></button>
+                    </div>
+                  </li>
+                );
+              })}
+              {!items && <li className="py-8 text-center text-stone-500">El ticket está vacío.</li>}
+            </ul>
+            <div className="flex items-center gap-3 border-t border-stone-100 p-4">
+              <button onClick={() => { setLineas([]); setTicket(false); }} disabled={!items} className="rounded-full bg-stone-100 px-4 py-3 text-sm font-semibold text-stone-700 disabled:opacity-50">Vaciar</button>
+              <button onClick={abrirCobro} disabled={!items} className="flex flex-1 items-center justify-between rounded-full bg-vino-800 px-6 py-3.5 font-bold text-white disabled:bg-stone-400">
+                <span>Cobrar</span><span>{bs(bruto)}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {kp && (
+        <div className="fixed inset-0 z-[60] flex items-end justify-center bg-black/50 md:items-center" onClick={() => setKp(null)}>
+          <div onClick={stop} className="w-full max-w-md rounded-t-3xl bg-white p-4 md:rounded-3xl">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="truncate text-lg font-bold text-stone-900">{kp.nombre}</h2>
+                <p className="text-xs text-stone-500">
+                  {bs(kpPrecio) + '/' + kp.unidad}
+                  {kpEsp && <span className="ml-2 rounded-full bg-amber-100 px-2 py-0.5 font-bold text-amber-800">Precio por mayor</span>}
+                </p>
+              </div>
+              <button onClick={() => setKp(null)} aria-label="Cerrar" className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-stone-100"><X size={18} /></button>
             </div>
 
-            <div className="flex-1 space-y-3 overflow-y-auto px-5 pb-3">
-              <ul className="space-y-2">
-                {lineas.map((l, i) => {
-                  const m = medidas[i];
-                  const auto = l.p ? precioDe(l.p, m.cant, tipo) : null;
-                  const cambiado = auto && l.manual && Math.abs(auto.precio - n(l.precio)) > 0.001;
-                  const st = l.p && l.p.stock != null ? Number(l.p.stock) : null;
-                  return (
-                    <li key={l.producto_id + '-' + i} className="rounded-2xl bg-stone-50 p-3">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="font-semibold">{l.nombre}</p>
-                        <button onClick={() => setLineas((ls) => ls.filter((_, x) => x !== i))} aria-label="Quitar" className="text-red-600"><Trash2 size={16} /></button>
-                      </div>
-                      <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] font-bold">
-                        {auto && auto.esp && !l.manual && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-800">Precio por mayor</span>}
-                        {cambiado && <span className="rounded-full bg-stone-200 px-2 py-0.5 text-stone-700">{'Precio cambiado (lista ' + bs(auto.precio) + ')'}</span>}
-                        {cambiado && <button onClick={() => setL(i, { manual: false })} className="text-vino-800 underline">Volver a lista</button>}
-                      </div>
-                      <div className="mt-2 flex gap-2">
-                        <button onClick={() => cambiarModo(i, 'peso')} className={mini(l.modo === 'peso')}>{esKg(l.unidad) ? 'Peso' : 'Cantidad'}</button>
-                        <button onClick={() => cambiarModo(i, 'monto')} className={mini(l.modo === 'monto')}>Monto</button>
-                      </div>
-                      {l.modo === 'peso' && (
-                        <div className="mt-2 flex flex-wrap gap-1.5">
-                          {rapidas(l.unidad).map((v) => (
-                            <button key={v} onClick={() => setL(i, { cantidad: String(v) })} className={mini(n(l.cantidad) === v)}>{marca(v, l.unidad)}</button>
-                          ))}
-                        </div>
-                      )}
-                      <div className="mt-2 grid grid-cols-2 gap-2">
-                        {l.modo === 'peso' ? (
-                          <label className="text-xs text-stone-500">{'Cantidad (' + l.unidad + ')'}
-                            <input type="number" inputMode="decimal" step="any" min="0" value={l.cantidad} onChange={(e) => setL(i, { cantidad: e.target.value })} />
-                          </label>
-                        ) : (
-                          <label className="text-xs text-stone-500">Monto Bs
-                            <input type="number" inputMode="decimal" step="0.01" min="0" value={l.monto} onChange={(e) => setL(i, { monto: e.target.value })} />
-                          </label>
-                        )}
-                        <label className="text-xs text-stone-500">{'Precio Bs/' + l.unidad}
-                          <input type="number" inputMode="decimal" step="0.01" min="0" value={l.precio} onChange={(e) => setPrecio(i, e.target.value)} />
-                        </label>
-                      </div>
-                      <p className="mt-2 text-right text-sm font-bold text-stone-900">{qty(m.cant) + ' ' + l.unidad + ' × ' + bs(n(l.precio)) + ' = ' + bs(m.sub)}</p>
-                      {st != null && m.cant > st && <p className="mt-1 text-xs font-semibold text-amber-700">{'Solo hay ' + qty(st) + ' ' + l.unidad + ' en stock'}</p>}
-                    </li>
-                  );
-                })}
-              </ul>
+            {esKg(kp.unidad) && (
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <button onClick={() => cambiarModoKp('peso')} className={mini(kp.modo === 'peso')}>Peso</button>
+                <button onClick={() => cambiarModoKp('monto')} className={mini(kp.modo === 'monto')}>Monto</button>
+              </div>
+            )}
+
+            <div className="mt-3 rounded-2xl bg-stone-50 p-3 text-center">
+              <p className="text-4xl font-extrabold text-stone-900">
+                {kp.buf === '' ? '0' : kp.buf.replace('.', ',')}
+                <span className="ml-2 text-xl font-bold text-stone-500">{kp.modo === 'monto' ? 'Bs' : kp.unidad}</span>
+              </p>
+              <p className="mt-1 text-sm font-semibold text-stone-600">{kp.modo === 'monto' ? '= ' + nf(kpCant) + ' ' + kp.unidad : '= ' + bs(kpSub)}</p>
+              {kpStock != null && kpCant > kpStock && <p className="mt-1 text-xs font-bold text-amber-700">{'Solo hay ' + nf(kpStock) + ' ' + kp.unidad + ' en stock'}</p>}
+            </div>
+
+            {kp.modo === 'peso' && (
+              <div className="mt-2 flex flex-wrap gap-2">
+                {rapidas(kp.unidad).map((v) => (
+                  <button key={v} onClick={() => setKp({ ...kp, buf: String(v), fresh: true })} className={mini(n(kp.buf) === v)}>{marca(v, kp.unidad)}</button>
+                ))}
+              </div>
+            )}
+
+            <div className="mt-3">
+              <Teclado onKey={(k) => setKp((s) => ({ ...s, buf: teclear(s.fresh ? '' : s.buf, k, s.modo === 'monto' ? 2 : 3), fresh: false }))} />
+            </div>
+
+            <div className="mt-2 flex items-center justify-between gap-2 text-xs">
+              {kp.editPrecio ? (
+                <label className="flex flex-1 items-center gap-2 text-stone-500">Precio Bs
+                  <input type="number" inputMode="decimal" step="0.01" min="0" value={kp.precio} onChange={(e) => setKp({ ...kp, precio: e.target.value, manual: true })} />
+                </label>
+              ) : (
+                <button onClick={() => setKp({ ...kp, editPrecio: true, precio: String(kpPrecio), manual: true })} className="font-bold text-vino-800 underline">Cambiar precio</button>
+              )}
+              {kp.p && kp.manual && <button onClick={() => setKp({ ...kp, manual: false, editPrecio: false })} className="shrink-0 font-bold text-stone-600 underline">Volver a lista</button>}
+            </div>
+
+            <button onClick={guardarKp} disabled={!(n(kp.buf) > 0) || !(kpPrecio > 0)} className="mt-3 w-full rounded-full bg-vino-800 py-3.5 font-bold text-white disabled:bg-stone-300">
+              {(kp.idx >= 0 ? 'Guardar' : 'Agregar') + ' · ' + bs(kpSub)}
+            </button>
+            {!(kpPrecio > 0) && <p className="mt-2 text-center text-xs font-semibold text-red-600">Este producto no tiene precio. Toca Cambiar precio.</p>}
+          </div>
+        </div>
+      )}
+
+      {cobrando && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 md:items-center" onClick={() => setCobrando(false)}>
+          <div onClick={stop} className="flex max-h-[96vh] w-full max-w-lg flex-col rounded-t-3xl bg-white md:rounded-3xl">
+            <div className="flex items-center gap-3 px-4 pb-1 pt-4">
+              <button onClick={() => setCobrando(false)} aria-label="Volver" className="grid h-9 w-9 place-items-center rounded-full bg-stone-100"><ArrowLeft size={18} /></button>
+              <h2 className="text-lg font-bold text-stone-900">Cobrar</h2>
+            </div>
+
+            <div className="flex-1 space-y-3 overflow-y-auto px-4 pb-3">
+              <div className="rounded-2xl bg-stone-50 py-4 text-center">
+                <p className="text-xs text-stone-500">{desc > 0 ? 'Subtotal ' + bs(bruto) + ' · descuento −' + bs(desc) : items + (items === 1 ? ' producto' : ' productos')}</p>
+                <p className="text-5xl font-extrabold text-stone-900">{bs(total)}</p>
+              </div>
 
               <div className="grid grid-cols-4 gap-2">
                 {METODOS.map(([v, t]) => (
-                  <button key={v} onClick={() => setF({ ...f, metodo: v })} className={`rounded-xl py-2.5 text-sm font-semibold ${f.metodo === v ? 'bg-vino-800 text-white' : 'bg-stone-100 text-stone-700'}`}>{t}</button>
+                  <button key={v} onClick={() => setF({ ...f, metodo: v })} className={`rounded-xl py-3 text-sm font-semibold ${f.metodo === v ? 'bg-vino-800 text-white' : 'bg-stone-100 text-stone-700'}`}>{t}</button>
                 ))}
               </div>
 
               {f.metodo === 'efectivo' && (
                 <div className="rounded-2xl bg-stone-50 p-3">
                   <p className="text-xs font-semibold text-stone-500">El cliente paga con</p>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    <button onClick={() => setF({ ...f, recibe: String(total) })} className={mini(f.recibe !== '' && recibe === total)}>Exacto</button>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    <button onClick={() => { ponerRecibe(total); setOtroMonto(false); }} className={mini(f.recibe !== '' && recibe === total)}>Exacto</button>
                     {sugeridos.map((b) => (
-                      <button key={b} onClick={() => setF({ ...f, recibe: String(b) })} className={mini(recibe === b)}>{'Bs ' + b}</button>
+                      <button key={b} onClick={() => { ponerRecibe(b); setOtroMonto(false); }} className={mini(recibe === b)}>{'Bs ' + b}</button>
                     ))}
+                    <button onClick={() => { setOtroMonto(!otroMonto); setRecibeNuevo(true); }} className={mini(otroMonto)}>Otro</button>
                   </div>
-                  <input className="mt-2" type="number" inputMode="decimal" step="0.01" min="0" placeholder="Otro monto" value={f.recibe} onChange={(e) => setF({ ...f, recibe: e.target.value })} />
-                  {vuelto > 0 && <p className="mt-2 text-center text-lg font-extrabold text-green-700">{'Vuelto: ' + bs(vuelto)}</p>}
-                  {falta > 0 && <p className="mt-2 text-center text-sm font-bold text-amber-700">{'Falta ' + bs(falta)}</p>}
+                  {otroMonto && (
+                    <div className="mt-3 space-y-2">
+                      <p className="rounded-xl bg-white py-2 text-center text-2xl font-extrabold text-stone-900">{'Bs ' + (f.recibe === '' ? '0' : f.recibe.replace('.', ','))}</p>
+                      <Teclado onKey={teclaRecibe} />
+                    </div>
+                  )}
+                  {vuelto > 0 && <p className="mt-3 text-center text-3xl font-extrabold text-green-700">{'Vuelto: ' + bs(vuelto)}</p>}
+                  {falta > 0 && <p className="mt-3 text-center text-sm font-bold text-amber-700">{'Falta ' + bs(falta)}</p>}
                 </div>
               )}
 
@@ -387,7 +567,7 @@ export default function NuevaVenta() {
                 </div>
               )}
 
-              <button onClick={() => setMas(!mas)} className="flex w-full items-center justify-between rounded-xl bg-stone-50 px-4 py-2.5 text-sm font-semibold text-stone-700">
+              <button onClick={() => setMas(!mas)} className="flex w-full items-center justify-between rounded-xl bg-stone-50 px-4 py-3 text-sm font-semibold text-stone-700">
                 <span>Más opciones</span>
                 <ChevronDown size={16} className={mas ? 'rotate-180 transition' : 'transition'} />
               </button>
@@ -414,16 +594,10 @@ export default function NuevaVenta() {
             </div>
 
             <div className="space-y-2 border-t border-stone-100 p-4">
-              <div className="flex items-end justify-between">
-                <div>
-                  <p className="text-xs text-stone-500">{desc > 0 ? 'Subtotal ' + bs(bruto) + ' · descuento −' + bs(desc) : items + (items === 1 ? ' producto' : ' productos')}</p>
-                  <p className="text-3xl font-extrabold text-stone-900">{bs(total)}</p>
-                </div>
-                {f.metodo === 'fiado' && <p className="text-right text-sm font-bold text-amber-700">{'Queda: ' + bs(r2(total - pagadoIni))}</p>}
-              </div>
+              {f.metodo === 'fiado' && <p className="text-center text-sm font-bold text-amber-700">{'Queda por cobrar: ' + bs(r2(total - pagadoIni))}</p>}
               {err && <p className="text-center text-sm font-semibold text-red-600">{err}</p>}
-              <button onClick={confirmar} disabled={busy} className="w-full rounded-full bg-vino-800 py-3.5 font-bold text-white disabled:opacity-50">
-                {busy ? 'Guardando...' : 'Confirmar venta'}
+              <button onClick={confirmar} disabled={busy} className="w-full rounded-full bg-vino-800 py-4 text-base font-bold text-white disabled:opacity-50">
+                {busy ? 'Guardando...' : 'Confirmar venta · ' + bs(total)}
               </button>
             </div>
           </div>
