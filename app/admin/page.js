@@ -56,7 +56,7 @@ export default function Admin() {
       const r = await fetch('/api/admin/productos');
       if (r.status === 401) return setAuth(false);
       setData(await r.json());
-      setAuth(true);
+      location.replace('/admin/inicio');
     } catch { aviso('Sin conexión'); }
   }
   useEffect(() => { cargar(); }, []);

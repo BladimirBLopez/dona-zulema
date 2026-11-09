@@ -21,7 +21,7 @@ export default function Clave() {
       <input type="password" placeholder="Nueva (mín. 12 caracteres)" value={nueva} onChange={(e) => setNueva(e.target.value)} className="w-full rounded border p-2" />
       <button className="w-full rounded bg-red-800 py-2 font-bold text-white">Cambiar</button>
       {msg && <p className="text-sm">{msg}</p>}
-      <a href="/admin" className="block text-sm text-blue-700">← Volver al panel</a>
+      <a href="/admin/inicio" className="block text-sm text-blue-700">← Volver al panel</a>
     </form>
   );
 }

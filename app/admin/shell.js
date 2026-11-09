@@ -15,7 +15,7 @@ const Mas = (p) => <Svg {...p}><circle cx="5" cy="12" r="1.5" /><circle cx="12" 
 const Costos = (p) => <Svg {...p}><path d="M8 6h13" /><path d="M8 12h13" /><path d="M8 18h13" /><path d="M3 6h.01" /><path d="M3 12h.01" /><path d="M3 18h.01" /></Svg>;
 
 const GRUPOS = [
-  ['General', [['/admin/inicio', 'Inicio', Inicio], ['/admin', 'Productos', Package], ['/admin/ventas', 'Ventas', ShoppingCart]]],
+  ['General', [['/admin/inicio', 'Inicio', Inicio], ['/admin/productos', 'Productos', Package], ['/admin/ventas', 'Ventas', ShoppingCart]]],
   ['Finanzas', [['/admin/reportes', 'Reportes', Reportes], ['/admin/gastos', 'Gastos', Wallet], ['/admin/costos', 'Costos', Costos]]],
   ['Tienda', [['/admin/categorias', 'Categorías', Tags], ['/admin/banners', 'Ofertas', Megaphone], ['/admin/negocio', 'Negocio', Store]]],
 ];

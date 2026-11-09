@@ -8,7 +8,7 @@ import { Page, PageHeader, Card, Stat, Badge, Btn, Empty, Skeleton } from '@/com
 
 const ACCESOS = [
   ['/admin/ventas/nueva', 'Vender', Plus],
-  ['/admin', 'Productos', Package],
+  ['/admin/productos', 'Productos', Package],
   ['/admin/categorias', 'Categorías', Tags],
   ['/admin/banners', 'Ofertas', Megaphone],
   ['/admin/negocio', 'Negocio', Store],
@@ -156,7 +156,7 @@ export default function Inicio() {
                       </li>
                     ))}
                   </ul>
-                  <Link href="/admin" className="mt-2 block text-center text-sm font-bold text-vino-800">Ver productos</Link>
+                  <Link href="/admin/productos" className="mt-2 block text-center text-sm font-bold text-vino-800">Ver productos</Link>
                 </>
               ) : (
                 <div className="mt-3">
