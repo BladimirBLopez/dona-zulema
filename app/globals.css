@@ -1,3 +1,28 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+::selection { background: #fcd34d; color: #3b0909; }
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+.admin input:not([type='checkbox']):not([type='file']),
+.admin select,
+.admin textarea {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid #e7e5e4;
+  background: #fff;
+  padding: 0.65rem 0.8rem;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.admin input:not([type='checkbox']):not([type='file']):focus,
+.admin select:focus,
+.admin textarea:focus {
+  border-color: #cf4237;
+  box-shadow: 0 0 0 4px rgba(207, 66, 55, 0.12);
+}
+.admin section { border-radius: 1.25rem; }
