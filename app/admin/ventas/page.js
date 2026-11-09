@@ -120,7 +120,7 @@ export default function Ventas() {
 
   const resumen = useMemo(() => {
     const act = (ventas || []).filter((v) => v.estado === 'activa');
-    return { n: act.length, total: act.reduce((s, v) => s + v.total, 0), cobrar: act.reduce((s, v) => s + (v.total - v.pagado), 0) };
+    return { n: act.length, total: act.reduce((s, v) => s + Number(v.total), 0), cobrar: act.reduce((s, v) => s + (v.total - v.pagado), 0) };
   }, [ventas]);
 
   const porCliente = useMemo(() => {
