@@ -42,6 +42,7 @@ export default function Negocio() {
 
       <Box t="Logo">
         <ImageUpload value={n.logo} label="Logo del negocio" onChange={(u) => set("logo", u)} />
+        <ImageUpload value={n.hero} label="Foto de portada (se ve detrás del título)" onChange={(u) => set("hero", u)} />
       </Box>
 
       <Box t="General">

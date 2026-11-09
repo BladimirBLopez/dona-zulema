@@ -58,6 +58,12 @@ export default async function Home() {
       </header>
 
       <section className="relative overflow-hidden bg-gradient-to-br from-vino-950 via-vino-900 to-vino-700 text-white">
+        {N.hero && (
+          <>
+            <img src={N.hero.replace('/upload/', '/upload/f_auto,q_auto,w_1600/')} alt="" fetchPriority="high" className="absolute inset-0 h-full w-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-b from-vino-950/80 via-vino-950/60 to-vino-950/90" />
+          </>
+        )}
         <div className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-oro-400/20 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-32 -left-24 h-96 w-96 rounded-full bg-vino-500/30 blur-3xl" />
         <div className="relative mx-auto max-w-4xl px-4 pb-28 pt-16 text-center md:pt-28">
