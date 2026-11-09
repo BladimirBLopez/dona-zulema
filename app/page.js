@@ -1,3 +1,4 @@
+import { Beneficios, Info } from './secciones';
 import { sql } from '@/lib/db';
 import { thumb } from '@/lib/cloudinary';
 
@@ -84,6 +85,7 @@ export default async function Home() {
         <div className="h-2 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400" />
       </section>
 
+      <Beneficios />
       <main id="catalogo" className="mx-auto max-w-6xl px-4 py-10">
         {lineas.length === 0 && (
           <p className="py-16 text-center text-stone-500">Pronto tendremos el catálogo aquí. Mientras tanto, escríbenos por WhatsApp.</p>
@@ -127,6 +129,7 @@ export default async function Home() {
         ))}
       </main>
 
+      <Info />
       <footer className="bg-[#3b0909] py-10 text-center text-amber-100">
         <p className="text-2xl font-extrabold" style={serif}>Doña Zulema</p>
         <p className="mt-1 text-sm text-amber-200/80">Quesería y Fiambrería · Frial Jurado</p>
