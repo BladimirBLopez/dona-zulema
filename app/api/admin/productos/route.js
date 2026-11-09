@@ -37,7 +37,7 @@ export async function POST(req) {
     await q`UPDATE productos SET categoria_id=${b.categoria_id}, nombre=${nombre},
       precio_menor=${num(b.precio_menor)}, precio_mayor=${num(b.precio_mayor)},
       unidad=${unidad}, disponible=${disp},
-      costo=${num(b.costo)}, stock=${num(b.stock)}, stock_min=${num(b.stock_min)},
+      costo=${num(b.costo)}, stock_min=${num(b.stock_min)},
       imagen_url=COALESCE(${b.imagen_url || null}, imagen_url),
       imagen_public_id=COALESCE(${b.imagen_public_id || null}, imagen_public_id)
       WHERE id=${b.id}`;

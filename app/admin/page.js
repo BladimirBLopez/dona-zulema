@@ -3,9 +3,28 @@ import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Search, Plus, Pencil, Trash2, X, ImagePlus, Lock } from 'lucide-react';
 
-const vacio = { id: null, nombre: '', categoria_id: '', precio_menor: '', precio_mayor: '', unidad: 'kg', disponible: true, imagen_url: '', imagen_public_id: '' };
+const vacio = { id: null, nombre: '', categoria_id: '', precio_menor: '', precio_mayor: '', unidad: 'kg', disponible: true, costo: '', stock: '', stock_min: '', imagen_url: '', imagen_public_id: '' };
 const bs = (v) => (v == null ? '—' : Number(v).toFixed(2));
 const mini = (u) => u.replace('/upload/', '/upload/f_auto,q_auto,w_160,h_160,c_fill/');
+const nz = (v) => (v == null || v === '' || isNaN(Number(v)) ? null : Number(v));
+const fmt = (v) => String(Math.round(Number(v) * 1000) / 1000);
+const gan = (precio, costo) => { const m = nz(precio), c = nz(costo); return m == null || c == null ? null : Math.round((m - c) * 100) / 100; };
+
+function Info({ p }) {
+  const s = nz(p.stock), mn = nz(p.stock_min), c = nz(p.costo), g = gan(p.precio_menor, p.costo);
+  const bajo = s != null && mn != null && s <= mn;
+  const chip = 'rounded-full px-2 py-0.5 ';
+  return (
+    <p className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] font-semibold">
+      {s == null
+        ? <span className={chip + 'bg-stone-100 text-stone-500'}>Sin control de stock</span>
+        : <span className={chip + (s <= 0 ? 'bg-red-100 text-red-700' : bajo ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-700')}>{'Stock ' + fmt(s) + ' ' + (p.unidad || '')}</span>}
+      {g == null
+        ? <span className={chip + 'bg-stone-100 text-stone-500'}>Sin costo</span>
+        : <span className={chip + (g < 0 ? 'bg-red-100 text-red-700' : 'bg-vino-50 text-vino-800')}>{'Gana Bs ' + g.toFixed(2) + (c > 0 ? ' · ' + Math.round((g / c) * 100) + '%' : '')}</span>}
+    </p>
+  );
+}
 
 function Switch({ on, onClick }) {
   return (
@@ -26,6 +45,7 @@ export default function Admin() {
   const [q, setQ] = useState('');
   const [filtro, setFiltro] = useState('todos');
   const [toast, setToast] = useState('');
+  const [st, setSt] = useState(null);
 
   const aviso = (t) => { setToast(t); setTimeout(() => setToast(''), 2500); };
 
@@ -87,7 +107,21 @@ export default function Admin() {
     cargar();
   }
 
-  const editar = (p) => setF({ ...p, precio_menor: p.precio_menor ?? '', precio_mayor: p.precio_mayor ?? '', imagen_url: p.imagen_url || '', imagen_public_id: p.imagen_public_id || '' });
+  async function guardarStock() {
+    const c = Number(st.cant);
+    if (st.cant === '' || !Number.isFinite(c)) return aviso('Escribe una cantidad');
+    if (st.modo === 'ingreso' && c <= 0) return aviso('La entrada debe ser mayor a 0');
+    if (st.modo === 'ajuste' && c < 0) return aviso('No puede ser negativo');
+    const actual = Number(st.p.stock) || 0;
+    const delta = st.modo === 'ajuste' ? Math.round((c - actual) * 1000) / 1000 : c;
+    if (delta === 0) return aviso('Sin cambios');
+    setBusy(true);
+    const r = await fetch('/api/admin/stock', { method: 'POST', body: JSON.stringify({ producto_id: String(st.p.id), cantidad: delta, motivo: st.modo }) });
+    setBusy(false);
+    if (r.ok) { setSt(null); aviso('Stock actualizado'); cargar(); } else aviso('No se pudo actualizar el stock');
+  }
+
+  const editar = (p) => setF({ ...p, precio_menor: p.precio_menor ?? '', precio_mayor: p.precio_mayor ?? '', costo: p.costo ?? '', stock: p.stock ?? '', stock_min: p.stock_min ?? '', imagen_url: p.imagen_url || '', imagen_public_id: p.imagen_public_id || '' });
 
   const lista = useMemo(() => {
     const t = q.trim().toLowerCase();
@@ -160,10 +194,12 @@ export default function Admin() {
               <p className="truncate font-semibold">{p.nombre}</p>
               <p className="truncate text-xs text-stone-500">{p.categoria}</p>
               <p className="mt-0.5 text-xs"><span className="text-vino-800">Menor Bs {bs(p.precio_menor)}</span> · <span className="text-amber-700">Mayor Bs {bs(p.precio_mayor)}</span></p>
+              <Info p={p} />
             </div>
             <div className="flex shrink-0 flex-col items-end gap-2">
               <Switch on={p.disponible} onClick={() => alternar(p)} />
               <div className="flex gap-1">
+                <button onClick={() => setSt({ p, modo: 'ingreso', cant: '' })} className="h-8 rounded-full bg-vino-50 px-3 text-xs font-bold text-vino-800">Stock</button>
                 <button onClick={() => editar(p)} aria-label="Editar" className="grid h-8 w-8 place-items-center rounded-full bg-stone-100 text-stone-700"><Pencil size={15} /></button>
                 <button onClick={() => borrar(p)} aria-label="Borrar" className="grid h-8 w-8 place-items-center rounded-full bg-red-50 text-red-600"><Trash2 size={15} /></button>
               </div>
@@ -201,6 +237,31 @@ export default function Admin() {
                 <input type="number" inputMode="decimal" step="0.01" min="0" placeholder="P. mayor" value={f.precio_mayor} onChange={(e) => setF({ ...f, precio_mayor: e.target.value })} />
                 <input placeholder="Unidad" value={f.unidad} onChange={(e) => setF({ ...f, unidad: e.target.value })} />
               </div>
+              <div className="grid grid-cols-2 gap-2">
+                <label className="text-xs text-stone-500">{'Costo (Bs por ' + (f.unidad || 'unidad') + ')'}
+                  <input type="number" inputMode="decimal" step="0.01" min="0" value={f.costo} onChange={(e) => setF({ ...f, costo: e.target.value })} />
+                </label>
+                <label className="text-xs text-stone-500">Aviso de stock bajo
+                  <input type="number" inputMode="decimal" step="any" min="0" value={f.stock_min} onChange={(e) => setF({ ...f, stock_min: e.target.value })} />
+                </label>
+              </div>
+              {f.id ? (
+                <p className="rounded-xl bg-crema p-2 text-xs text-stone-600">{'Stock actual: ' + (nz(f.stock) == null ? 'sin control' : fmt(f.stock) + ' ' + (f.unidad || '')) + '. Para cambiarlo usa el botón Stock de la lista.'}</p>
+              ) : (
+                <label className="block text-xs text-stone-500">Stock inicial (opcional)
+                  <input type="number" inputMode="decimal" step="any" min="0" value={f.stock} onChange={(e) => setF({ ...f, stock: e.target.value })} />
+                </label>
+              )}
+              {gan(f.precio_menor, f.costo) != null && (
+                <p className={'rounded-xl p-2 text-center text-sm font-bold ' + (gan(f.precio_menor, f.costo) < 0 ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700')}>
+                  {'Ganancia al menor: Bs ' + gan(f.precio_menor, f.costo).toFixed(2) + ' por ' + (f.unidad || 'unidad') + (nz(f.costo) > 0 ? ' (' + Math.round((gan(f.precio_menor, f.costo) / nz(f.costo)) * 100) + '%)' : '')}
+                </p>
+              )}
+              {gan(f.precio_mayor, f.costo) != null && (
+                <p className={'rounded-xl p-2 text-center text-sm font-bold ' + (gan(f.precio_mayor, f.costo) < 0 ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-800')}>
+                  {'Ganancia al mayor: Bs ' + gan(f.precio_mayor, f.costo).toFixed(2) + ' por ' + (f.unidad || 'unidad') + (nz(f.costo) > 0 ? ' (' + Math.round((gan(f.precio_mayor, f.costo) / nz(f.costo)) * 100) + '%)' : '')}
+                </p>
+              )}
               <div className="flex items-center justify-between rounded-2xl bg-crema p-3">
                 <span className="text-sm font-semibold">Mostrar en la tienda</span>
                 <Switch on={f.disponible} onClick={() => setF({ ...f, disponible: !f.disponible })} />
@@ -221,6 +282,28 @@ export default function Admin() {
           </motion.div>
         )}
       </AnimatePresence>
+    {st && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 md:items-center" onClick={() => setSt(null)}>
+          <div onClick={(e) => e.stopPropagation()} className="w-full max-w-lg space-y-3 rounded-t-3xl bg-white p-5 md:rounded-3xl">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="font-serif text-2xl font-extrabold text-vino-800">Stock</h2>
+                <p className="truncate text-sm text-stone-500">{st.p.nombre + ' · actual: ' + (nz(st.p.stock) == null ? 'sin control' : fmt(st.p.stock) + ' ' + (st.p.unidad || ''))}</p>
+              </div>
+              <button type="button" onClick={() => setSt(null)} aria-label="Cerrar" className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-stone-100"><X size={18} /></button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {[['ingreso', 'Entra mercadería'], ['ajuste', 'Corregir total']].map(([v, t]) => (
+                <button key={v} type="button" onClick={() => setSt({ ...st, modo: v, cant: '' })} className={'rounded-xl py-2.5 text-sm font-semibold ' + (st.modo === v ? 'bg-vino-800 text-white' : 'bg-stone-100 text-stone-700')}>{t}</button>
+              ))}
+            </div>
+            <label className="block text-xs text-stone-500">{st.modo === 'ingreso' ? 'Cantidad que entra (' + (st.p.unidad || '') + ')' : 'Stock real que hay ahora (' + (st.p.unidad || '') + ')'}
+              <input type="number" inputMode="decimal" step="any" min="0" value={st.cant} onChange={(e) => setSt({ ...st, cant: e.target.value })} autoFocus />
+            </label>
+            <button onClick={guardarStock} disabled={busy} className="w-full rounded-full bg-vino-800 py-3 font-bold text-white disabled:opacity-50">{busy ? 'Guardando...' : 'Guardar stock'}</button>
+          </div>
+        </div>
+      )}
     </main>
   );
 }
