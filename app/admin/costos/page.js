@@ -1,4 +1,5 @@
 'use client';
+import { confirmar, avisar, avisoAuto } from '@/lib/avisos';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Search, Check } from 'lucide-react';
 import { api, errMsg } from '@/lib/cliente';
@@ -18,7 +19,7 @@ export default function Costos() {
   const [toast, setToast] = useState('');
   const [fallo, setFallo] = useState('');
 
-  const aviso = (t) => { setToast(t); setTimeout(() => setToast(''), 2500); };
+  const aviso = avisoAuto;
 
   const cargar = useCallback(async () => {
     const r = await api('/api/admin/productos');

@@ -1,5 +1,5 @@
 'use client';
-import { confirmar } from '@/lib/avisos';
+import { confirmar, avisar, avisoAuto } from '@/lib/avisos';
 import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Search, Plus, Pencil, Trash2, X, ImagePlus, Lock } from 'lucide-react';
@@ -49,7 +49,7 @@ export default function Admin() {
   const [toast, setToast] = useState('');
   const [st, setSt] = useState(null);
 
-  const aviso = (t) => { setToast(t); setTimeout(() => setToast(''), 2500); };
+  const aviso = avisoAuto;
 
   async function cargar() {
     try {

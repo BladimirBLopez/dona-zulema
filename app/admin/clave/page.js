@@ -1,4 +1,5 @@
 'use client';
+import { confirmar, avisar, avisoAuto } from '@/lib/avisos';
 import { useState } from 'react';
 
 export default function Clave() {
@@ -10,7 +11,7 @@ export default function Clave() {
     e.preventDefault();
     const r = await fetch('/api/admin/clave', { method: 'POST', body: JSON.stringify({ actual, nueva }) });
     const d = await r.json();
-    setMsg(d.ok ? 'Clave cambiada. Vuelve a entrar.' : 'Error: ' + (d.error || ''));
+    d.ok ? avisar.ok('Clave cambiada', 'Vuelve a entrar con la nueva clave.') : avisar.error('No se pudo cambiar la clave', d.error || undefined);
   }
 
   return (

@@ -1,5 +1,5 @@
 'use client';
-import { confirmar } from '@/lib/avisos';
+import { confirmar, avisar, avisoAuto } from '@/lib/avisos';
 import { useEffect, useState } from 'react';
 import { Plus, Pencil, Trash2, Megaphone } from 'lucide-react';
 import ImageUpload from '@/components/ImageUpload';
@@ -14,14 +14,14 @@ export default function Banners() {
   async function cargar() {
     const r = await fetch('/api/admin/banners');
     if (r.status === 401) { location.href = '/admin'; return; }
-    if (!r.ok) { setMsg('Falta crear la tabla banners en Neon.'); setList([]); return; }
+    if (!r.ok) { avisar.error('Falta crear la tabla banners en Neon.'); setList([]); return; }
     setList(await r.json());
   }
   useEffect(() => { cargar(); }, []);
 
   async function guardar(b) {
     const r = await fetch('/api/admin/banners', { method: 'POST', body: JSON.stringify(b) });
-    setMsg(r.ok ? 'Guardado. Ya se ve en la tienda.' : 'No se pudo guardar');
+    r.ok ? avisar.ok('Oferta guardada', 'Ya se ve en la tienda.') : avisar.error('No se pudo guardar');
     if (r.ok) setF(null);
     cargar();
   }

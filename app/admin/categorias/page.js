@@ -1,5 +1,5 @@
 'use client';
-import { confirmar } from '@/lib/avisos';
+import { confirmar, avisar, avisoAuto } from '@/lib/avisos';
 import { useEffect, useState } from 'react';
 
 export default function Categorias() {
@@ -16,7 +16,7 @@ export default function Categorias() {
 
   async function guardar(c) {
     const r = await fetch('/api/admin/categorias', { method: 'POST', body: JSON.stringify(c) });
-    setMsg(r.ok ? 'Guardado' : 'Error: revisa el nombre');
+    r.ok ? avisar.ok('Categoría guardada') : avisar.error('No se pudo guardar', 'Revisa el nombre.');
     cargar();
   }
 
@@ -24,7 +24,7 @@ export default function Categorias() {
     if (!(await confirmar({ titulo: '¿Borrar esta categoría?', texto: 'No se puede deshacer.', ok: 'Sí, borrar', peligro: true }))) return;
     const r = await fetch('/api/admin/categorias?id=' + id, { method: 'DELETE' });
     const j = await r.json();
-    setMsg(j.error === 'tiene_productos' ? 'No se puede: tiene productos. Bórralos o muévelos antes.' : 'Borrada');
+    j.error === 'tiene_productos' ? avisar.error('No se puede borrar', 'Tiene productos. Bórralos o muévelos antes.') : avisar.ok('Categoría borrada');
     cargar();
   }
 

@@ -1,4 +1,5 @@
 'use client';
+import { confirmar, avisar, avisoAuto } from '@/lib/avisos';
 import ImageUpload from '@/components/ImageUpload';
 import { useEffect, useState } from 'react';
 
@@ -30,9 +31,9 @@ export default function Negocio() {
 
   async function guardar(e) {
     e.preventDefault();
-    setMsg('Guardando...');
+    avisar.cargando('Guardando...', 'negocio');
     const r = await fetch('/api/admin/negocio', { method: 'POST', body: JSON.stringify(n) });
-    setMsg(r.ok ? 'Guardado. El sitio se actualiza en 1 minuto.' : 'Error al guardar');
+    r.ok ? avisar.ok('Datos guardados', 'El sitio se actualiza en 1 minuto.', 'negocio') : avisar.error('No se pudo guardar', undefined, 'negocio');
     if (r.ok) setN(await (await fetch('/api/admin/negocio')).json());
   }
 
