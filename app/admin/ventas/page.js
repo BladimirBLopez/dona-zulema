@@ -2,7 +2,7 @@
 import { confirmar, avisar, avisoAuto } from '@/lib/avisos';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Plus, Search, ChevronDown, MessageCircle, Ban, Wallet, Inbox, ShoppingCart } from 'lucide-react';
+import { Plus, Search, ChevronDown, MessageCircle, Ban, Inbox, ShoppingCart } from 'lucide-react';
 import { api, errMsg } from '@/lib/cliente';
 import { bs, qty, hoyBO, horaBO, diaBO, reciboTexto, waLink } from '@/lib/fmt';
 
@@ -18,9 +18,6 @@ function rango(p, a, b) {
 
 function VentaCard({ v, negocio, onChange, aviso }) {
   const [open, setOpen] = useState(false);
-  const [monto, setMonto] = useState('');
-  const [met, setMet] = useState('efectivo');
-  const saldo = v.total - v.pagado;
   const anulada = v.estado === 'anulada';
 
   async function anular() {
@@ -29,13 +26,6 @@ function VentaCard({ v, negocio, onChange, aviso }) {
     aviso(r.ok ? 'Venta anulada' : errMsg(r.data));
     onChange();
   }
-  async function abonar() {
-    const r = await api('/api/admin/ventas', 'PATCH', { accion: 'abonar', id: v.id, monto: monto || saldo, metodo: met });
-    aviso(r.ok ? `Cobrado ${bs(r.data.aplicado)}` : errMsg(r.data));
-    setMonto('');
-    onChange();
-  }
-
   return (
     <li className={`rounded-2xl bg-white shadow-card ${anulada ? 'opacity-60' : ''}`}>
       <button onClick={() => setOpen(!open)} className="flex w-full items-center gap-3 p-3 text-left">
@@ -46,7 +36,6 @@ function VentaCard({ v, negocio, onChange, aviso }) {
             <span className="rounded-full bg-stone-100 px-2 py-0.5 text-stone-600">{MET[v.metodo] || v.metodo}</span>
             {v.tipo === 'mayor' && <span className="rounded-full bg-oro-200/60 px-2 py-0.5 text-amber-900">Mayor</span>}
             {anulada && <span className="rounded-full bg-red-100 px-2 py-0.5 text-red-700">Anulada</span>}
-            {!anulada && saldo > 0.001 && <span className="rounded-full bg-amber-100 px-2 py-0.5 text-amber-800">Debe {bs(saldo)}</span>}
           </div>
         </div>
         <p className="shrink-0 text-lg font-extrabold text-vino-800">{bs(v.total)}</p>
@@ -63,19 +52,6 @@ function VentaCard({ v, negocio, onChange, aviso }) {
           </ul>
           {v.nota && <p className="rounded-xl bg-panel p-2 text-xs text-stone-600">{v.nota}</p>}
           <p className="text-xs text-stone-500">Venta #{v.id}{v.cliente_tel ? ' · ' + v.cliente_tel : ''}</p>
-
-          {!anulada && saldo > 0.001 && (
-            <div className="rounded-2xl bg-amber-50 p-3">
-              <p className="mb-2 text-sm font-semibold text-amber-900">Registrar cobro (saldo {bs(saldo)})</p>
-              <div className="flex gap-2">
-                <input type="number" inputMode="decimal" step="0.01" min="0" placeholder={String(saldo)} value={monto} onChange={(e) => setMonto(e.target.value)} />
-                <select value={met} onChange={(e) => setMet(e.target.value)} style={{ width: '9rem' }}>
-                  <option value="efectivo">Efectivo</option><option value="qr">QR</option><option value="transferencia">Transf.</option>
-                </select>
-                <button onClick={abonar} className="shrink-0 rounded-xl bg-amber-600 px-4 font-bold text-white">Cobrar</button>
-              </div>
-            </div>
-          )}
 
           <div className="flex gap-2">
             <a href={waLink(v.cliente_tel, reciboTexto(v, negocio))} target="_blank" rel="noopener noreferrer"
@@ -95,24 +71,20 @@ export default function Ventas() {
   const [b, setB] = useState(hoyBO());
   const [q, setQ] = useState('');
   const [ventas, setVentas] = useState(null);
-  const [deudas, setDeudas] = useState(null);
   const [pedidos, setPedidos] = useState(null);
   const [negocio, setNegocio] = useState('');
-  const [toast, setToast] = useState('');
   const [fallo, setFallo] = useState('');
 
   const aviso = avisoAuto;
 
   const cargar = useCallback(async () => {
     const [d, h] = rango(per, a, b);
-    const [v, de, pe] = await Promise.all([
+    const [v, pe] = await Promise.all([
       api(`/api/admin/ventas?desde=${d}&hasta=${h}&q=${encodeURIComponent(q)}`),
-      api('/api/admin/ventas?solo=deuda'),
       api('/api/admin/pedidos?estado=pendiente'),
     ]);
     setFallo(!v.ok ? errMsg(v.data) : '');
     setVentas(v.ok ? v.data : []);
-    setDeudas(de.ok ? de.data : []);
     setPedidos(pe.ok ? pe.data : []);
   }, [per, a, b, q]);
 
@@ -121,21 +93,8 @@ export default function Ventas() {
 
   const resumen = useMemo(() => {
     const act = (ventas || []).filter((v) => v.estado === 'activa');
-    return { n: act.length, total: act.reduce((s, v) => s + Number(v.total), 0), cobrar: act.reduce((s, v) => s + (v.total - v.pagado), 0) };
+    return { n: act.length, total: act.reduce((s, v) => s + Number(v.total), 0) };
   }, [ventas]);
-
-  const porCliente = useMemo(() => {
-    const m = new Map();
-    for (const v of deudas || []) {
-      const k = (v.cliente_nombre || 'Sin nombre').trim().toLowerCase();
-      const g = m.get(k) || { nombre: v.cliente_nombre || 'Sin nombre', tel: v.cliente_tel, saldo: 0, ventas: [] };
-      g.saldo += v.total - v.pagado;
-      g.tel = g.tel || v.cliente_tel;
-      g.ventas.push(v);
-      m.set(k, g);
-    }
-    return [...m.values()].sort((x, y) => y.saldo - x.saldo);
-  }, [deudas]);
 
   async function cancelar(p) {
     if (!(await confirmar({ titulo: '¿Cancelar este pedido?', ok: 'Sí, cancelar pedido', cancelar: 'Volver', peligro: true }))) return;
@@ -156,7 +115,7 @@ export default function Ventas() {
       <div className="mb-4 flex items-center justify-between">
         <div>
           <h1 className="font-serif text-3xl font-extrabold text-vino-800">Ventas</h1>
-          <p className="text-sm text-stone-500">Caja, pedidos de la tienda y deudas.</p>
+          <p className="text-sm text-stone-500">Caja y pedidos de la tienda.</p>
         </div>
         <Link href="/admin/ventas/nueva" className="flex items-center gap-2 rounded-full bg-vino-800 px-5 py-2.5 text-sm font-bold text-white shadow"><Plus size={18} /> Vender</Link>
       </div>
@@ -164,7 +123,6 @@ export default function Ventas() {
       <div className="mb-4 flex rounded-full bg-white p-1 shadow-card">
         {tabBtn('ventas', 'Ventas', 0)}
         {tabBtn('pedidos', 'Pedidos', pedidos?.length || 0)}
-        {tabBtn('deudas', 'Deudas', porCliente.length)}
       </div>
 
       {fallo && <p className="mb-3 rounded-2xl bg-red-50 p-3 text-sm font-semibold text-red-700">{fallo}</p>}
@@ -184,8 +142,8 @@ export default function Ventas() {
             <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" />
             <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar cliente o producto..." style={{ paddingLeft: '2.75rem' }} />
           </div>
-          <div className="mb-4 grid grid-cols-3 gap-3 text-center">
-            {[['Ventas', resumen.n, 'text-vino-800'], ['Total', bs(resumen.total), 'text-green-700'], ['Por cobrar', bs(resumen.cobrar), 'text-amber-700']].map(([t, v, c]) => (
+          <div className="mb-4 grid grid-cols-2 gap-3 text-center">
+            {[['Ventas', resumen.n, 'text-vino-800'], ['Total', bs(resumen.total), 'text-green-700']].map(([t, v, c]) => (
               <div key={t} className="rounded-2xl bg-white p-3 shadow-card"><p className={`text-lg font-extrabold ${c}`}>{v}</p><p className="text-xs text-stone-500">{t}</p></div>
             ))}
           </div>
@@ -219,23 +177,6 @@ export default function Ventas() {
         </ul>
       )}
 
-      {tab === 'deudas' && (
-        <div className="space-y-5 pb-4">
-          {porCliente.map((g) => (
-            <section key={g.nombre}>
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <p className="font-bold text-vino-800">{g.nombre} <span className="text-amber-700">· {bs(g.saldo)}</span></p>
-                {g.tel && <a href={waLink(g.tel, `Hola ${g.nombre}, te recordamos tu saldo pendiente de ${bs(g.saldo)} en ${negocio || 'nuestra tienda'}. ¡Gracias!`)} target="_blank" rel="noopener noreferrer"
-                  className="flex items-center gap-1 rounded-full bg-green-500 px-3 py-1.5 text-xs font-bold text-white"><MessageCircle size={14} /> Recordar</a>}
-              </div>
-              <ul className="space-y-2">{g.ventas.map((v) => <VentaCard key={v.id} v={v} negocio={negocio} onChange={cargar} aviso={aviso} />)}</ul>
-            </section>
-          ))}
-          {deudas && !porCliente.length && <p className="py-12 text-center text-stone-500"><Wallet className="mx-auto mb-2 text-vino-300" /> Nadie te debe nada.</p>}
-        </div>
-      )}
-
-      {toast && <div className="fixed left-1/2 top-4 z-[60] -translate-x-1/2 rounded-full bg-vino-950 px-5 py-2.5 text-sm font-semibold text-white shadow-lift">{toast}</div>}
     </main>
   );
 }
