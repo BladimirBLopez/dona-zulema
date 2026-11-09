@@ -35,7 +35,7 @@ export async function POST(req) {
       await destroyImage(old[0].imagen_public_id);
     }
     await q`UPDATE productos SET categoria_id=${b.categoria_id}, nombre=${nombre},
-      precio_menor=${num(b.precio_menor)}, precio_mayor=${num(b.precio_mayor)},
+      precio_menor=${num(b.precio_menor)}, precio_mayor=${num(b.precio_mayor)}, mayor_desde=${num(b.mayor_desde)},
       unidad=${unidad}, disponible=${disp},
       costo=${num(b.costo)}, stock_min=${num(b.stock_min)},
       imagen_url=COALESCE(${b.imagen_url || null}, imagen_url),
@@ -49,13 +49,13 @@ export async function POST(req) {
     await q`
       WITH creado AS (
         INSERT INTO productos (
-          categoria_id, nombre, precio_menor, precio_mayor,
+          categoria_id, nombre, precio_menor, precio_mayor, mayor_desde,
           unidad, disponible, costo, stock, stock_min,
           imagen_url, imagen_public_id
         )
         VALUES (
           ${b.categoria_id}, ${nombre},
-          ${num(b.precio_menor)}, ${num(b.precio_mayor)},
+          ${num(b.precio_menor)}, ${num(b.precio_mayor)}, ${num(b.mayor_desde)},
           ${unidad}, ${disp},
           ${num(b.costo)}, ${stockInicial}, ${num(b.stock_min)},
           ${b.imagen_url || null}, ${b.imagen_public_id || null}

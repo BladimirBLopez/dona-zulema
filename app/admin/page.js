@@ -2,8 +2,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Search, Plus, Pencil, Trash2, X, ImagePlus, Lock } from 'lucide-react';
+import ProductoForm from '@/components/ProductoForm';
 
-const vacio = { id: null, nombre: '', categoria_id: '', precio_menor: '', precio_mayor: '', unidad: 'kg', disponible: true, costo: '', stock: '', stock_min: '', imagen_url: '', imagen_public_id: '' };
+const vacio = { id: null, nombre: '', categoria_id: '', precio_menor: '', precio_mayor: '', mayor_desde: '', unidad: 'kg', disponible: true, costo: '', stock: '', stock_min: '', imagen_url: '', imagen_public_id: '' };
 const bs = (v) => (v == null ? '—' : Number(v).toFixed(2));
 const mini = (u) => u.replace('/upload/', '/upload/f_auto,q_auto,w_160,h_160,c_fill/');
 const nz = (v) => (v == null || v === '' || isNaN(Number(v)) ? null : Number(v));
@@ -118,10 +119,10 @@ export default function Admin() {
     setBusy(true);
     const r = await fetch('/api/admin/stock', { method: 'POST', body: JSON.stringify({ producto_id: String(st.p.id), cantidad: delta, motivo: st.modo }) });
     setBusy(false);
-    if (r.ok) { setSt(null); aviso('Stock actualizado'); cargar(); } else aviso('No se pudo actualizar el stock');
+    if (r.ok) { setSt(null); setF((x) => (x && x.id === st.p.id ? { ...x, stock: Math.round(((Number(x.stock) || 0) + delta) * 1000) / 1000 } : x)); aviso('Stock actualizado'); cargar(); } else aviso('No se pudo actualizar el stock');
   }
 
-  const editar = (p) => setF({ ...p, precio_menor: p.precio_menor ?? '', precio_mayor: p.precio_mayor ?? '', costo: p.costo ?? '', stock: p.stock ?? '', stock_min: p.stock_min ?? '', imagen_url: p.imagen_url || '', imagen_public_id: p.imagen_public_id || '' });
+  const editar = (p) => setF({ ...p, precio_menor: p.precio_menor ?? '', precio_mayor: p.precio_mayor ?? '', mayor_desde: p.mayor_desde ?? '', costo: p.costo ?? '', stock: p.stock ?? '', stock_min: p.stock_min ?? '', imagen_url: p.imagen_url || '', imagen_public_id: p.imagen_public_id || '' });
 
   const lista = useMemo(() => {
     const t = q.trim().toLowerCase();
@@ -193,7 +194,7 @@ export default function Admin() {
             <div className="min-w-0 flex-1">
               <p className="truncate font-semibold">{p.nombre}</p>
               <p className="truncate text-xs text-stone-500">{p.categoria}</p>
-              <p className="mt-0.5 text-xs"><span className="text-vino-800">Menor Bs {bs(p.precio_menor)}</span> · <span className="text-amber-700">Mayor Bs {bs(p.precio_mayor)}</span></p>
+              <p className="mt-0.5 text-xs"><span className="font-semibold text-vino-800">{p.precio_menor == null ? 'Sin precio' : 'Bs ' + bs(p.precio_menor) + ' / ' + (p.unidad || 'unidad')}</span>{p.precio_mayor != null && <span className="text-amber-700">{' · ' + (p.mayor_desde != null ? 'desde ' + fmt(p.mayor_desde) + ' ' + (p.unidad || '') + ': ' : 'mayor: ') + 'Bs ' + bs(p.precio_mayor)}</span>}</p>
               <Info p={p} />
             </div>
             <div className="flex shrink-0 flex-col items-end gap-2">
@@ -211,66 +212,8 @@ export default function Admin() {
 
       <AnimatePresence>
         {f && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setF(null)}
-            className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 md:items-center">
-            <motion.form onSubmit={guardar} onClick={(e) => e.stopPropagation()}
-              initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }}
-              className="max-h-[92vh] w-full max-w-lg space-y-3 overflow-y-auto rounded-t-3xl bg-white p-5 md:rounded-3xl">
-              <div className="flex items-center justify-between">
-                <h2 className="font-serif text-2xl font-extrabold text-vino-800">{f.id ? 'Editar producto' : 'Nuevo producto'}</h2>
-                <button type="button" onClick={() => setF(null)} aria-label="Cerrar" className="grid h-9 w-9 place-items-center rounded-full bg-stone-100"><X size={18} /></button>
-              </div>
-
-              <label className="flex cursor-pointer items-center gap-3 rounded-2xl border-2 border-dashed border-vino-200 p-3 hover:bg-vino-50">
-                {f.imagen_url ? <img src={mini(f.imagen_url)} alt="" className="h-16 w-16 rounded-xl object-cover" /> : <span className="grid h-16 w-16 place-items-center rounded-xl bg-vino-50 text-vino-300"><ImagePlus size={24} /></span>}
-                <span className="text-sm font-semibold text-vino-800">{busy ? 'Subiendo...' : f.imagen_url ? 'Cambiar foto' : 'Subir foto'}</span>
-                <input type="file" accept="image/*" className="hidden" onChange={(e) => subir(e.target.files?.[0])} />
-              </label>
-
-              <input placeholder="Nombre del producto" value={f.nombre} onChange={(e) => setF({ ...f, nombre: e.target.value })} required />
-              <select value={f.categoria_id} onChange={(e) => setF({ ...f, categoria_id: e.target.value })} required>
-                <option value="">Categoría...</option>
-                {data.categorias.map((c) => <option key={c.id} value={c.id}>{c.linea} › {c.nombre}</option>)}
-              </select>
-              <div className="grid grid-cols-3 gap-2">
-                <input type="number" inputMode="decimal" step="0.01" min="0" placeholder="P. menor" value={f.precio_menor} onChange={(e) => setF({ ...f, precio_menor: e.target.value })} />
-                <input type="number" inputMode="decimal" step="0.01" min="0" placeholder="P. mayor" value={f.precio_mayor} onChange={(e) => setF({ ...f, precio_mayor: e.target.value })} />
-                <input placeholder="Unidad" value={f.unidad} onChange={(e) => setF({ ...f, unidad: e.target.value })} />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <label className="text-xs text-stone-500">{'Costo (Bs por ' + (f.unidad || 'unidad') + ')'}
-                  <input type="number" inputMode="decimal" step="0.01" min="0" value={f.costo} onChange={(e) => setF({ ...f, costo: e.target.value })} />
-                </label>
-                <label className="text-xs text-stone-500">Aviso de stock bajo
-                  <input type="number" inputMode="decimal" step="any" min="0" value={f.stock_min} onChange={(e) => setF({ ...f, stock_min: e.target.value })} />
-                </label>
-              </div>
-              {f.id ? (
-                <p className="rounded-xl bg-panel p-2 text-xs text-stone-600">{'Stock actual: ' + (nz(f.stock) == null ? 'sin control' : fmt(f.stock) + ' ' + (f.unidad || '')) + '. Para cambiarlo usa el botón Stock de la lista.'}</p>
-              ) : (
-                <label className="block text-xs text-stone-500">Stock inicial (opcional)
-                  <input type="number" inputMode="decimal" step="any" min="0" value={f.stock} onChange={(e) => setF({ ...f, stock: e.target.value })} />
-                </label>
-              )}
-              {gan(f.precio_menor, f.costo) != null && (
-                <p className={'rounded-xl p-2 text-center text-sm font-bold ' + (gan(f.precio_menor, f.costo) < 0 ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700')}>
-                  {'Ganancia al menor: Bs ' + gan(f.precio_menor, f.costo).toFixed(2) + ' por ' + (f.unidad || 'unidad') + (nz(f.costo) > 0 ? ' (' + Math.round((gan(f.precio_menor, f.costo) / nz(f.costo)) * 100) + '%)' : '')}
-                </p>
-              )}
-              {gan(f.precio_mayor, f.costo) != null && (
-                <p className={'rounded-xl p-2 text-center text-sm font-bold ' + (gan(f.precio_mayor, f.costo) < 0 ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-800')}>
-                  {'Ganancia al mayor: Bs ' + gan(f.precio_mayor, f.costo).toFixed(2) + ' por ' + (f.unidad || 'unidad') + (nz(f.costo) > 0 ? ' (' + Math.round((gan(f.precio_mayor, f.costo) / nz(f.costo)) * 100) + '%)' : '')}
-                </p>
-              )}
-              <div className="flex items-center justify-between rounded-2xl bg-panel p-3">
-                <span className="text-sm font-semibold">Mostrar en la tienda</span>
-                <Switch on={f.disponible} onClick={() => setF({ ...f, disponible: !f.disponible })} />
-              </div>
-              <button disabled={busy} className="w-full rounded-full bg-vino-800 py-3 font-bold text-white transition hover:bg-vino-700 disabled:opacity-50">
-                {busy ? 'Espera...' : 'Guardar'}
-              </button>
-            </motion.form>
-          </motion.div>
+          <ProductoForm f={f} setF={setF} categorias={data.categorias} busy={busy} onSubir={subir}
+            onGuardar={guardar} onCerrar={() => setF(null)} onStock={() => setSt({ p: f, modo: 'ingreso', cant: '' })} />
         )}
       </AnimatePresence>
 
