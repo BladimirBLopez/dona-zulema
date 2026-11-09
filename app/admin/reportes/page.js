@@ -3,11 +3,12 @@ import { useEffect, useState } from 'react';
 import { api, errMsg } from '@/lib/cliente';
 import { bs, qty, hoyBO } from '@/lib/fmt';
 
-const PER = [['7d', '7 días'], ['30d', '30 días'], ['mes', 'Este mes'], ['ant', 'Mes pasado']];
+const PER = [['hoy', 'Hoy'], ['7d', '7 días'], ['30d', '30 días'], ['mes', 'Este mes'], ['ant', 'Mes pasado']];
 const METODO = { efectivo: 'Efectivo', qr: 'QR', transferencia: 'Transferencia', fiado: 'Fiado' };
 
 function rango(p) {
   const hoy = hoyBO();
+  if (p === 'hoy') return [hoy, hoy];
   if (p === '7d') return [hoyBO(-6), hoy];
   if (p === '30d') return [hoyBO(-29), hoy];
   if (p === 'mes') return [hoy.slice(0, 8) + '01', hoy];
@@ -141,7 +142,7 @@ export default function Reportes() {
           </Caja>
 
           <Caja titulo="Por categoría"><Barras items={d.categorias} color="bg-oro-500" /></Caja>
-          <Caja titulo="Cómo te pagan"><Barras items={d.metodos.map((m) => ({ nombre: METODO[m.nombre] || m.nombre, total: m.total }))} color="bg-green-600" /></Caja>
+          <Caja titulo="Cobros por forma de pago"><Barras items={d.metodos.map((m) => ({ nombre: METODO[m.nombre] || m.nombre, total: m.total }))} color="bg-green-600" /></Caja>
           <Caja titulo="En qué gastas"><Barras items={d.gastos_cat} color="bg-amber-600" /></Caja>
 
           {r.por_cobrar > 0 && <p className="mt-3 text-center text-sm text-stone-500">Por cobrar de este período: <b className="text-amber-700">{bs(r.por_cobrar)}</b></p>}
