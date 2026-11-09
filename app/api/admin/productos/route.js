@@ -42,10 +42,37 @@ export async function POST(req) {
       imagen_public_id=COALESCE(${b.imagen_public_id || null}, imagen_public_id)
       WHERE id=${b.id}`;
   } else {
-    await q`INSERT INTO productos (categoria_id, nombre, precio_menor, precio_mayor, unidad, disponible, costo, stock, stock_min, imagen_url, imagen_public_id)
-      VALUES (${b.categoria_id}, ${nombre}, ${num(b.precio_menor)}, ${num(b.precio_mayor)}, ${unidad}, ${disp},
-      ${num(b.costo)}, ${num(b.stock)}, ${num(b.stock_min)},
-      ${b.imagen_url || null}, ${b.imagen_public_id || null})`;
+    const stockInicial = num(b.stock);
+    if (stockInicial !== null && (!Number.isFinite(stockInicial) || stockInicial < 0)) {
+      return NextResponse.json({ error: 'datos_invalidos' }, { status: 400 });
+    }
+    await q`
+      WITH creado AS (
+        INSERT INTO productos (
+          categoria_id, nombre, precio_menor, precio_mayor,
+          unidad, disponible, costo, stock, stock_min,
+          imagen_url, imagen_public_id
+        )
+        VALUES (
+          ${b.categoria_id}, ${nombre},
+          ${num(b.precio_menor)}, ${num(b.precio_mayor)},
+          ${unidad}, ${disp},
+          ${num(b.costo)}, ${stockInicial}, ${num(b.stock_min)},
+          ${b.imagen_url || null}, ${b.imagen_public_id || null}
+        )
+        RETURNING id, stock
+      ),
+      movimiento AS (
+        INSERT INTO stock_mov (producto_id, cantidad, motivo)
+        SELECT creado.id::text, creado.stock, 'ingreso'
+        FROM creado
+        WHERE creado.stock > 0
+        RETURNING id
+      )
+      SELECT creado.id,
+        (SELECT COUNT(*) FROM movimiento) AS movimientos
+      FROM creado`;
+
   }
   revalidatePath('/'); return NextResponse.json({ ok: true });
 }
