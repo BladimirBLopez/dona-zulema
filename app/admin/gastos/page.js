@@ -66,10 +66,10 @@ export default function Gastos() {
         {PER.map(([v, t]) => <button key={v} onClick={() => setPer(v)} className={chip(per === v)}>{t}</button>)}
       </div>
 
-      <div className="rounded-3xl bg-gradient-to-br from-vino-800 to-vino-950 p-5 text-white shadow-lift">
-        <p className="text-sm text-vino-200">Total gastado</p>
+      <div className="rounded-2xl border border-stone-200 bg-white p-5 text-stone-900">
+        <p className="text-sm text-stone-500">Total gastado</p>
         <p className="mt-1 text-4xl font-extrabold">{bs(total)}</p>
-        <p className="mt-1 text-xs text-vino-200">{lista ? lista.length : 0} {lista && lista.length === 1 ? 'gasto' : 'gastos'}</p>
+        <p className="mt-1 text-xs text-stone-500">{lista ? lista.length : 0} {lista && lista.length === 1 ? 'gasto' : 'gastos'}</p>
       </div>
 
       <div className="mt-3 space-y-3 rounded-3xl bg-white p-4 shadow-card">

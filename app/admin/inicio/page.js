@@ -21,7 +21,7 @@ function cabecera() {
   const h = (new Date().getUTCHours() + 20) % 24;
   const s = h < 12 ? 'Buenos días' : h < 19 ? 'Buenas tardes' : 'Buenas noches';
   const f = new Date().toLocaleDateString('es-BO', { weekday: 'long', day: 'numeric', month: 'long', timeZone: 'America/La_Paz' });
-  return { s, f };
+  return { s, f: f.charAt(0).toUpperCase() + f.slice(1) };
 }
 
 export default function Inicio() {
@@ -57,7 +57,7 @@ export default function Inicio() {
 
   return (
     <Page className="pb-6">
-      <p className="text-sm capitalize text-stone-500">{cab.f || '\u00a0'}</p>
+      <p className="text-sm text-stone-500">{cab.f || '\u00a0'}</p>
       <PageHeader title={cab.s || '\u00a0'}>
         <Btn href="/admin/ventas/nueva"><Plus size={16} /> Vender</Btn>
       </PageHeader>
@@ -79,26 +79,26 @@ export default function Inicio() {
 
       {d && (
         <div className="space-y-4">
-          <div className="rounded-3xl bg-gradient-to-br from-vino-800 to-vino-950 p-5 text-white shadow-lift md:p-6">
+          <div className="rounded-2xl border border-stone-200 bg-white p-5 text-stone-900 md:p-6">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="text-sm text-vino-200">Vendido hoy</p>
+                <p className="text-sm text-stone-500">Vendido hoy</p>
                 <p className="mt-1 text-4xl font-extrabold md:text-5xl">{bs(hoy.total)}</p>
               </div>
               {delta !== null && (
-                <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold ${delta >= 0 ? 'bg-green-400/20 text-green-200' : 'bg-red-400/20 text-red-200'}`}>
+                <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold ${delta >= 0 ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
                   {delta >= 0 ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
                   {delta >= 0 ? '+' : ''}{Math.round(delta)}% vs ayer
                 </span>
               )}
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3 text-sm">
-              <div className="rounded-2xl bg-white/10 p-3">
-                <p className="text-vino-200">Ventas</p>
+              <div className="rounded-xl bg-panel p-3">
+                <p className="text-stone-500">Ventas</p>
                 <p className="text-xl font-bold">{hoy.n}</p>
               </div>
-              <div className="rounded-2xl bg-white/10 p-3">
-                <p className="text-vino-200">Ganancia</p>
+              <div className="rounded-xl bg-panel p-3">
+                <p className="text-stone-500">Ganancia</p>
                 <p className="text-xl font-bold">{sinCosto ? '—' : bs(hoy.ganancia)}</p>
               </div>
             </div>
@@ -138,6 +138,7 @@ export default function Inicio() {
                   );
                 })}
               </div>
+              {sem === 0 && <p className="mt-3 text-center text-xs text-stone-500">Todavía no hay ventas en estos 7 días.</p>}
               <Link href="/admin/reportes" className="mt-3 block text-center text-sm font-bold text-vino-800">Ver reportes completos</Link>
             </Card>
 

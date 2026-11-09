@@ -1,9 +1,18 @@
+// ui-sobrio
 const TONOS = {
   vino: 'bg-vino-50 text-vino-800',
   verde: 'bg-green-50 text-green-700',
-  ambar: 'bg-oro-200/50 text-amber-900',
+  ambar: 'bg-amber-50 text-amber-800',
   rojo: 'bg-red-50 text-red-700',
   gris: 'bg-stone-100 text-stone-600',
+};
+
+const VALOR = {
+  vino: 'text-vino-800',
+  verde: 'text-green-700',
+  ambar: 'text-amber-700',
+  rojo: 'text-red-700',
+  gris: 'text-stone-900',
 };
 
 export function Page({ children, className = '' }) {
@@ -14,7 +23,7 @@ export function PageHeader({ title, sub, children }) {
   return (
     <div className="mb-5 flex items-start justify-between gap-3">
       <div className="min-w-0">
-        <h1 className="font-serif text-2xl font-extrabold leading-tight text-vino-800 md:text-3xl">{title}</h1>
+        <h1 className="text-xl font-bold leading-tight text-stone-900 md:text-2xl">{title}</h1>
         {sub && <p className="mt-0.5 text-sm text-stone-500">{sub}</p>}
       </div>
       {children && <div className="flex shrink-0 items-center gap-2">{children}</div>}
@@ -23,17 +32,17 @@ export function PageHeader({ title, sub, children }) {
 }
 
 export function Card({ children, className = '' }) {
-  return <section className={`rounded-3xl bg-white p-4 shadow-card ring-1 ring-vino-900/5 ${className}`}>{children}</section>;
+  return <section className={`rounded-2xl border border-stone-200 bg-white p-4 ${className}`}>{children}</section>;
 }
 
 export function Stat({ label, value, hint, tone = 'vino', icon: Icon }) {
   return (
-    <div className="rounded-3xl bg-white p-4 shadow-card ring-1 ring-vino-900/5">
-      <div className="flex items-center justify-between">
-        <p className="text-xs font-semibold uppercase tracking-wide text-stone-500">{label}</p>
-        {Icon && <span className={`grid h-8 w-8 place-items-center rounded-xl ${TONOS[tone]}`}><Icon size={16} /></span>}
+    <div className="h-full rounded-2xl border border-stone-200 bg-white p-3.5 sm:p-4">
+      <div className="flex items-center justify-between gap-2">
+        <p className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-wide text-stone-500 sm:text-[11px]">{label}</p>
+        {Icon && <span className={`hidden h-8 w-8 shrink-0 place-items-center rounded-lg sm:grid ${TONOS[tone]}`}><Icon size={16} /></span>}
       </div>
-      <p className="mt-2 text-2xl font-extrabold text-stone-900 md:text-3xl">{value}</p>
+      <p className={`mt-1.5 text-base font-bold leading-tight sm:text-2xl ${VALOR[tone] || VALOR.gris}`}>{value}</p>
       {hint && <p className="mt-0.5 text-xs text-stone-500">{hint}</p>}
     </div>
   );
@@ -45,8 +54,8 @@ export function Badge({ children, tone = 'gris' }) {
 
 export function Empty({ icon: Icon, title, text, children }) {
   return (
-    <div className="rounded-3xl border-2 border-dashed border-vino-200 bg-white/60 px-6 py-12 text-center">
-      {Icon && <span className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-vino-50 text-vino-400"><Icon size={22} /></span>}
+    <div className="rounded-2xl border border-dashed border-stone-300 bg-white px-6 py-10 text-center">
+      {Icon && <span className="mx-auto mb-3 grid h-11 w-11 place-items-center rounded-xl bg-stone-100 text-stone-400"><Icon size={20} /></span>}
       <p className="font-bold text-stone-800">{title}</p>
       {text && <p className="mx-auto mt-1 max-w-xs text-sm text-stone-500">{text}</p>}
       {children && <div className="mt-4">{children}</div>}
@@ -59,9 +68,9 @@ export function Skeleton({ className = 'h-20' }) {
 }
 
 const BTN = {
-  primary: 'bg-vino-800 text-white shadow hover:bg-vino-700',
+  primary: 'bg-vino-800 text-white hover:bg-vino-700',
   soft: 'bg-vino-50 text-vino-800 hover:bg-vino-100',
-  ghost: 'bg-stone-100 text-stone-700 hover:bg-stone-200',
+  ghost: 'bg-white text-stone-700 ring-1 ring-stone-300 hover:bg-stone-50',
   danger: 'bg-red-50 text-red-700 hover:bg-red-100',
 };
 

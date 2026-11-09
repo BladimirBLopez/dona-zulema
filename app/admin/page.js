@@ -246,7 +246,7 @@ export default function Admin() {
                 </label>
               </div>
               {f.id ? (
-                <p className="rounded-xl bg-crema p-2 text-xs text-stone-600">{'Stock actual: ' + (nz(f.stock) == null ? 'sin control' : fmt(f.stock) + ' ' + (f.unidad || '')) + '. Para cambiarlo usa el botón Stock de la lista.'}</p>
+                <p className="rounded-xl bg-panel p-2 text-xs text-stone-600">{'Stock actual: ' + (nz(f.stock) == null ? 'sin control' : fmt(f.stock) + ' ' + (f.unidad || '')) + '. Para cambiarlo usa el botón Stock de la lista.'}</p>
               ) : (
                 <label className="block text-xs text-stone-500">Stock inicial (opcional)
                   <input type="number" inputMode="decimal" step="any" min="0" value={f.stock} onChange={(e) => setF({ ...f, stock: e.target.value })} />
@@ -262,7 +262,7 @@ export default function Admin() {
                   {'Ganancia al mayor: Bs ' + gan(f.precio_mayor, f.costo).toFixed(2) + ' por ' + (f.unidad || 'unidad') + (nz(f.costo) > 0 ? ' (' + Math.round((gan(f.precio_mayor, f.costo) / nz(f.costo)) * 100) + '%)' : '')}
                 </p>
               )}
-              <div className="flex items-center justify-between rounded-2xl bg-crema p-3">
+              <div className="flex items-center justify-between rounded-2xl bg-panel p-3">
                 <span className="text-sm font-semibold">Mostrar en la tienda</span>
                 <Switch on={f.disponible} onClick={() => setF({ ...f, disponible: !f.disponible })} />
               </div>

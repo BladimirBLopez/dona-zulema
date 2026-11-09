@@ -44,3 +44,20 @@ html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
 @media (prefers-reduced-motion: reduce) { .skeleton, .fade-in { animation: none; } }
 
 .admin a:focus-visible, .admin button:focus-visible { outline: 2px solid #cf4237; outline-offset: 2px; }
+
+/* admin-sobrio */
+.admin .shadow-card { box-shadow: none; border: 1px solid #e5e7eb; }
+.admin .shadow-lift { box-shadow: 0 10px 30px -14px rgba(15, 23, 42, 0.35); }
+.admin .rounded-3xl { border-radius: 1rem; }
+.admin .rounded-2xl { border-radius: 0.875rem; }
+.admin .font-serif { font-family: var(--font-sans), system-ui, sans-serif; }
+.admin .font-brand { font-family: var(--font-serif), Georgia, serif; }
+.admin h1, .admin h2 { color: #1c1917; font-weight: 700; letter-spacing: -0.01em; }
+.admin input:not([type='checkbox']):not([type='file']),
+.admin select,
+.admin textarea { border-color: #d1d5db; }
+.admin input:not([type='checkbox']):not([type='file']):focus,
+.admin select:focus,
+.admin textarea:focus { border-color: #7a1414; box-shadow: 0 0 0 3px rgba(122, 20, 20, 0.12); }
+.admin a:focus-visible, .admin button:focus-visible { outline-color: #7a1414; }
+.skeleton { background: linear-gradient(90deg, #e5e7eb 25%, #f1f3f5 37%, #e5e7eb 63%); background-size: 400% 100%; }

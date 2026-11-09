@@ -214,7 +214,7 @@ export default function NuevaVenta() {
 
             <ul className="space-y-2">
               {lineas.map((l, i) => (
-                <li key={l.producto_id + i} className="rounded-2xl bg-crema p-3">
+                <li key={l.producto_id + i} className="rounded-2xl bg-panel p-3">
                   <div className="flex items-start justify-between gap-2">
                     <p className="font-semibold">{l.nombre}</p>
                     <button onClick={() => setLineas((ls) => ls.filter((_, x) => x !== i))} aria-label="Quitar" className="text-red-600"><Trash2 size={16} /></button>

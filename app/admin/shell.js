@@ -56,19 +56,19 @@ export default function Shell({ children }) {
     return () => { document.body.style.overflow = ''; window.removeEventListener('keydown', esc); };
   }, [mas]);
 
-  if (!ok) return <div className="admin min-h-screen bg-crema">{children}</div>;
+  if (!ok) return <div className="admin min-h-screen bg-panel">{children}</div>;
 
   const tab = (a) => `flex flex-col items-center gap-0.5 py-1.5 text-[11px] font-semibold ${a ? 'text-vino-800' : 'text-stone-500'}`;
   const pill = (a) => `grid h-7 w-12 place-items-center rounded-full transition ${a ? 'bg-vino-100' : ''}`;
   const item = (a) => `flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${a ? 'bg-oro-400 text-vino-950 shadow-sm' : 'text-vino-100 hover:bg-white/10'}`;
 
   return (
-    <div className="admin min-h-screen bg-crema">
+    <div className="admin min-h-screen bg-panel">
       <aside className="fixed inset-y-0 left-0 hidden w-64 flex-col overflow-y-auto bg-vino-950 p-5 text-white md:flex">
         <div className="mb-7 flex items-center gap-3">
           <Marca N={marca} />
           <div className="min-w-0">
-            <p className="truncate font-serif text-lg font-extrabold leading-none">{marca.nombre}</p>
+            <p className="truncate font-brand text-lg font-extrabold leading-none">{marca.nombre}</p>
             <p className="mt-1 text-xs text-vino-200">Panel de administración</p>
           </div>
         </div>
@@ -134,11 +134,11 @@ export default function Shell({ children }) {
             </div>
             <div className="grid grid-cols-3 gap-3">
               {EXTRA.map(([href, t, Icon]) => (
-                <Link key={href} href={href} className={`flex flex-col items-center gap-2 rounded-2xl p-4 text-center text-xs font-bold ${on(href) ? 'bg-vino-100 text-vino-800' : 'bg-crema text-stone-700'}`}>
+                <Link key={href} href={href} className={`flex flex-col items-center gap-2 rounded-2xl p-4 text-center text-xs font-bold ${on(href) ? 'bg-vino-100 text-vino-800' : 'bg-panel text-stone-700'}`}>
                   <Icon size={22} /> {t}
                 </Link>
               ))}
-              <a href="/" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 rounded-2xl bg-crema p-4 text-center text-xs font-bold text-stone-700"><ExternalLink size={22} /> Ver sitio</a>
+              <a href="/" target="_blank" rel="noopener noreferrer" className="flex flex-col items-center gap-2 rounded-2xl bg-panel p-4 text-center text-xs font-bold text-stone-700"><ExternalLink size={22} /> Ver sitio</a>
               <a href="/api/admin/logout" className="flex flex-col items-center gap-2 rounded-2xl bg-red-50 p-4 text-center text-xs font-bold text-red-700"><LogOut size={22} /> Salir</a>
             </div>
           </div>

@@ -60,7 +60,7 @@ function VentaCard({ v, negocio, onChange, aviso }) {
             ))}
             {v.descuento > 0 && <li className="flex justify-between text-stone-500"><span>Descuento</span><span>−{bs(v.descuento)}</span></li>}
           </ul>
-          {v.nota && <p className="rounded-xl bg-crema p-2 text-xs text-stone-600">{v.nota}</p>}
+          {v.nota && <p className="rounded-xl bg-panel p-2 text-xs text-stone-600">{v.nota}</p>}
           <p className="text-xs text-stone-500">Venta #{v.id}{v.cliente_tel ? ' · ' + v.cliente_tel : ''}</p>
 
           {!anulada && saldo > 0.001 && (
