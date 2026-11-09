@@ -11,12 +11,15 @@ const Inicio = (p) => <Svg {...p}><path d="M3 10.5 12 3l9 7.5" /><path d="M5 9.5
 const Reportes = (p) => <Svg {...p}><path d="M4 20V10" /><path d="M10 20V4" /><path d="M16 20v-7" /><path d="M22 20H2" /></Svg>;
 const Mas = (p) => <Svg {...p}><circle cx="5" cy="12" r="1.5" /><circle cx="12" cy="12" r="1.5" /><circle cx="19" cy="12" r="1.5" /></Svg>;
 
+const Costos = (p) => <Svg {...p}><path d="M8 6h13" /><path d="M8 12h13" /><path d="M8 18h13" /><path d="M3 6h.01" /><path d="M3 12h.01" /><path d="M3 18h.01" /></Svg>;
+
 const LINKS = [
   ['/admin/inicio', 'Inicio', Inicio],
   ['/admin', 'Productos', Package],
   ['/admin/ventas', 'Ventas', ShoppingCart],
   ['/admin/reportes', 'Reportes', Reportes],
   ['/admin/gastos', 'Gastos', Wallet],
+  ['/admin/costos', 'Costos', Costos],
   ['/admin/categorias', 'Categorías', Tags],
   ['/admin/banners', 'Ofertas', Megaphone],
   ['/admin/negocio', 'Negocio', Store],
