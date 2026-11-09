@@ -1,11 +1,10 @@
 import { Beneficios, Info } from './secciones';
+import { getNegocio, makeWa } from '@/lib/negocio';
 import { sql } from '@/lib/db';
 import { thumb } from '@/lib/cloudinary';
 
 export const revalidate = 60;
 
-const WA = '59175284955';
-const wa = (t) => `https://wa.me/${WA}?text=${encodeURIComponent(t)}`;
 const slug = (s) => s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-');
 const bs = (v) => (v == null ? null : 'Bs ' + Number(v).toFixed(2));
 const serif = { fontFamily: 'var(--font-serif), Georgia, serif' };
@@ -39,6 +38,8 @@ function WaIcon({ className = 'h-5 w-5' }) {
 }
 
 export default async function Home() {
+  const N = await getNegocio();
+  const wa = makeWa(N.whatsapp);
   let lineas = [];
   try { lineas = await getData(); } catch (e) { console.error(e); }
   const cats = lineas.flatMap((l) => l.cats.map((c) => c.nombre));
@@ -47,7 +48,7 @@ export default async function Home() {
     <>
       <header className="sticky top-0 z-30 border-b border-amber-200/60 bg-[#7a1414]/95 text-white backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          <a href="#" className="text-xl font-extrabold tracking-tight" style={serif}>Doña Zulema</a>
+          <a href="#" className="text-xl font-extrabold tracking-tight" style={serif}>{N.nombre}</a>
           <a href={wa('Hola, quiero hacer un pedido')} className="flex items-center gap-2 rounded-full bg-green-500 px-4 py-2 text-sm font-bold shadow">
             <WaIcon className="h-4 w-4" /> Pedir
           </a>
@@ -65,7 +66,7 @@ export default async function Home() {
 
       <section className="relative overflow-hidden bg-gradient-to-br from-[#5e0d0d] via-[#8b1a1a] to-[#b02a1e] text-white">
         <div className="mx-auto max-w-6xl px-4 py-14 text-center md:py-24">
-          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-amber-300">Quesería · Fiambrería · Pollería</p>
+          <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-amber-300">{N.slogan}</p>
           <h1 className="text-4xl font-extrabold leading-tight md:text-6xl" style={serif}>
             Frescura y sabor,<br />al por mayor y menor
           </h1>
@@ -85,7 +86,7 @@ export default async function Home() {
         <div className="h-2 bg-gradient-to-r from-amber-400 via-yellow-300 to-amber-400" />
       </section>
 
-      <Beneficios />
+      <Beneficios n={N} />
       <main id="catalogo" className="mx-auto max-w-6xl px-4 py-10">
         {lineas.length === 0 && (
           <p className="py-16 text-center text-stone-500">Pronto tendremos el catálogo aquí. Mientras tanto, escríbenos por WhatsApp.</p>
@@ -129,12 +130,12 @@ export default async function Home() {
         ))}
       </main>
 
-      <Info />
+      <Info n={N} wa={wa} />
       <footer className="bg-[#3b0909] py-10 text-center text-amber-100">
-        <p className="text-2xl font-extrabold" style={serif}>Doña Zulema</p>
+        <p className="text-2xl font-extrabold" style={serif}>{N.nombre}</p>
         <p className="mt-1 text-sm text-amber-200/80">Quesería y Fiambrería · Frial Jurado</p>
         <a href={wa('Hola, quiero hacer un pedido')} className="mt-4 inline-flex items-center gap-2 rounded-full bg-green-500 px-6 py-2 font-bold text-white">
-          <WaIcon className="h-4 w-4" /> 75284955
+          <WaIcon className="h-4 w-4" /> {N.whatsapp.replace(/^591/, "")}
         </a>
       </footer>
 
