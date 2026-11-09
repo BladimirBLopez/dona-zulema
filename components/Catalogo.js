@@ -19,7 +19,7 @@ function Card({ p, qty, onAdd }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-40px' }}
       transition={{ duration: 0.35 }}
-      className="group flex flex-col overflow-hidden rounded-3xl bg-white shadow-card ring-1 ring-vino-900/5 transition hover:-translate-y-1 hover:shadow-lift"
+      className="group relative flex flex-col overflow-hidden rounded-3xl bg-white shadow-card ring-1 ring-vino-900/5 transition hover:-translate-y-1 hover:shadow-lift"
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-oro-200/60 to-vino-100">
         {p.img ? (
@@ -30,13 +30,13 @@ function Card({ p, qty, onAdd }) {
         <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-vino-800 backdrop-blur">{p.categoria}</span>
       </div>
       <div className="flex flex-1 flex-col p-4">
-        <h4 className="font-semibold leading-snug text-stone-900"><Link href={`/producto/${p.id}`} className="hover:text-vino-700">{p.nombre}</Link></h4>
+        <h4 className="font-semibold leading-snug text-stone-900"><Link href={`/producto/${p.id}`} className="after:absolute after:inset-0 hover:text-vino-700">{p.nombre}</Link></h4>
         <div className="mt-3 flex flex-wrap gap-2 text-xs">
           {menor && <span className="rounded-lg bg-vino-50 px-2 py-1 text-vino-800">Menor <b>{menor}</b>/{p.unidad}</span>}
           {mayor && <span className="rounded-lg bg-oro-200/50 px-2 py-1 text-amber-900">Mayor <b>{mayor}</b>/{p.unidad}</span>}
           {!menor && !mayor && <span className="rounded-lg bg-stone-100 px-2 py-1 text-stone-500">Consultar precio</span>}
         </div>
-        <div className="mt-auto pt-4">
+        <div className="relative z-10 mt-auto pt-4">
           {qty ? (
             <div className="flex items-center justify-between rounded-full bg-vino-800 p-1 text-white">
               <button onClick={() => onAdd(p, -st)} aria-label="Quitar" className="grid h-9 w-9 place-items-center rounded-full hover:bg-white/15"><Minus size={16} /></button>
