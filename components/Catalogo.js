@@ -1,5 +1,5 @@
 'use client';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Search, Plus, Minus, X, ShoppingBag, MessageCircle, Milk, Drumstick, Trash2, PackageOpen } from 'lucide-react';
 
@@ -60,6 +60,7 @@ export default function Catalogo({ productos, wa }) {
   const [open, setOpen] = useState(false);
   const [tipo, setTipo] = useState('menor');
   const [nota, setNota] = useState('');
+  const ultimo = useRef({ k: '', t: 0 });
 
   const lineas = useMemo(() => {
     const m = new Map();
@@ -108,6 +109,22 @@ export default function Catalogo({ productos, wa }) {
     nota.trim() ? 'Nota: ' + nota.trim() : '',
   ].filter(Boolean).join('\n');
   const link = `https://wa.me/${wa}?text=${encodeURIComponent(msg)}`;
+
+  function guardarPedido() {
+    try {
+      const lista = items.map(({ p, qty }) => ({ id: p.id, qty }));
+      const k = JSON.stringify(lista);
+      const ahora = Date.now();
+      if (ultimo.current.k === k && ahora - ultimo.current.t < 120000) return;
+      ultimo.current = { k, t: ahora };
+      fetch('/api/pedido', {
+        method: 'POST',
+        keepalive: true,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: lista }),
+      }).catch(() => {});
+    } catch {}
+  }
 
   const tab = (act) => `whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition ${act ? 'bg-vino-800 text-white shadow' : 'bg-white text-stone-700 ring-1 ring-stone-200 hover:bg-vino-50'}`;
   const chip = (act) => `whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold transition ${act ? 'bg-oro-400 text-vino-950' : 'bg-white text-stone-600 ring-1 ring-stone-200'}`;
@@ -238,7 +255,7 @@ export default function Catalogo({ productos, wa }) {
               />
               <p className="mt-2 text-xs text-stone-500">El precio final se confirma por WhatsApp.</p>
 
-              <a href={link} target="_blank" rel="noopener noreferrer"
+              <a href={link} onClick={guardarPedido} target="_blank" rel="noopener noreferrer"
                 className="mt-4 flex items-center justify-center gap-2 rounded-full bg-green-500 py-3.5 font-bold text-white shadow-lg transition hover:bg-green-600">
                 <MessageCircle size={20} /> Enviar pedido por WhatsApp
               </a>
