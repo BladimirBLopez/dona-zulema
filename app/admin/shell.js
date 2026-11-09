@@ -2,10 +2,11 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Package, Tags, Megaphone, Store, KeyRound, LogOut, ExternalLink } from 'lucide-react';
+import { Package, ShoppingCart, Tags, Megaphone, Store, KeyRound, LogOut, ExternalLink } from 'lucide-react';
 
 const LINKS = [
   ['/admin', 'Productos', Package],
+  ['/admin/ventas', 'Ventas', ShoppingCart],
   ['/admin/categorias', 'Categorías', Tags],
   ['/admin/banners', 'Ofertas', Megaphone],
   ['/admin/negocio', 'Negocio', Store],
@@ -34,7 +35,7 @@ export default function Shell({ children }) {
         </div>
         <nav className="space-y-1">
           {LINKS.map(([href, t, Icon]) => (
-            <Link key={href} href={href} className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition ${path === href ? 'bg-oro-400 text-vino-950' : 'text-vino-100 hover:bg-white/10'}`}>
+            <Link key={href} href={href} className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold transition ${(href === '/admin' ? path === href : path.startsWith(href)) ? 'bg-oro-400 text-vino-950' : 'text-vino-100 hover:bg-white/10'}`}>
               <Icon size={18} /> {t}
             </Link>
           ))}
@@ -57,9 +58,9 @@ export default function Shell({ children }) {
         <div className="mx-auto max-w-4xl pb-28 pt-2 md:pb-10">{children}</div>
       </div>
 
-      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-5 border-t border-stone-200 bg-white/95 backdrop-blur md:hidden">
+      <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-6 border-t border-stone-200 bg-white/95 backdrop-blur md:hidden">
         {LINKS.map(([href, t, Icon]) => (
-          <Link key={href} href={href} className={`flex flex-col items-center gap-1 py-2.5 text-[11px] font-semibold ${path === href ? 'text-vino-800' : 'text-stone-500'}`}>
+          <Link key={href} href={href} className={`flex flex-col items-center gap-1 py-2.5 text-[10px] font-semibold ${(href === '/admin' ? path === href : path.startsWith(href)) ? 'text-vino-800' : 'text-stone-500'}`}>
             <Icon size={20} /> {t}
           </Link>
         ))}
