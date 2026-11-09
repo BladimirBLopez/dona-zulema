@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { isAdmin } from '@/lib/admin';
@@ -44,7 +45,7 @@ export async function POST(req) {
       VALUES (${b.categoria_id}, ${nombre}, ${num(b.precio_menor)}, ${num(b.precio_mayor)}, ${unidad}, ${disp},
       ${b.imagen_url || null}, ${b.imagen_public_id || null})`;
   }
-  return NextResponse.json({ ok: true });
+  revalidatePath('/'); return NextResponse.json({ ok: true });
 }
 
 export async function DELETE(req) {
@@ -53,5 +54,14 @@ export async function DELETE(req) {
   const q = sql();
   const r = await q`DELETE FROM productos WHERE id=${id} RETURNING imagen_public_id`;
   if (r[0]?.imagen_public_id) await destroyImage(r[0].imagen_public_id);
+  revalidatePath('/'); return NextResponse.json({ ok: true });
+}
+
+export async function PUT(req) {
+  if (!(await isAdmin(req))) return deny();
+  const b = await req.json().catch(() => ({}));
+  if (!b.id) return NextResponse.json({ error: 'datos_invalidos' }, { status: 400 });
+  await sql()`UPDATE productos SET disponible = ${b.disponible === true} WHERE id = ${b.id}`;
+  revalidatePath('/');
   return NextResponse.json({ ok: true });
 }

@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { isAdmin } from '@/lib/admin';
@@ -33,7 +34,7 @@ export async function POST(req) {
       VALUES (${b.linea_id}, ${nombre}, ${slug},
       (SELECT COALESCE(MAX(orden), 0) + 1 FROM categorias WHERE linea_id = ${b.linea_id}))`;
   }
-  return NextResponse.json({ ok: true });
+  revalidatePath('/'); return NextResponse.json({ ok: true });
 }
 
 export async function DELETE(req) {
@@ -43,5 +44,5 @@ export async function DELETE(req) {
   const [{ n }] = await q`SELECT count(*)::int AS n FROM productos WHERE categoria_id = ${id}`;
   if (n > 0) return NextResponse.json({ error: 'tiene_productos' }, { status: 409 });
   await q`DELETE FROM categorias WHERE id = ${id}`;
-  return NextResponse.json({ ok: true });
+  revalidatePath('/'); return NextResponse.json({ ok: true });
 }

@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { isAdmin } from '@/lib/admin';
@@ -16,5 +17,5 @@ export async function POST(req) {
   const v = JSON.stringify(limpiar(b));
   await sql()`INSERT INTO app_settings (key, value, updated_at) VALUES ('negocio', ${v}, now())
     ON CONFLICT (key) DO UPDATE SET value = ${v}, updated_at = now()`;
-  return NextResponse.json({ ok: true });
+  revalidatePath('/'); return NextResponse.json({ ok: true });
 }

@@ -48,6 +48,11 @@ export default function Admin() {
     if (r.ok) { setF(vacio); setMsg('Guardado'); cargar(); } else setMsg('Error al guardar');
   }
 
+  async function alternar(p) {
+    await fetch("/api/admin/productos", { method: "PUT", body: JSON.stringify({ id: p.id, disponible: !p.disponible }) });
+    cargar();
+  }
+
   async function borrar(id) {
     if (!confirm('¿Borrar este producto?')) return;
     await fetch('/api/admin/productos?id=' + id, { method: 'DELETE' });
@@ -96,10 +101,10 @@ export default function Admin() {
         {data.productos.map((p) => (
           <li key={p.id} className="flex items-center justify-between rounded bg-white p-3 shadow">
             <div>
-              <b>{p.nombre}</b> {!p.disponible && <span className="text-xs text-red-600">(agotado)</span>}
+              <b>{p.nombre}</b> {!p.disponible && <span className="text-xs text-red-600">(oculto en la tienda)</span>}
               <div className="text-xs text-stone-500">{p.linea} › {p.categoria} · Bs {p.precio_menor ?? '-'} / {p.precio_mayor ?? '-'}</div>
             </div>
-            <div className="flex gap-2 text-sm">
+            <div className="flex gap-2 text-sm"><button onClick={() => alternar(p)} className={p.disponible ? "text-amber-700" : "font-bold text-green-700"}>{p.disponible ? "Ocultar" : "Mostrar"}</button>
               <button onClick={() => { setF({ ...p, precio_menor: p.precio_menor ?? '', precio_mayor: p.precio_mayor ?? '' }); window.scrollTo(0, 0); }} className="text-blue-700">Editar</button>
               <button onClick={() => borrar(p.id)} className="text-red-700">Borrar</button>
             </div>
