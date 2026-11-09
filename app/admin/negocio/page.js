@@ -1,4 +1,5 @@
 'use client';
+import ImageUpload from '@/components/ImageUpload';
 import { useEffect, useState } from 'react';
 
 const inp = 'w-full rounded border p-2';
@@ -38,6 +39,10 @@ export default function Negocio() {
   return (
     <form onSubmit={guardar} className="mx-auto max-w-2xl p-4">
       <h1 className="mb-4 text-2xl font-bold text-[#7a1414]">Datos del negocio</h1>
+
+      <Box t="Logo">
+        <ImageUpload value={n.logo} label="Logo del negocio" onChange={(u) => set("logo", u)} />
+      </Box>
 
       <Box t="General">
         <L t="Nombre"><input className={inp} value={n.nombre} onChange={(e) => set('nombre', e.target.value)} /></L>

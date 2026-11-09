@@ -1,19 +1,29 @@
 import './globals.css';
 import { Playfair_Display, Inter } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
+import { SITE } from '@/lib/site';
 
 const serif = Playfair_Display({ subsets: ['latin'], variable: '--font-serif', weight: ['700', '800'] });
 const sans = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
+const title = 'Doña Zulema | Quesos, fiambres, lácteos y pollo';
+const description = 'Quesos, fiambres Sofía, lácteos PIL, pollo y menudencias al por mayor y menor. Pedidos por WhatsApp.';
+
 export const metadata = {
-  title: 'Doña Zulema | Quesos, fiambres, lácteos y pollo',
-  description: 'Quesos, fiambres Sofía, lácteos PIL, pollo y menudencias al por mayor y menor.',
+  metadataBase: new URL(SITE),
+  title,
+  description,
+  openGraph: { title, description, type: 'website', locale: 'es_BO', siteName: 'Doña Zulema' },
 };
+
+export const viewport = { themeColor: '#3b0909' };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="es" className={`${serif.variable} ${sans.variable} scroll-smooth`}>
-      <body className="bg-[#fbf6ec] text-stone-800 antialiased" style={{ fontFamily: 'var(--font-sans), system-ui, sans-serif' }}>
+    <html lang="es" className={`${serif.variable} ${sans.variable}`}>
+      <body className="bg-crema font-sans text-stone-800 antialiased">
         {children}
+        <Analytics />
       </body>
     </html>
   );

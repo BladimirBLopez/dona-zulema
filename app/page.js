@@ -1,3 +1,7 @@
+import { getBanners } from '@/lib/banners';
+import Ofertas from '@/components/Ofertas';
+import JsonLd from '@/components/JsonLd';
+import Marca from '@/components/Marca';
 import { Scale, Snowflake, MessageCircle } from 'lucide-react';
 import { sql } from '@/lib/db';
 import { thumb } from '@/lib/cloudinary';
@@ -33,6 +37,7 @@ async function getProductos() {
 export default async function Home() {
   const N = await getNegocio();
   const wa = makeWa(N.whatsapp);
+  const banners = await getBanners();
   let productos = [];
   try { productos = await getProductos(); } catch (e) { console.error('catalogo', e?.message); }
   const pedido = wa('Hola, quiero hacer un pedido');
@@ -43,7 +48,7 @@ export default async function Home() {
       <header className="sticky top-0 z-30 border-b border-white/10 bg-vino-950/95 text-white backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
           <a href="#" className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded-full bg-oro-400 font-serif text-lg font-extrabold text-vino-950">{N.nombre.charAt(0)}</span>
+            <Marca N={N} />
             <span className="font-serif text-xl font-extrabold tracking-tight">{N.nombre}</span>
           </a>
           <a href={pedido} className="flex items-center gap-2 rounded-full bg-green-500 px-4 py-2 text-sm font-bold shadow transition hover:bg-green-600">
@@ -80,12 +85,14 @@ export default async function Home() {
         </svg>
       </section>
 
+      <JsonLd n={N} />
+      <Ofertas banners={banners} wa={N.whatsapp} />
       <Catalogo productos={productos} wa={N.whatsapp} />
       <Beneficios n={N} />
       <Info n={N} wa={wa} />
 
       <footer className="bg-vino-950 pb-24 pt-12 text-center text-vino-100">
-        <span className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-oro-400 font-serif text-xl font-extrabold text-vino-950">{N.nombre.charAt(0)}</span>
+        <Marca N={N} big />
         <p className="font-serif text-2xl font-extrabold text-white">{N.nombre}</p>
         {N.slogan && <p className="mt-1 text-sm text-vino-200">{N.slogan}</p>}
         <a href={pedido} className="mt-5 inline-flex items-center gap-2 rounded-full bg-green-500 px-6 py-2.5 font-bold text-white">
