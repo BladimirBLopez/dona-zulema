@@ -64,6 +64,21 @@ export default function ProductoForm({ f, setF, categorias, busy, onSubir, onGua
   const g1 = precio != null && costo != null ? Math.round((precio - costo) * 100) / 100 : null;
   const g2 = esp && pEsp != null && costo != null ? Math.round((pEsp - costo) * 100) / 100 : null;
   const falta = !String(f.nombre).trim() || !f.categoria_id;
+  const nuevo = !f.id;
+
+  function irA(i) {
+    if (nuevo && tab === 0 && i > 0 && falta) {
+      setIntento(true);
+      return setMsg('Escribe el nombre y elige la sección para continuar.');
+    }
+    setMsg('');
+    setTab(i);
+  }
+
+  function cerrar() {
+    if (nuevo && String(f.nombre).trim() && !confirm('¿Salir sin guardar este producto?')) return;
+    onCerrar();
+  }
 
   function alternarEsp() {
     if (esp) setF({ ...f, precio_mayor: '', mayor_desde: '' });
@@ -89,7 +104,7 @@ export default function ProductoForm({ f, setF, categorias, busy, onSubir, onGua
   const chip = (a) => `rounded-xl py-2.5 text-sm font-semibold transition ${a ? 'bg-vino-800 text-white' : 'bg-stone-100 text-stone-700'}`;
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onCerrar}
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={cerrar}
       className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 md:items-center">
       <motion.form onSubmit={enviar} noValidate
         onKeyDown={(e) => { if (e.key === 'Enter' && e.target.tagName === 'INPUT') e.preventDefault(); }}
@@ -102,14 +117,14 @@ export default function ProductoForm({ f, setF, categorias, busy, onSubir, onGua
             <div className="min-w-0">
               <h2 className="font-serif text-2xl font-extrabold text-vino-800">{f.id ? 'Editar producto' : 'Nuevo producto'}</h2>
               <p className="truncate text-sm text-stone-500">
-                {String(f.nombre).trim() || 'Sin nombre todavía'}{precio != null ? ' · Bs ' + dinero(precio) + ' / ' + u : ''}
+                {nuevo ? 'Paso ' + (tab + 1) + ' de 3 · ' : ''}{String(f.nombre).trim() || 'Sin nombre todavía'}{precio != null ? ' · Bs ' + dinero(precio) + ' / ' + u : ''}
               </p>
             </div>
-            <button type="button" onClick={onCerrar} aria-label="Cerrar" className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-stone-100"><X size={18} /></button>
+            <button type="button" onClick={cerrar} aria-label="Cerrar" className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-stone-100"><X size={18} /></button>
           </div>
           <div className="mt-4 grid grid-cols-3 gap-1 rounded-full bg-stone-100 p-1">
             {TABS.map((t, i) => (
-              <button key={t} type="button" onClick={() => { setTab(i); setMsg(''); }} className={tabCls(tab === i)}>
+              <button key={t} type="button" onClick={() => irA(i)} className={tabCls(tab === i)}>
                 {t}
                 {i === 0 && intento && falta && <span className="absolute right-2 top-1.5 h-2 w-2 rounded-full bg-red-500" />}
               </button>
@@ -132,11 +147,11 @@ export default function ProductoForm({ f, setF, categorias, busy, onSubir, onGua
               </label>
 
               <Campo label="Nombre del producto">
-                <input placeholder="Ej: Queso calceño" value={f.nombre} onChange={(e) => set('nombre', e.target.value)} />
+                <input placeholder="Ej: Queso calceño" value={f.nombre} onChange={(e) => set('nombre', e.target.value)} className={intento && !String(f.nombre).trim() ? '!border-red-500' : ''} />
               </Campo>
 
               <Campo label="¿En qué sección de la tienda aparece?">
-                <select value={f.categoria_id} onChange={(e) => set('categoria_id', e.target.value)}>
+                <select value={f.categoria_id} onChange={(e) => set('categoria_id', e.target.value)} className={intento && !f.categoria_id ? '!border-red-500' : ''}>
                   <option value="">Elige una sección...</option>
                   {categorias.map((c) => <option key={c.id} value={c.id}>{c.linea} › {c.nombre}</option>)}
                 </select>
@@ -256,17 +271,18 @@ export default function ProductoForm({ f, setF, categorias, busy, onSubir, onGua
         <div className="border-t border-stone-100 bg-white px-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3">
           {msg && <p className="mb-2 text-center text-sm font-semibold text-red-600">{msg}</p>}
           <div className="flex gap-2">
-            {tab > 0 && (
-              <button type="button" onClick={() => setTab(tab - 1)} aria-label="Atrás" className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-stone-100"><ChevronLeft size={20} /></button>
+            {nuevo && tab > 0 && (
+              <button type="button" onClick={() => irA(tab - 1)} aria-label="Atrás" className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-stone-100"><ChevronLeft size={20} /></button>
             )}
-            {tab < 2 && (
-              <button type="button" onClick={() => setTab(tab + 1)} className="flex h-12 flex-1 items-center justify-center gap-1 rounded-full bg-vino-50 font-bold text-vino-800">
+            {nuevo && tab < 2 ? (
+              <button type="button" onClick={() => irA(tab + 1)} className="flex h-12 flex-1 items-center justify-center gap-1 rounded-full bg-vino-800 font-bold text-white transition hover:bg-vino-700">
                 Siguiente <ChevronRight size={18} />
               </button>
+            ) : (
+              <button disabled={busy} className="h-12 flex-1 rounded-full bg-vino-800 font-bold text-white transition hover:bg-vino-700 disabled:opacity-50">
+                {busy ? 'Espera...' : nuevo ? 'Guardar producto' : 'Guardar cambios'}
+              </button>
             )}
-            <button disabled={busy} className={`h-12 rounded-full bg-vino-800 font-bold text-white transition hover:bg-vino-700 disabled:opacity-50 ${tab < 2 ? 'px-6' : 'flex-1'}`}>
-              {busy ? 'Espera...' : 'Guardar'}
-            </button>
           </div>
         </div>
       </motion.form>
