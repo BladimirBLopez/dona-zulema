@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { X, ImagePlus, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -53,6 +53,7 @@ export default function ProductoForm({ f, setF, categorias, busy, onSubir, onGua
   const [msg, setMsg] = useState('');
   const [intento, setIntento] = useState(false);
   const [esp, setEsp] = useState(nz(f.precio_mayor) != null);
+  const quiereGuardar = useRef(false);
 
   const set = (k, v) => setF({ ...f, [k]: v });
   const u = f.unidad || 'unidad';
@@ -86,6 +87,8 @@ export default function ProductoForm({ f, setF, categorias, busy, onSubir, onGua
   }
 
   function enviar(e) {
+    if (!quiereGuardar.current) { e.preventDefault(); return; }
+    quiereGuardar.current = false;
     e.preventDefault();
     if (falta) {
       setIntento(true);
@@ -275,11 +278,11 @@ export default function ProductoForm({ f, setF, categorias, busy, onSubir, onGua
               <button type="button" onClick={() => irA(tab - 1)} aria-label="Atrás" className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-stone-100"><ChevronLeft size={20} /></button>
             )}
             {nuevo && tab < 2 ? (
-              <button type="button" onClick={() => irA(tab + 1)} className="flex h-12 flex-1 items-center justify-center gap-1 rounded-full bg-vino-800 font-bold text-white transition hover:bg-vino-700">
+              <button key="siguiente" type="button" onClick={() => irA(tab + 1)} className="flex h-12 flex-1 items-center justify-center gap-1 rounded-full bg-vino-800 font-bold text-white transition hover:bg-vino-700">
                 Siguiente <ChevronRight size={18} />
               </button>
             ) : (
-              <button disabled={busy} className="h-12 flex-1 rounded-full bg-vino-800 font-bold text-white transition hover:bg-vino-700 disabled:opacity-50">
+              <button key="guardar" type="submit" onClick={() => { quiereGuardar.current = true; }} disabled={busy} className="h-12 flex-1 rounded-full bg-vino-800 font-bold text-white transition hover:bg-vino-700 disabled:opacity-50">
                 {busy ? 'Espera...' : nuevo ? 'Guardar producto' : 'Guardar cambios'}
               </button>
             )}
