@@ -1,55 +1,50 @@
 import { NextResponse } from 'next/server';
-import { isAdmin } from '@/lib/admin';
-import {
-  obtenerUsuarioSesion
-} from '@/lib/usuarios';
+import { obtenerUsuarioSesion } from '@/lib/usuarios';
+import { permisosEfectivos } from '@/lib/permisos';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
+function responder(datos, status = 200) {
+  return NextResponse.json(datos, {
+    status,
+    headers: {
+      'Cache-Control': 'no-store'
+    }
+  });
+}
+
 export async function GET(req) {
   try {
-    const u = await obtenerUsuarioSesion(req);
+    const usuario = await obtenerUsuarioSesion(req);
 
-    if (u?.rol === 'propietario') {
-      return NextResponse.json({
-        ok: true,
-        usuario: {
-          id: u.id,
-          nombre: u.nombre,
-          usuario: u.usuario,
-          rol: u.rol
-        }
-      }, {
-        headers: { 'Cache-Control': 'no-store' }
-      });
+    if (!usuario) {
+      return responder({
+        error: 'no_autorizado'
+      }, 401);
     }
 
-    // Compatibilidad temporal.
-    if (await isAdmin(req)) {
-      return NextResponse.json({
-        ok: true,
-        temporal: true,
-        usuario: {
-          nombre: 'Administrador anterior',
-          rol: 'propietario'
-        }
-      }, {
-        headers: { 'Cache-Control': 'no-store' }
-      });
-    }
+    const permisos = await permisosEfectivos(usuario);
 
-    return NextResponse.json(
-      { error: 'no_autorizado' },
-      { status: 401 }
+    return responder({
+      ok: true,
+      usuario: {
+        id: usuario.id,
+        nombre: usuario.nombre,
+        usuario: usuario.usuario,
+        rol: usuario.rol
+      },
+      permisos
+    });
+
+  } catch (error) {
+    console.error(
+      'sesion individual',
+      error?.code || ''
     );
 
-  } catch (e) {
-    console.error('sesion', e?.code || '');
-
-    return NextResponse.json(
-      { error: 'error_servidor' },
-      { status: 500 }
-    );
+    return responder({
+      error: 'error_servidor'
+    }, 500);
   }
 }

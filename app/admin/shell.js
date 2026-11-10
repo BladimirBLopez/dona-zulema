@@ -29,17 +29,72 @@ const CLAVE = ['/admin/clave', 'Clave', KeyRound];
 const LINKS = [...GRUPOS.flatMap(([, l]) => l), CLAVE];
 const PRINCIPAL = ['/admin/inicio', '/admin/ventas/nueva', '/admin/ventas', '/admin/productos'].map((h) => LINKS.find(([x]) => x === h));
 
+
+const PERMISOS_MENU = {
+  '/admin/inicio': 'inicio.ver',
+  '/admin/ventas/nueva': 'ventas.crear',
+  '/admin/ventas': 'ventas.ver',
+  '/admin/productos': 'productos.ver',
+  '/admin/categorias': 'categorias.ver',
+  '/admin/gastos': 'gastos.ver',
+  '/admin/costos': 'costos.ver',
+  '/admin/reportes': 'reportes.ver',
+  '/admin/cierre': 'cierre.ver',
+  '/admin/banners': 'banners.ver',
+  '/admin/negocio': 'negocio.ver'
+};
+
 export default function Shell({ children }) {
   const path = usePathname();
   const [ok, setOk] = useState(false);
   const [N, setN] = useState(null);
   const [mas, setMas] = useState(false);
   const [usuarioSesion, setUsuarioSesion] = useState(null);
+  const [permisosSesion, setPermisosSesion] = useState([]);
   const saliendo = useRef(false);
   const exacto = ['/admin', '/admin/ventas'];
   const on = (href) => (exacto.includes(href) ? path === href : path.startsWith(href));
   const actual = LINKS.find(([h]) => on(h));
   const marca = N || { nombre: 'Doña Zulema', logo: '' };
+
+  const puedeVerPermiso = (permiso) =>
+    usuarioSesion?.rol === 'propietario' ||
+    (
+      Boolean(usuarioSesion) &&
+      permisosSesion.includes(permiso)
+    );
+
+  const puedeVerRuta = (href) => {
+    if (!usuarioSesion) return false;
+
+    if (usuarioSesion.rol === 'propietario') {
+      return true;
+    }
+
+    if (href === '/admin/clave') {
+      return true;
+    }
+
+    if (href === '/admin/usuarios') {
+      return false;
+    }
+
+    const permiso = PERMISOS_MENU[href];
+
+    return Boolean(
+      permiso &&
+      permisosSesion.includes(permiso)
+    );
+  };
+
+  const gruposVisibles = GRUPOS
+    .map(([grupo, links]) => [
+      grupo,
+      links.filter(([href]) => puedeVerRuta(href))
+    ])
+    .filter(([, links]) => links.length > 0);
+
+
 
   useEffect(() => {
     let activo = true;
@@ -60,14 +115,16 @@ export default function Shell({ children }) {
             .catch(() => ({}));
 
           if (activo) {
-            setUsuarioSesion(
-              datos.temporal
-                ? null
-                : datos.usuario || null
+            setUsuarioSesion(datos.usuario || null);
+            setPermisosSesion(
+              Array.isArray(datos.permisos)
+                ? datos.permisos
+                : []
             );
           }
         } else {
           setUsuarioSesion(null);
+          setPermisosSesion([]);
         }
 
         if (!r.ok) {
@@ -88,6 +145,8 @@ export default function Shell({ children }) {
         if (activo) {
           setOk(false);
           setN(null);
+          setUsuarioSesion(null);
+          setPermisosSesion([]);
         }
       }
     }
@@ -208,11 +267,7 @@ export default function Shell({ children }) {
           </div>
         </div>
         <div className="space-y-5">
-          {GRUPOS.filter(
-            ([grupo]) =>
-              grupo !== 'Administración' ||
-              usuarioSesion?.rol === 'propietario'
-          ).map(([g, links]) => (
+          {gruposVisibles.map(([g, links]) => (
             <div key={g}>
               <p className="mb-1.5 px-4 text-[11px] font-bold uppercase tracking-widest text-vino-300">{g}</p>
               <nav className="space-y-0.5">
@@ -242,7 +297,9 @@ export default function Shell({ children }) {
           </div>
         </div>
         <div className="flex items-center gap-1">
-          <NotificationBell />
+          {puedeVerPermiso('notificaciones.ver') && (
+            <NotificationBell />
+          )}
           <a href="/" target="_blank" rel="noopener noreferrer" aria-label="Ver sitio" className="grid h-9 w-9 place-items-center rounded-full hover:bg-white/10 md:hidden"><ExternalLink size={18} /></a>
           <a href="/api/admin/logout" onClick={salir} aria-label="Salir" className="grid h-9 w-9 place-items-center rounded-full hover:bg-white/10 md:hidden"><LogOut size={18} /></a>
         </div>
@@ -253,7 +310,9 @@ export default function Shell({ children }) {
       </div>
 
       <nav className="fixed inset-x-0 bottom-0 z-30 grid grid-cols-4 border-t border-stone-200 bg-white/95 backdrop-blur md:hidden">
-        {PRINCIPAL.map(([href, t, Icon]) => (
+        {PRINCIPAL
+          .filter(([href]) => puedeVerRuta(href))
+          .map(([href, t, Icon]) => (
           <Link key={href} href={href} aria-current={on(href) ? 'page' : undefined} className={tab(on(href))}>
             <span className={pill(on(href))}><Icon size={20} /></span>
             {t}
@@ -276,11 +335,7 @@ export default function Shell({ children }) {
               <button type="button" onClick={() => setMas(false)} aria-label="Cerrar menú" className="grid h-9 w-9 shrink-0 place-items-center rounded-full hover:bg-white/10"><X size={20} /></button>
             </div>
             <div className="space-y-5">
-              {GRUPOS.filter(
-            ([grupo]) =>
-              grupo !== 'Administración' ||
-              usuarioSesion?.rol === 'propietario'
-          ).map(([g, links]) => (
+              {gruposVisibles.map(([g, links]) => (
                 <div key={g}>
                   <p className="mb-1.5 px-4 text-[11px] font-bold uppercase tracking-widest text-vino-300">{g}</p>
                   <nav className="space-y-0.5">
