@@ -227,8 +227,7 @@ export default function Catalogo({ productos, wa }) {
 
   return (
     <section id="catalogo" className="scroll-mt-16 bg-crema pb-10 pt-6">
-      <div className="sticky top-16 z-20 border-b border-vino-900/5 bg-crema/90 backdrop-blur">
-        <div className="mx-auto max-w-6xl space-y-3 px-4 py-3">
+      <div className="mx-auto max-w-6xl space-y-3 px-4 py-3">
           <div className="relative">
             <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" />
             <input
@@ -252,7 +251,11 @@ export default function Catalogo({ productos, wa }) {
               ))}
             </div>
           )}
-        <div className="flex flex-wrap items-center justify-between gap-2">
+      </div>
+
+      <div className="sticky top-16 z-20 border-b border-vino-900/5 bg-crema/95 backdrop-blur">
+        <div className="mx-auto max-w-6xl px-4 py-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={() => setFiltrosAbiertos(true)} className="flex min-h-11 items-center gap-2 rounded-xl border border-vino-900/10 bg-white px-4 py-2 text-sm font-semibold text-vino-900 shadow-sm hover:bg-vino-50">
               <SlidersHorizontal size={17} />
