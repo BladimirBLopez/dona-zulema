@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
 import { isAdmin } from '@/lib/admin';
 import { destroyImage } from '@/lib/cloudinary';
+import { admiteDecimales } from '@/lib/unidades';
 
 const deny = () => NextResponse.json({ error: 'no_autorizado' }, { status: 401 });
 const num = (v) => (v === '' || v == null || isNaN(Number(v)) ? null : Number(v));
@@ -30,6 +31,10 @@ export async function POST(req) {
   if (nums.some((x) => x !== null && x < 0)) return NextResponse.json({ error: 'datos_invalidos' }, { status: 400 });
   const q = sql();
   const unidad = String(b.unidad || 'kg').trim().slice(0, 20);
+  const cantidades = [b.mayor_desde, b.stock_min, ...(b.id ? [] : [b.stock])].map(num);
+  if (!admiteDecimales(unidad) && cantidades.some((x) => x !== null && !Number.isInteger(x))) {
+    return NextResponse.json({ error: 'cantidad_entera' }, { status: 400 });
+  }
   const disp = b.disponible !== false;
   if (b.id) {
     const old = await q`SELECT imagen_public_id FROM productos WHERE id = ${b.id}`;

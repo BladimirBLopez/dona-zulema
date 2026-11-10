@@ -3,6 +3,7 @@ import { confirmar } from '@/lib/avisos';
 import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { X, ImagePlus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { admiteDecimales } from '@/lib/unidades';
 
 const UNIDADES = [['kg', 'Kilo'], ['unidad', 'Unidad'], ['litro', 'Litro'], ['paquete', 'Paquete']];
 const TABS = ['Producto', 'Precio', 'Costo y stock'];
@@ -68,6 +69,7 @@ export default function ProductoForm({ f, setF, categorias, busy, onSubir, onGua
   const g2 = esp && pEsp != null && costo != null ? Math.round((pEsp - costo) * 100) / 100 : null;
   const falta = !String(f.nombre).trim() || !f.categoria_id;
   const nuevo = !f.id;
+  const dec = admiteDecimales(f.unidad);
   const stockAct = nz(f.stock);
   const minimo = nz(f.stock_min);
   const avisoBajo = minimo == null ? '' : stockAct == null
@@ -103,6 +105,11 @@ export default function ProductoForm({ f, setF, categorias, busy, onSubir, onGua
     if (enPrecio || enStock) {
       setTab(enPrecio ? 1 : 2);
       return setMsg('Los precios, el costo y el stock no pueden ser negativos.');
+    }
+    const frac = (v) => nz(v) != null && !Number.isInteger(nz(v));
+    if (!dec && ([f.mayor_desde, f.stock_min, ...(nuevo ? [f.stock] : [])].some(frac))) {
+      setTab(frac(f.mayor_desde) ? 1 : 2);
+      return setMsg('Con "' + u + '" solo se aceptan cantidades enteras (por ejemplo 5, no 5.5).');
     }
     if (falta) {
       setIntento(true);
@@ -215,7 +222,7 @@ export default function ProductoForm({ f, setF, categorias, busy, onSubir, onGua
                     <div className="grid grid-cols-2 gap-3">
                       <Campo label="Si llevan desde">
                         <Fila post={u}>
-                          <input type="number" inputMode="decimal" step="any" min="0" placeholder="5" value={f.mayor_desde} onChange={(e) => set('mayor_desde', e.target.value)} />
+                          <input type="number" inputMode={dec ? 'decimal' : 'numeric'} step={dec ? 'any' : '1'} min="0" placeholder="5" value={f.mayor_desde} onChange={(e) => set('mayor_desde', e.target.value)} />
                         </Fila>
                       </Campo>
                       <Campo label={'Cada ' + u + ' cuesta'}>
@@ -265,16 +272,16 @@ export default function ProductoForm({ f, setF, categorias, busy, onSubir, onGua
                   <button type="button" onClick={onStock} className="h-9 shrink-0 rounded-full bg-vino-50 px-4 text-sm font-bold text-vino-800">Cambiar</button>
                 </div>
               ) : (
-                <Campo label="¿Cuánto tienes ahora? (opcional)">
+                <Campo label="¿Cuánto tienes ahora? (opcional)" ayuda={dec ? 'Puedes usar decimales, por ejemplo 10.5.' : 'Solo números enteros, por ejemplo 12.'}>
                   <Fila post={u}>
-                    <input type="number" inputMode="decimal" step="any" min="0" placeholder="0" value={f.stock} onChange={(e) => set('stock', e.target.value)} />
+                    <input type="number" inputMode={dec ? 'decimal' : 'numeric'} step={dec ? 'any' : '1'} min="0" placeholder="0" value={f.stock} onChange={(e) => set('stock', e.target.value)} />
                   </Fila>
                 </Campo>
               )}
 
               <Campo label="Avísame cuando queden menos de" ayuda={<>Es solo un aviso: no limita lo que puedes vender. Aparecerá en tu Inicio como Stock bajo.{avisoBajo && <b className="mt-1 block text-amber-700">{avisoBajo}</b>}</>}>
                 <Fila post={u}>
-                  <input type="number" inputMode="decimal" step="any" min="0" placeholder="Ej: 3" value={f.stock_min} onChange={(e) => set('stock_min', e.target.value)} />
+                  <input type="number" inputMode={dec ? 'decimal' : 'numeric'} step={dec ? 'any' : '1'} min="0" placeholder="Ej: 3" value={f.stock_min} onChange={(e) => set('stock_min', e.target.value)} />
                 </Fila>
               </Campo>
 

@@ -1,4 +1,5 @@
 'use client';
+import { pasoDe } from '@/lib/unidades';
 import { useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Search, Plus, Minus, X, ShoppingBag, Milk, Drumstick, Trash2, PackageOpen } from 'lucide-react';
@@ -6,7 +7,7 @@ import Link from 'next/link';
 import WhatsApp from '@/components/WhatsApp';
 
 const bs = (v) => (v == null || v === '' ? null : 'Bs ' + Number(v).toFixed(2));
-const stepOf = (u) => (String(u).toLowerCase() === 'kg' ? 0.5 : 1);
+const stepOf = pasoDe;
 const Icono = ({ lslug, className }) => (lslug === 'pollo' ? <Drumstick className={className} /> : <Milk className={className} />);
 
 const unidadDe = (u) => { const x = String(u || 'unidad').trim().toLowerCase(); return x === 'kg' ? 'kilo' : x.startsWith('unidad') ? 'unidad' : x; };
