@@ -1,4 +1,5 @@
 'use client';
+import InstalarApp from '@/components/InstalarApp';
 import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -347,6 +348,7 @@ export default function Shell({ children }) {
         </div>
         <div className="mt-auto space-y-0.5 border-t border-white/10 pt-3">
           <Link href={CLAVE[0]} className={item(on(CLAVE[0]))}><KeyRound size={18} /> Clave</Link>
+          <InstalarApp className={item(false) + ' w-full'} />
           <a href="/" target="_blank" rel="noopener noreferrer" className={item(false)}><ExternalLink size={18} /> Ver sitio</a>
           <a href="/api/admin/logout" onClick={salir} className={item(false)}><LogOut size={18} /> Salir</a>
         </div>
@@ -419,6 +421,7 @@ export default function Shell({ children }) {
             </div>
             <div className="mt-6 space-y-0.5 border-t border-white/10 pt-3">
               <Link href={CLAVE[0]} className={item(on(CLAVE[0]))}><KeyRound size={18} /> Clave</Link>
+              <InstalarApp className={item(false) + ' w-full'} />
               <a href="/" target="_blank" rel="noopener noreferrer" className={item(false)}><ExternalLink size={18} /> Ver sitio</a>
               <a href="/api/admin/logout" onClick={salir} className={item(false)}><LogOut size={18} /> Salir</a>
             </div>
