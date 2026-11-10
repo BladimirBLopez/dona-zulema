@@ -31,7 +31,7 @@ export default function AccesoIndividual() {
 
     try {
       const respuesta = await fetch(
-        '/api/admin/acceso',
+        '/api/admin/login',
         {
           method: 'POST',
           credentials: 'same-origin',
@@ -45,7 +45,7 @@ export default function AccesoIndividual() {
         }
       );
 
-      const datos = await respuesta.json();
+      const datos = await respuesta.json().catch(() => ({}));
 
       if (!respuesta.ok) {
         const mensaje = {
@@ -59,7 +59,7 @@ export default function AccesoIndividual() {
 
         throw new Error(
           mensaje[datos.error] ||
-          'No se pudo iniciar sesión.'
+          'No se pudo iniciar sesión (HTTP ' + respuesta.status + ').'
         );
       }
 
