@@ -1,5 +1,6 @@
 'use client';
 import { pasoDe } from '@/lib/unidades';
+import { obtenerPrecioPedido, redondearDinero } from '@/lib/precio-pedido';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Search, Plus, Minus, X, ShoppingBag, Milk, Drumstick, Trash2, PackageOpen, SlidersHorizontal, ArrowDownUp, Check } from 'lucide-react';
@@ -199,9 +200,28 @@ export default function Catalogo({ productos, wa }) {
 
   const items = Object.values(cart);
   const count = items.length;
+
+  const detalle = items.map(({ p, qty }) => {
+    const info = obtenerPrecioPedido(p, qty, tipo);
+    const subtotal = info.precio === null
+      ? null
+      : redondearDinero(info.precio * qty);
+    return { p, qty, ...info, subtotal };
+  });
+
+  const sinPrecio = detalle.some((i) => i.precio === null);
+  const conPrecio = detalle.some((i) => i.precio !== null);
+  const total = redondearDinero(
+    detalle.reduce((s, i) => s + (i.subtotal ?? 0), 0)
+  );
+  const totalTexto = conPrecio ? bs(total) : 'Por confirmar';
+
   const msg = [
     'Hola, quiero hacer este pedido (' + (tipo === 'mayor' ? 'al por mayor' : 'al por menor') + '):',
-    ...items.map(({ p, qty }) => `• ${qty} ${p.unidad} de ${p.nombre}`),
+    ...detalle.map(({ p, qty, precio, subtotal }) =>
+      `• ${cantidadDe(qty, p.unidad)} de ${p.nombre}\n  ${precio === null ? 'Precio a consultar' : bs(precio) + ' x ' + qty + ' = ' + bs(subtotal)}`),
+    'Total ' + (sinPrecio ? 'parcial' : 'estimado') + ': ' + totalTexto,
+    sinPrecio ? 'Hay productos con precio a consultar.' : '',
     nota.trim() ? 'Nota: ' + nota.trim() : '',
   ].filter(Boolean).join('\n');
   const link = `https://wa.me/${wa}?text=${encodeURIComponent(msg)}`;
@@ -209,7 +229,7 @@ export default function Catalogo({ productos, wa }) {
   function guardarPedido() {
     try {
       const lista = items.map(({ p, qty }) => ({ id: p.id, qty }));
-      const k = JSON.stringify(lista);
+      const k = JSON.stringify({ lista, tipo });
       const ahora = Date.now();
       if (ultimo.current.k === k && ahora - ultimo.current.t < 120000) return;
       ultimo.current = { k, t: ahora };
@@ -217,7 +237,7 @@ export default function Catalogo({ productos, wa }) {
         method: 'POST',
         keepalive: true,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: lista }),
+        body: JSON.stringify({ items: lista, tipo }),
       }).catch(() => {});
     } catch {}
   }
@@ -463,13 +483,25 @@ export default function Catalogo({ productos, wa }) {
               </div>
 
               <ul className="space-y-2">
-                {items.map(({ p, qty }) => (
-                  <li key={p.id} className="flex items-center justify-between gap-3 rounded-2xl bg-crema p-3">
-                    <div className="min-w-0">
-                      <p className="truncate font-semibold">{p.nombre}</p>
-                      <p className="text-xs text-stone-500">{qty} {p.unidad}</p>
+                {detalle.map(({ p, qty, precio, subtotal, mayorDesde, mayorAplicado }) => (
+                  <li key={p.id} className="rounded-2xl bg-crema p-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-stone-900">{p.nombre}</p>
+                        <p className="mt-1 text-xs text-stone-600">
+                          {cantidadDe(qty, p.unidad)} x {precio === null ? 'Consultar precio' : bs(precio)}
+                        </p>
+                        {tipo === 'mayor' && !mayorAplicado && mayorDesde > 0 && p.precio_mayor != null && qty < mayorDesde && (
+                          <p className="mt-1 text-xs text-amber-800">
+                            Precio mayor desde {cantidadDe(mayorDesde, p.unidad)}
+                          </p>
+                        )}
+                      </div>
+                      <strong className="shrink-0 text-vino-800">
+                        {subtotal === null ? 'Consultar' : bs(subtotal)}
+                      </strong>
                     </div>
-                    <div className="flex shrink-0 items-center gap-1">
+                    <div className="mt-2 flex justify-end gap-2">
                       <button onClick={() => add(p, -stepOf(p.unidad))} aria-label="Quitar" className="grid h-8 w-8 place-items-center rounded-full bg-white shadow"><Minus size={14} /></button>
                       <button onClick={() => add(p, stepOf(p.unidad))} aria-label="Agregar" className="grid h-8 w-8 place-items-center rounded-full bg-white shadow"><Plus size={14} /></button>
                       <button onClick={() => add(p, -qty)} aria-label="Eliminar" className="grid h-8 w-8 place-items-center rounded-full text-red-600"><Trash2 size={16} /></button>
@@ -483,7 +515,19 @@ export default function Catalogo({ productos, wa }) {
                 placeholder="Nota (opcional): hora de entrega, zona, etc."
                 className="mt-4 w-full rounded-2xl border border-stone-200 p-3 text-sm outline-none focus:border-vino-500"
               />
-              <p className="mt-2 text-xs text-stone-500">El precio final se confirma por WhatsApp.</p>
+              <div className="mt-3 flex items-center justify-between border-t border-stone-200 py-3">
+                <span className="font-semibold text-stone-700">
+                  Total {sinPrecio ? 'parcial' : 'estimado'}
+                </span>
+                <strong className="text-xl text-vino-800">
+                  {totalTexto}
+                </strong>
+              </div>
+              <p className="mt-1 text-xs text-stone-500">
+                {sinPrecio
+                  ? 'Los productos sin precio no se incluyen en el total parcial.'
+                  : 'El precio final se confirma por WhatsApp.'}
+              </p>
 
               <a href={link} onClick={guardarPedido} target="_blank" rel="noopener noreferrer"
                 className="mt-4 flex items-center justify-center gap-2 rounded-full bg-green-500 py-3.5 font-bold text-white shadow-lg transition hover:bg-green-600">

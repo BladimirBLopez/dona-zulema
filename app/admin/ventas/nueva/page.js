@@ -138,7 +138,7 @@ export default function NuevaVenta() {
             const prod = lista.find((x) => String(x.id) === String(it.producto_id));
             return aplicar({
               producto_id: String(it.producto_id || ''), nombre: it.nombre, unidad: it.unidad || 'kg', p: prod || null,
-              cantidad: String(it.cantidad), precio: String(it.precio ?? 0), manual: !prod, modo: 'peso', monto: '',
+              cantidad: String(it.cantidad), precio: String(it.precio ?? 0), manual: !prod || it.precio != null, modo: 'peso', monto: '',
             }, 'menor');
           }));
         }
