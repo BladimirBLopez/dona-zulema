@@ -13,11 +13,13 @@ const Inicio = (p) => <Svg {...p}><path d="M3 10.5 12 3l9 7.5" /><path d="M5 9.5
 const Reportes = (p) => <Svg {...p}><path d="M4 20V10" /><path d="M10 20V4" /><path d="M16 20v-7" /><path d="M22 20H2" /></Svg>;
 const Costos = (p) => <Svg {...p}><path d="M8 6h13" /><path d="M8 12h13" /><path d="M8 18h13" /><path d="M3 6h.01" /><path d="M3 12h.01" /><path d="M3 18h.01" /></Svg>;
 
+const Cierre = (p) => <Svg {...p}><rect x="4" y="3" width="16" height="18" rx="2" /><path d="M8 7h8" /><path d="M8 12h.01" /><path d="M12 12h.01" /><path d="M16 12h.01" /><path d="M8 16h.01" /><path d="M12 16h.01" /><path d="M16 16h.01" /></Svg>;
+
 const GRUPOS = [
   ['Principal', [['/admin/inicio', 'Inicio', Inicio]]],
   ['Ventas', [['/admin/ventas/nueva', 'Nueva venta', Plus], ['/admin/ventas', 'Ventas', ShoppingCart]]],
   ['Inventario', [['/admin/productos', 'Productos', Package], ['/admin/categorias', 'Categorías', Tags]]],
-  ['Contabilidad', [['/admin/gastos', 'Gastos', Wallet], ['/admin/costos', 'Costos', Costos], ['/admin/reportes', 'Reportes', Reportes]]],
+  ['Contabilidad', [['/admin/gastos', 'Gastos', Wallet], ['/admin/costos', 'Costos', Costos], ['/admin/reportes', 'Reportes', Reportes], ['/admin/cierre', 'Cierre de caja', Cierre]]],
   ['Tienda web', [['/admin/banners', 'Ofertas', Megaphone], ['/admin/negocio', 'Negocio', Store]]],
 ];
 const CLAVE = ['/admin/clave', 'Clave', KeyRound];
