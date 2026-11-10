@@ -163,7 +163,10 @@ export default function Shell({ children }) {
     saliendo.current = true;
 
     try {
-      if ('serviceWorker' in navigator) {
+      if (
+        usuarioSesion?.rol === 'propietario' &&
+        'serviceWorker' in navigator
+      ) {
         const registro =
           await navigator.serviceWorker.getRegistration(
             '/admin/'
@@ -360,7 +363,11 @@ export default function Shell({ children }) {
         </div>
         <div className="flex items-center gap-1">
           {puedeVerPermiso('notificaciones.ver') && (
-            <NotificationBell />
+            <NotificationBell
+              permitirPush={
+                usuarioSesion?.rol === 'propietario'
+              }
+            />
           )}
           <a href="/" target="_blank" rel="noopener noreferrer" aria-label="Ver sitio" className="grid h-9 w-9 place-items-center rounded-full hover:bg-white/10 md:hidden"><ExternalLink size={18} /></a>
           <a href="/api/admin/logout" onClick={salir} aria-label="Salir" className="grid h-9 w-9 place-items-center rounded-full hover:bg-white/10 md:hidden"><LogOut size={18} /></a>

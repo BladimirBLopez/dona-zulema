@@ -31,7 +31,9 @@ function fechaBO(valor) {
   });
 }
 
-export default function NotificationBell() {
+export default function NotificationBell({
+  permitirPush = false
+}) {
   const [abierto, setAbierto] = useState(false);
   const [sonido, setSonido] = useState(false);
   const [total, setTotal] = useState(0);
@@ -260,7 +262,7 @@ export default function NotificationBell() {
 
   return (
     <div className="relative" ref={contenedor}>
-      <PushWelcome />
+      {permitirPush && <PushWelcome />}
       <button
         type="button"
         onClick={() => setAbierto(v => !v)}
@@ -328,7 +330,7 @@ export default function NotificationBell() {
             </div>
           </div>
 
-          <PushToggle />
+          {permitirPush && <PushToggle />}
 
           {error && (
             <p className="bg-amber-50 px-4 py-2 text-xs text-amber-800">
