@@ -19,7 +19,9 @@ export async function GET(req) {
     q`SELECT c.id, c.nombre, l.nombre AS linea
       FROM categorias c JOIN lineas l ON l.id = c.linea_id ORDER BY l.orden, c.orden`,
   ]);
-  return NextResponse.json({ productos, categorias });
+  const NUMS = ['precio_menor', 'precio_mayor', 'mayor_desde', 'costo', 'stock', 'stock_min'];
+  const limpios = productos.map((p) => { const o = { ...p }; for (const k of NUMS) if (o[k] != null && o[k] !== '') o[k] = Number(o[k]); return o; });
+  return NextResponse.json({ productos: limpios, categorias });
 }
 
 export async function POST(req) {
@@ -30,7 +32,8 @@ export async function POST(req) {
   const nums = [b.precio_menor, b.precio_mayor, b.mayor_desde, b.costo, b.stock_min].map(num);
   if (nums.some((x) => x !== null && x < 0)) return NextResponse.json({ error: 'datos_invalidos' }, { status: 400 });
   const q = sql();
-  const unidad = String(b.unidad || 'kg').trim().slice(0, 20);
+  const unidad = String(b.unidad ?? '').trim().slice(0, 20);
+  if (!unidad) return NextResponse.json({ error: 'unidad_vacia' }, { status: 400 });
   const cantidades = [b.mayor_desde, b.stock_min, ...(b.id ? [] : [b.stock])].map(num);
   if (!admiteDecimales(unidad) && cantidades.some((x) => x !== null && !Number.isInteger(x))) {
     return NextResponse.json({ error: 'cantidad_entera' }, { status: 400 });
