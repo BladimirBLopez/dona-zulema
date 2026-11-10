@@ -66,6 +66,18 @@ export default function PushToggle() {
     }
 
     revisar();
+
+    window.addEventListener(
+      'dz-push-actualizado',
+      revisar
+    );
+
+    return () => {
+      window.removeEventListener(
+        'dz-push-actualizado',
+        revisar
+      );
+    };
   }, []);
 
   async function activar() {
@@ -240,7 +252,7 @@ export default function PushToggle() {
 
       {estado === 'bloqueado' && (
         <p className="mt-2 text-xs text-amber-700">
-          Debes permitir notificaciones en el navegador.
+          Chrome bloqueo las notificaciones. Cambia el permiso del sitio a Permitir, recarga la pagina y vuelve a activar.
         </p>
       )}
 

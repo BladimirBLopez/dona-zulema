@@ -9,6 +9,7 @@ import {
 
 import Link from 'next/link';
 import PushToggle from '@/components/PushToggle';
+import PushWelcome from '@/components/PushWelcome';
 
 import {
   Bell,
@@ -259,6 +260,7 @@ export default function NotificationBell() {
 
   return (
     <div className="relative" ref={contenedor}>
+      <PushWelcome />
       <button
         type="button"
         onClick={() => setAbierto(v => !v)}
