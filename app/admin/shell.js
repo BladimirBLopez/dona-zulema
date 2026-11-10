@@ -3,6 +3,7 @@ import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Package, ShoppingCart, Tags, Megaphone, Store, KeyRound, LogOut, ExternalLink, Wallet, X, Plus, Menu as MenuIcon } from 'lucide-react';
+import { UsersRound } from 'lucide-react';
 import Marca from '@/components/Marca';
 import Avisos from '@/components/Avisos';
 import NotificationBell from '@/components/NotificationBell';
@@ -22,6 +23,7 @@ const GRUPOS = [
   ['Inventario', [['/admin/productos', 'Productos', Package], ['/admin/categorias', 'Categorías', Tags]]],
   ['Contabilidad', [['/admin/gastos', 'Gastos', Wallet], ['/admin/costos', 'Costos', Costos], ['/admin/reportes', 'Reportes', Reportes], ['/admin/cierre', 'Cierre de caja', Cierre]]],
   ['Tienda web', [['/admin/banners', 'Ofertas', Megaphone], ['/admin/negocio', 'Negocio', Store]]],
+  ['Administración', [['/admin/usuarios', 'Usuarios y permisos', UsersRound]]],
 ];
 const CLAVE = ['/admin/clave', 'Clave', KeyRound];
 const LINKS = [...GRUPOS.flatMap(([, l]) => l), CLAVE];
@@ -32,6 +34,7 @@ export default function Shell({ children }) {
   const [ok, setOk] = useState(false);
   const [N, setN] = useState(null);
   const [mas, setMas] = useState(false);
+  const [usuarioSesion, setUsuarioSesion] = useState(null);
   const saliendo = useRef(false);
   const exacto = ['/admin', '/admin/ventas'];
   const on = (href) => (exacto.includes(href) ? path === href : path.startsWith(href));
@@ -51,6 +54,21 @@ export default function Shell({ children }) {
         if (!activo) return;
 
         setOk(r.ok);
+
+        if (r.ok) {
+          const datos = await r.json()
+            .catch(() => ({}));
+
+          if (activo) {
+            setUsuarioSesion(
+              datos.temporal
+                ? null
+                : datos.usuario || null
+            );
+          }
+        } else {
+          setUsuarioSesion(null);
+        }
 
         if (!r.ok) {
           setN(null);
@@ -190,7 +208,11 @@ export default function Shell({ children }) {
           </div>
         </div>
         <div className="space-y-5">
-          {GRUPOS.map(([g, links]) => (
+          {GRUPOS.filter(
+            ([grupo]) =>
+              grupo !== 'Administración' ||
+              usuarioSesion?.rol === 'propietario'
+          ).map(([g, links]) => (
             <div key={g}>
               <p className="mb-1.5 px-4 text-[11px] font-bold uppercase tracking-widest text-vino-300">{g}</p>
               <nav className="space-y-0.5">
@@ -254,7 +276,11 @@ export default function Shell({ children }) {
               <button type="button" onClick={() => setMas(false)} aria-label="Cerrar menú" className="grid h-9 w-9 shrink-0 place-items-center rounded-full hover:bg-white/10"><X size={20} /></button>
             </div>
             <div className="space-y-5">
-              {GRUPOS.map(([g, links]) => (
+              {GRUPOS.filter(
+            ([grupo]) =>
+              grupo !== 'Administración' ||
+              usuarioSesion?.rol === 'propietario'
+          ).map(([g, links]) => (
                 <div key={g}>
                   <p className="mb-1.5 px-4 text-[11px] font-bold uppercase tracking-widest text-vino-300">{g}</p>
                   <nav className="space-y-0.5">
