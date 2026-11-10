@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { X, ImagePlus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { admiteDecimales } from '@/lib/unidades';
+import Escaner from '@/components/Escaner';
 
 const UNIDADES = [['kg', 'Kilo'], ['unidad', 'Unidad'], ['litro', 'Litro'], ['paquete', 'Paquete']];
 const TABS = ['Producto', 'Precio', 'Costo y stock'];
@@ -55,6 +56,7 @@ export default function ProductoForm({ f, setF, categorias, busy, onSubir, onGua
   const [msg, setMsg] = useState('');
   const [intento, setIntento] = useState(false);
   const [esp, setEsp] = useState(nz(f.precio_mayor) != null);
+  const [cam, setCam] = useState(false);
   const quiereGuardar = useRef(false);
 
   const set = (k, v) => setF({ ...f, [k]: v });
@@ -182,6 +184,7 @@ export default function ProductoForm({ f, setF, categorias, busy, onSubir, onGua
                 <div className="flex gap-2">
                   <input inputMode="numeric" placeholder="Escanea o escribe" value={f.codigo || ''} onChange={(e) => set('codigo', e.target.value)} className="min-w-0 flex-1" />
                   <button type="button" onClick={() => set('codigo', '99' + String(Date.now()).slice(-8))} className="shrink-0 rounded-xl bg-vino-50 px-4 text-sm font-bold text-vino-800">Generar</button>
+                  <button type="button" onClick={() => setCam(true)} className="shrink-0 rounded-xl bg-vino-800 px-4 text-sm font-bold text-white">Escanear</button>
                 </div>
               </Campo>
 
@@ -320,6 +323,7 @@ export default function ProductoForm({ f, setF, categorias, busy, onSubir, onGua
             )}
           </div>
         </div>
+      {cam && <Escaner titulo="Escanear código del producto" onCodigo={(c) => { set('codigo', c); return 'cerrar'; }} onCerrar={() => setCam(false)} />}
       </motion.form>
     </motion.div>
   );

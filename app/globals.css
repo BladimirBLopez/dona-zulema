@@ -61,3 +61,8 @@ html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
 .admin textarea:focus { border-color: #7a1414; box-shadow: 0 0 0 3px rgba(122, 20, 20, 0.12); }
 .admin a:focus-visible, .admin button:focus-visible { outline-color: #7a1414; }
 .skeleton { background: linear-gradient(90deg, #e5e7eb 25%, #f1f3f5 37%, #e5e7eb 63%); background-size: 400% 100%; }
+
+/* escaner-v1 */
+.linea-escaneo { top: 8%; animation: escaneo 2s ease-in-out infinite; box-shadow: 0 0 12px rgba(251, 191, 36, 0.9); }
+@keyframes escaneo { 0%, 100% { top: 8%; } 50% { top: 90%; } }
+@media (prefers-reduced-motion: reduce) { .linea-escaneo { animation: none; top: 50%; } }

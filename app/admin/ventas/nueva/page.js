@@ -4,12 +4,15 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Search, Plus, Minus, X, Trash2, Check, MessageCircle, ArrowLeft, ChevronDown } from 'lucide-react';
 import { api, errMsg } from '@/lib/cliente';
+import { avisar } from '@/lib/avisos';
+import Escaner from '@/components/Escaner';
 import { bs, hoyBO, reciboTexto, waLink } from '@/lib/fmt';
 
 const METODOS = [['efectivo', 'Efectivo'], ['qr', 'QR'], ['transferencia', 'Transf.']];
 const BILLETES = [10, 20, 50, 100, 200];
 const n = (v) => Number(v) || 0;
 const r2 = (x) => Math.round((x + Number.EPSILON) * 100) / 100;
+const normCod = (s) => { const t = String(s || '').trim(); return /^\d+$/.test(t) ? t.replace(/^0+/, '') : t.toLowerCase(); };
 const r3 = (x) => Math.round(x * 1000) / 1000;
 const nf = (v) => String(r3(Number(v) || 0)).replace('.', ',');
 const esKg = (u) => ['kg', 'kilo', 'kilos'].includes(String(u || '').toLowerCase());
@@ -99,6 +102,7 @@ export default function NuevaVenta() {
   const [mas, setMas] = useState(false);
   const [f, setF] = useState(formVacio());
   const [libre, setLibre] = useState(null);
+  const [cam, setCam] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
   const [hecho, setHecho] = useState(null);
@@ -162,6 +166,14 @@ export default function NuevaVenta() {
     if (!l) return;
     const inicial = l.modo === 'monto' ? l.monto : l.cantidad;
     setKp({ idx: i, id: l.producto_id, p: l.p, nombre: l.nombre, unidad: l.unidad, modo: l.modo, buf: String(inicial || ''), fresh: true, precio: l.precio, manual: l.manual, editPrecio: false });
+  }
+
+  function leerCodigo(c) {
+    const p = (productos || []).find((x) => x.codigo && normCod(x.codigo) === normCod(c));
+    if (!p) { avisar.aviso('Código no registrado', c); return; }
+    tocar(p);
+    if (esKg(uni(p))) return 'cerrar';
+    avisar.ok(p.nombre + ' agregado');
   }
 
   function tocar(p) {
@@ -338,6 +350,7 @@ export default function NuevaVenta() {
           <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar producto..." style={{ paddingLeft: '2.75rem' }} />
         </div>
+        <button onClick={() => setCam(true)} className="shrink-0 rounded-xl bg-vino-800 px-4 text-sm font-semibold text-white">Escanear</button>
         <button onClick={() => setLibre({ nombre: '', precio: '' })} className="shrink-0 rounded-xl bg-white px-4 text-sm font-semibold text-stone-700 ring-1 ring-stone-300">Libre</button>
       </div>
 
@@ -398,6 +411,8 @@ export default function NuevaVenta() {
           <button disabled={!items} onClick={abrirCobro} className="shrink-0 rounded-full bg-vino-800 px-7 py-3 font-bold text-white shadow-lift disabled:bg-stone-400">Cobrar</button>
         </div>
       </div>
+
+      {cam && <Escaner titulo="Escanear producto" onCodigo={leerCodigo} onCerrar={() => setCam(false)} />}
 
       {ticket && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 md:items-center" onClick={() => setTicket(false)}>
