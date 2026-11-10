@@ -1,15 +1,24 @@
 import { revalidatePath } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
-import { isAdmin } from '@/lib/admin';
+import { autorizar } from '@/lib/permisos';
 import { destroyImage } from '@/lib/cloudinary';
 import { admiteDecimales } from '@/lib/unidades';
 
-const deny = () => NextResponse.json({ error: 'no_autorizado' }, { status: 401 });
+const denegar = (acceso) => NextResponse.json(
+  {
+    error: acceso.status === 401
+      ? 'no_autorizado'
+      : 'sin_permiso'
+  },
+  { status: acceso.status }
+);
 const num = (v) => (v === '' || v == null || isNaN(Number(v)) ? null : Number(v));
 
 export async function GET(req) {
-  if (!(await isAdmin(req))) return deny();
+  const acceso = await autorizar(req, 'productos.ver');
+  if (!acceso.ok) return denegar(acceso);
+  const puedeVerCostos = (await autorizar(req, 'costos.ver')).ok;
   const q = sql();
   const [productos, categorias] = await Promise.all([
     q`SELECT p.*, c.nombre AS categoria, l.nombre AS linea
@@ -20,12 +29,39 @@ export async function GET(req) {
       FROM categorias c JOIN lineas l ON l.id = c.linea_id ORDER BY l.orden, c.orden`,
   ]);
   const NUMS = ['precio_menor', 'precio_mayor', 'mayor_desde', 'costo', 'stock', 'stock_min'];
-  const limpios = productos.map((p) => { const o = { ...p }; for (const k of NUMS) if (o[k] != null && o[k] !== '') o[k] = Number(o[k]); return o; });
-  return NextResponse.json({ productos: limpios, categorias });
+  const limpios = productos.map((p) => {
+    const o = { ...p };
+
+    // No revelar datos financieros sin permiso.
+    if (!puedeVerCostos) {
+      for (const campo of Object.keys(o)) {
+        if (
+          /(^|_)(costo|costos|margen|margenes|ganancia|ganancias|utilidad|utilidades)($|_)|^precio_compra$/i.test(campo)
+        ) {
+          delete o[campo];
+        }
+      }
+    }
+
+    for (const k of NUMS) {
+      if (o[k] != null && o[k] !== '') {
+        o[k] = Number(o[k]);
+      }
+    }
+
+    return o;
+  });
+  return NextResponse.json(
+    { productos: limpios, categorias },
+    { headers: { 'Cache-Control': 'no-store' } }
+  );
 }
 
 export async function POST(req) {
-  if (!(await isAdmin(req))) return deny();
+  const acceso = await autorizar(req, 'productos.gestionar');
+  if (!acceso.ok) return denegar(acceso);
+  const permisoCosto = await autorizar(req, 'costos.editar');
+  if (!permisoCosto.ok) return denegar(permisoCosto);
   const b = await req.json().catch(() => ({}));
   const nombre = String(b.nombre || '').trim().slice(0, 120);
   if (!nombre || !b.categoria_id) return NextResponse.json({ error: 'datos_invalidos' }, { status: 400 });
@@ -94,7 +130,8 @@ export async function POST(req) {
 }
 
 export async function DELETE(req) {
-  if (!(await isAdmin(req))) return deny();
+  const acceso = await autorizar(req, 'productos.eliminar');
+  if (!acceso.ok) return denegar(acceso);
   const id = new URL(req.url).searchParams.get('id');
   const q = sql();
   const r = await q`DELETE FROM productos WHERE id=${id} RETURNING imagen_public_id`;
@@ -103,7 +140,8 @@ export async function DELETE(req) {
 }
 
 export async function PUT(req) {
-  if (!(await isAdmin(req))) return deny();
+  const acceso = await autorizar(req, 'productos.gestionar');
+  if (!acceso.ok) return denegar(acceso);
   const b = await req.json().catch(() => ({}));
   if (!b.id) return NextResponse.json({ error: 'datos_invalidos' }, { status: 400 });
   await sql()`UPDATE productos SET disponible = ${b.disponible === true} WHERE id = ${b.id}`;

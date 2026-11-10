@@ -1,13 +1,21 @@
 import { revalidatePath } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
-import { isAdmin } from '@/lib/admin';
+import { autorizar } from '@/lib/permisos';
 
-const deny = () => NextResponse.json({ error: 'no_autorizado' }, { status: 401 });
+const denegar = (acceso) => NextResponse.json(
+  {
+    error: acceso.status === 401
+      ? 'no_autorizado'
+      : 'sin_permiso'
+  },
+  { status: acceso.status }
+);
 const slugify = (t) => t.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 export async function GET(req) {
-  if (!(await isAdmin(req))) return deny();
+  const acceso = await autorizar(req, 'categorias.ver');
+  if (!acceso.ok) return denegar(acceso);
   const q = sql();
   const [lineas, categorias] = await Promise.all([
     q`SELECT id, nombre FROM lineas ORDER BY orden`,
@@ -18,7 +26,8 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
-  if (!(await isAdmin(req))) return deny();
+  const acceso = await autorizar(req, 'categorias.gestionar');
+  if (!acceso.ok) return denegar(acceso);
   const b = await req.json().catch(() => ({}));
   const nombre = String(b.nombre || '').trim().slice(0, 60);
   if (nombre.length < 2) return NextResponse.json({ error: 'nombre_invalido' }, { status: 400 });
@@ -38,7 +47,8 @@ export async function POST(req) {
 }
 
 export async function DELETE(req) {
-  if (!(await isAdmin(req))) return deny();
+  const acceso = await autorizar(req, 'categorias.gestionar');
+  if (!acceso.ok) return denegar(acceso);
   const id = new URL(req.url).searchParams.get('id');
   const q = sql();
   const [{ n }] = await q`SELECT count(*)::int AS n FROM productos WHERE categoria_id = ${id}`;

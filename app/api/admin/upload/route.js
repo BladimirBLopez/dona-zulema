@@ -1,9 +1,23 @@
 import { NextResponse } from 'next/server';
-import { isAdmin } from '@/lib/admin';
+import { autorizar } from '@/lib/permisos';
 import { cldConfig, signParams } from '@/lib/cloudinary';
 
 export async function POST(req) {
-  if (!(await isAdmin(req))) return NextResponse.json({ error: 'no_autorizado' }, { status: 401 });
+  const acceso = await autorizar(
+    req,
+    'productos.gestionar'
+  );
+
+  if (!acceso.ok) {
+    return NextResponse.json(
+      {
+        error: acceso.status === 401
+          ? 'no_autorizado'
+          : 'sin_permiso'
+      },
+      { status: acceso.status }
+    );
+  }
   const c = cldConfig();
   if (!c) return NextResponse.json({ error: 'cloudinary_no_configurado' }, { status: 500 });
   const timestamp = Math.floor(Date.now() / 1000);

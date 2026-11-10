@@ -1,21 +1,30 @@
 import { revalidatePath } from 'next/cache';
 import { NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
-import { isAdmin } from '@/lib/admin';
+import { autorizar } from '@/lib/permisos';
 import { destroyImage } from '@/lib/cloudinary';
 
-const deny = () => NextResponse.json({ error: 'no_autorizado' }, { status: 401 });
+const denegar = (acceso) => NextResponse.json(
+  {
+    error: acceso.status === 401
+      ? 'no_autorizado'
+      : 'sin_permiso'
+  },
+  { status: acceso.status }
+);
 const s = (v, m) => String(v ?? '').trim().slice(0, m);
 const img = (u) => (/^https:\/\/res\.cloudinary\.com\//.test(String(u || '')) ? String(u).slice(0, 500) : null);
 
 export async function GET(req) {
-  if (!(await isAdmin(req))) return deny();
+  const acceso = await autorizar(req, 'banners.ver');
+  if (!acceso.ok) return denegar(acceso);
   const rows = await sql()`SELECT * FROM banners ORDER BY orden, id`;
   return NextResponse.json(rows);
 }
 
 export async function POST(req) {
-  if (!(await isAdmin(req))) return deny();
+  const acceso = await autorizar(req, 'banners.gestionar');
+  if (!acceso.ok) return denegar(acceso);
   const b = await req.json().catch(() => ({}));
   const titulo = s(b.titulo, 80);
   if (!titulo) return NextResponse.json({ error: 'datos_invalidos' }, { status: 400 });
@@ -37,7 +46,8 @@ export async function POST(req) {
 }
 
 export async function DELETE(req) {
-  if (!(await isAdmin(req))) return deny();
+  const acceso = await autorizar(req, 'banners.gestionar');
+  if (!acceso.ok) return denegar(acceso);
   const id = new URL(req.url).searchParams.get('id');
   const r = await sql()`DELETE FROM banners WHERE id = ${id} RETURNING imagen_public_id`;
   if (r[0]?.imagen_public_id) await destroyImage(r[0].imagen_public_id);
