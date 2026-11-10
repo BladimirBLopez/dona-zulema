@@ -252,11 +252,7 @@ export default function Catalogo({ productos, wa }) {
               ))}
             </div>
           )}
-        </div>
-      </div>
-
-      <div className="mx-auto max-w-6xl px-4 pt-6">
-        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex flex-wrap gap-2">
             <button type="button" onClick={() => setFiltrosAbiertos(true)} className="flex min-h-11 items-center gap-2 rounded-xl border border-vino-900/10 bg-white px-4 py-2 text-sm font-semibold text-vino-900 shadow-sm hover:bg-vino-50">
               <SlidersHorizontal size={17} />
@@ -282,11 +278,17 @@ export default function Catalogo({ productos, wa }) {
             </label>
           </div>
 
+        </div>
+
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-6xl px-4 pt-6">
+        <div className="mb-4">
           <span aria-live="polite" className="text-sm text-stone-500">
             {filtrados.length} {filtrados.length === 1 ? 'producto' : 'productos'}
           </span>
         </div>
-
         {(q.trim() || cantidadFiltros > 0) && (
           <div className="mb-4 flex flex-wrap items-center gap-3 text-sm">
             <span className="text-stone-600">Filtros activos</span>
