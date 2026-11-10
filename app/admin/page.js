@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { LockKeyhole, UserRound } from 'lucide-react';
+import { rutaInicialAdmin } from '@/lib/rutas-admin';
 
 export default function AccesoIndividual() {
   const [usuario, setUsuario] = useState('');
@@ -10,15 +11,36 @@ export default function AccesoIndividual() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    let activo = true;
+
     fetch('/api/admin/sesion', {
-      cache: 'no-store'
+      cache: 'no-store',
+      credentials: 'same-origin'
     })
-      .then(r => {
-        if (r.ok) {
-          window.location.replace('/admin/inicio');
+      .then(async respuesta => {
+        if (!respuesta.ok) return;
+
+        const datos = await respuesta.json()
+          .catch(() => null);
+
+        if (
+          activo &&
+          datos?.ok &&
+          datos.usuario
+        ) {
+          window.location.replace(
+            rutaInicialAdmin(
+              datos.usuario,
+              datos.permisos
+            )
+          );
         }
       })
       .catch(() => {});
+
+    return () => {
+      activo = false;
+    };
   }, []);
 
   async function ingresar(evento) {
@@ -63,7 +85,36 @@ export default function AccesoIndividual() {
         );
       }
 
-      window.location.replace('/admin/inicio');
+      // Obtener los permisos de la nueva sesion
+      // antes de elegir el modulo de destino.
+      const respuestaSesion = await fetch(
+        '/api/admin/sesion',
+        {
+          cache: 'no-store',
+          credentials: 'same-origin'
+        }
+      );
+
+      const datosSesion = await respuestaSesion.json()
+        .catch(() => null);
+
+      if (
+        !respuestaSesion.ok ||
+        !datosSesion?.ok ||
+        !datosSesion.usuario
+      ) {
+        throw new Error(
+          'La sesión se creó, pero no se pudo ' +
+          'verificar el acceso. Actualiza la página.'
+        );
+      }
+
+      window.location.replace(
+        rutaInicialAdmin(
+          datosSesion.usuario,
+          datosSesion.permisos
+        )
+      );
 
     } catch (e) {
       setError(e.message);

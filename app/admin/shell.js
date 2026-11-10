@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Package, ShoppingCart, Tags, Megaphone, Store, KeyRound, LogOut, ExternalLink, Wallet, X, Plus, Menu as MenuIcon } from 'lucide-react';
 import { UsersRound } from 'lucide-react';
+import { puedeAbrirRuta } from '@/lib/rutas-admin';
 import Marca from '@/components/Marca';
 import Avisos from '@/components/Avisos';
 import NotificationBell from '@/components/NotificationBell';
@@ -30,20 +31,6 @@ const LINKS = [...GRUPOS.flatMap(([, l]) => l), CLAVE];
 const PRINCIPAL = ['/admin/inicio', '/admin/ventas/nueva', '/admin/ventas', '/admin/productos'].map((h) => LINKS.find(([x]) => x === h));
 
 
-const PERMISOS_MENU = {
-  '/admin/inicio': 'inicio.ver',
-  '/admin/ventas/nueva': 'ventas.crear',
-  '/admin/ventas': 'ventas.ver',
-  '/admin/productos': 'productos.ver',
-  '/admin/categorias': 'categorias.ver',
-  '/admin/gastos': 'gastos.ver',
-  '/admin/costos': 'costos.ver',
-  '/admin/reportes': 'reportes.ver',
-  '/admin/cierre': 'cierre.ver',
-  '/admin/banners': 'banners.ver',
-  '/admin/negocio': 'negocio.ver'
-};
-
 export default function Shell({ children }) {
   const path = usePathname();
   const [ok, setOk] = useState(false);
@@ -66,28 +53,12 @@ export default function Shell({ children }) {
       permisosSesion.includes(permiso)
     );
 
-  const puedeVerRuta = (href) => {
-    if (!usuarioSesion) return false;
-
-    if (usuarioSesion.rol === 'propietario') {
-      return true;
-    }
-
-    if (href === '/admin/clave') {
-      return true;
-    }
-
-    if (href === '/admin/usuarios') {
-      return false;
-    }
-
-    const permiso = PERMISOS_MENU[href];
-
-    return Boolean(
-      permiso &&
-      permisosSesion.includes(permiso)
+  const puedeVerRuta = (href) =>
+    puedeAbrirRuta(
+      usuarioSesion,
+      permisosSesion,
+      href
     );
-  };
 
   const gruposVisibles = GRUPOS
     .map(([grupo, links]) => [
