@@ -47,6 +47,8 @@ const PERMISOS_MENU = {
 export default function Shell({ children }) {
   const path = usePathname();
   const [ok, setOk] = useState(false);
+  const [comprobandoSesion, setComprobandoSesion] =
+    useState(true);
   const [N, setN] = useState(null);
   const [mas, setMas] = useState(false);
   const [usuarioSesion, setUsuarioSesion] = useState(null);
@@ -100,6 +102,10 @@ export default function Shell({ children }) {
     let activo = true;
 
     async function check() {
+      if (activo) {
+        setComprobandoSesion(true);
+      }
+
       try {
         const r = await fetch(
           '/api/admin/sesion',
@@ -147,6 +153,10 @@ export default function Shell({ children }) {
           setN(null);
           setUsuarioSesion(null);
           setPermisosSesion([]);
+        }
+      } finally {
+        if (activo) {
+          setComprobandoSesion(false);
         }
       }
     }
@@ -250,7 +260,88 @@ export default function Shell({ children }) {
     }
   }
 
-  if (!ok) return <div className="admin min-h-screen bg-panel">{children}<Avisos /></div>;
+
+  // No montar paginas privadas mientras se comprueba
+  // la sesion. Esto evita ejecutar sus efectos.
+  if (comprobandoSesion) {
+    return (
+      <main className="admin grid min-h-screen place-items-center bg-panel p-6">
+        <p
+          role="status"
+          className="text-center text-sm text-stone-600"
+        >
+          Verificando acceso...
+        </p>
+      </main>
+    );
+  }
+
+  // El unico acceso publico del administrador
+  // es la pagina de inicio de sesion.
+  if (!ok || !usuarioSesion) {
+    if (path === '/admin') {
+      return (
+        <div className="admin min-h-screen bg-panel">
+          {children}
+          <Avisos />
+        </div>
+      );
+    }
+
+    return (
+      <main className="admin grid min-h-screen place-items-center bg-panel p-5">
+        <section className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-sm">
+          <h1 className="text-xl font-bold text-vino-800">
+            Sesión requerida
+          </h1>
+
+          <p className="mt-3 text-sm text-stone-600">
+            Debes iniciar sesión para acceder
+            al administrador de Doña Zulema.
+          </p>
+
+          <Link
+            href="/admin"
+            className="mt-5 inline-block rounded-xl bg-vino-800 px-5 py-3 font-bold text-white"
+          >
+            Iniciar sesión
+          </Link>
+        </section>
+      </main>
+    );
+  }
+
+  // Nunca montar paginas que no correspondan
+  // a los permisos efectivos del empleado.
+  if (path !== '/admin' && !puedeVerRuta(path)) {
+    const primeraRuta = [
+      ...PRINCIPAL,
+      ...GRUPOS.flatMap(([, links]) => links)
+    ].find(([href]) => puedeVerRuta(href))?.[0]
+      || '/admin/clave';
+
+    return (
+      <main className="admin grid min-h-screen place-items-center bg-panel p-5">
+        <section className="w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-sm">
+          <h1 className="text-xl font-bold text-vino-800">
+            Acceso restringido
+          </h1>
+
+          <p className="mt-3 text-sm text-stone-600">
+            Tu cuenta no tiene autorización
+            para abrir esta sección.
+          </p>
+
+          <Link
+            href={primeraRuta}
+            className="mt-5 inline-block rounded-xl bg-vino-800 px-5 py-3 font-bold text-white"
+          >
+            Ir a un módulo autorizado
+          </Link>
+        </section>
+      </main>
+    );
+  }
 
   const tab = (a) => `flex flex-col items-center gap-0.5 py-1.5 text-[11px] font-semibold ${a ? 'text-vino-800' : 'text-stone-500'}`;
   const pill = (a) => `grid h-7 w-12 place-items-center rounded-full transition ${a ? 'bg-vino-100' : ''}`;
