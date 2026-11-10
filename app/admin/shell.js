@@ -139,7 +139,7 @@ export default function Shell({ children }) {
         }
 
         const negocio = await fetch(
-          '/api/admin/negocio',
+          '/api/admin/identidad',
           { cache: 'no-store' }
         );
 

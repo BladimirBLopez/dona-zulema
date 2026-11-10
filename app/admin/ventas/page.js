@@ -112,7 +112,7 @@ export default function Ventas() {
   }, [per, a, b, q]);
 
   useEffect(() => { const t = setTimeout(cargar, q ? 300 : 0); return () => clearTimeout(t); }, [cargar, q]);
-  useEffect(() => { api('/api/admin/negocio').then((r) => setNegocio(r.data?.nombre || '')); }, []);
+  useEffect(() => { api('/api/admin/identidad').then((r) => setNegocio(r.data?.nombre || '')); }, []);
 
   const resumen = useMemo(() => {
     const act = (ventas || []).filter((v) => v.estado === 'activa');

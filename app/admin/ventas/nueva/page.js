@@ -112,7 +112,7 @@ export default function NuevaVenta() {
 
   useEffect(() => {
     (async () => {
-      const [pr, ng, vs] = await Promise.all([api('/api/admin/productos'), api('/api/admin/negocio'), api('/api/admin/ventas')]);
+      const [pr, ng, vs] = await Promise.all([api('/api/admin/productos'), api('/api/admin/identidad'), api('/api/admin/ventas')]);
       const lista = pr.data?.productos || [];
       setProductos(lista);
       setNegocio(ng.data?.nombre || '');
