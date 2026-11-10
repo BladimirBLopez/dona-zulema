@@ -1,12 +1,13 @@
 'use client';
 import { pasoDe } from '@/lib/unidades';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Search, Plus, Minus, X, ShoppingBag, Milk, Drumstick, Trash2, PackageOpen } from 'lucide-react';
+import { Search, Plus, Minus, X, ShoppingBag, Milk, Drumstick, Trash2, PackageOpen, SlidersHorizontal, ArrowDownUp, Check } from 'lucide-react';
 import Link from 'next/link';
 import WhatsApp from '@/components/WhatsApp';
 
 const bs = (v) => (v == null || v === '' ? null : 'Bs ' + Number(v).toFixed(2));
+const normalizar = (v) => String(v ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 const stepOf = pasoDe;
 const Icono = ({ lslug, className }) => (lslug === 'pollo' ? <Drumstick className={className} /> : <Milk className={className} />);
 
@@ -80,11 +81,22 @@ export default function Catalogo({ productos, wa }) {
   const [q, setQ] = useState('');
   const [linea, setLinea] = useState('all');
   const [cat, setCat] = useState('all');
+  const [precioMax, setPrecioMax] = useState('todos');
+  const [orden, setOrden] = useState('catalogo');
+  const [filtrosAbiertos, setFiltrosAbiertos] = useState(false);
   const [cart, setCart] = useState({});
   const [open, setOpen] = useState(false);
   const [tipo, setTipo] = useState('menor');
   const [nota, setNota] = useState('');
   const ultimo = useRef({ k: '', t: 0 });
+  useEffect(() => {
+    if (!filtrosAbiertos) return;
+    const cerrar = (e) => {
+      if (e.key === 'Escape') setFiltrosAbiertos(false);
+    };
+    document.addEventListener('keydown', cerrar);
+    return () => document.removeEventListener('keydown', cerrar);
+  }, [filtrosAbiertos]);
 
   const lineas = useMemo(() => {
     const m = new Map();
@@ -98,23 +110,83 @@ export default function Catalogo({ productos, wa }) {
     return [...s];
   }, [productos, linea]);
 
+  const maximoPrecio = useMemo(() => productos.reduce((max, p) => {
+    const v = p.precio_menor == null || p.precio_menor === '' ? NaN : Number(p.precio_menor);
+    return Number.isFinite(v) && v > max ? v : max;
+  }, 0), [productos]);
+
+  const limitePrecio = Math.max(1, Math.ceil(maximoPrecio / 10) * 10);
+
+  const filtrados = useMemo(() => {
+    const texto = normalizar(q.trim());
+
+    const lista = productos.filter((p) => {
+      if (linea !== 'all' && p.lslug !== linea) return false;
+      if (cat !== 'all' && p.categoria !== cat) return false;
+      if (texto && !normalizar(`${p.nombre} ${p.categoria} ${p.linea}`).includes(texto)) return false;
+
+      if (precioMax !== 'todos') {
+        const v = p.precio_menor == null || p.precio_menor === '' ? NaN : Number(p.precio_menor);
+        if (!Number.isFinite(v) || v > Number(precioMax)) return false;
+      }
+
+      return true;
+    });
+
+    if (orden === 'nombre') {
+      lista.sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+    }
+
+    if (orden === 'precio-asc' || orden === 'precio-desc') {
+      const precio = (p) => p.precio_menor == null || p.precio_menor === '' ? NaN : Number(p.precio_menor);
+
+      lista.sort((a, b) => {
+        const va = precio(a);
+        const vb = precio(b);
+
+        if (!Number.isFinite(va)) return Number.isFinite(vb) ? 1 : 0;
+        if (!Number.isFinite(vb)) return -1;
+
+        return orden === 'precio-asc' ? va - vb : vb - va;
+      });
+    }
+
+    return lista;
+  }, [productos, q, linea, cat, precioMax, orden]);
+
   const grupos = useMemo(() => {
-    const t = q.trim().toLowerCase();
     const out = [];
-    for (const p of productos) {
-      if (linea !== 'all' && p.lslug !== linea) continue;
-      if (cat !== 'all' && p.categoria !== cat) continue;
-      if (t && !(p.nombre + ' ' + p.categoria).toLowerCase().includes(t)) continue;
+
+    for (const p of filtrados) {
       let l = out.find((x) => x.linea === p.linea);
       if (!l) out.push((l = { linea: p.linea, cats: [] }));
+
       let c = l.cats.find((x) => x.nombre === p.categoria);
       if (!c) l.cats.push((c = { nombre: p.categoria, items: [] }));
+
       c.items.push(p);
     }
-    return out;
-  }, [productos, q, linea, cat]);
 
-  const pickLinea = (v) => { setLinea(v); setCat('all'); };
+    return out;
+  }, [filtrados]);
+
+  const cantidadFiltros =
+    Number(linea !== 'all') +
+    Number(cat !== 'all') +
+    Number(precioMax !== 'todos');
+
+  const limpiar = () => {
+    setQ('');
+    setLinea('all');
+    setCat('all');
+    setPrecioMax('todos');
+    setOrden('catalogo');
+  };
+
+  const pickLinea = (v) => {
+    setLinea(v);
+    setCat('all');
+  };
 
   const add = (p, d) =>
     setCart((c) => {
@@ -163,7 +235,7 @@ export default function Catalogo({ productos, wa }) {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Buscar queso, jamón, pollo..."
-              className="w-full rounded-full border-0 bg-white py-3 pl-11 pr-4 text-sm shadow-card outline-none ring-1 ring-stone-200 focus:ring-2 focus:ring-vino-500"
+              className="w-full rounded-2xl border-0 bg-white py-3.5 pl-11 pr-4 text-sm shadow-card outline-none ring-1 ring-stone-200 focus:ring-2 focus:ring-vino-500"
             />
           </div>
           <div className="no-scrollbar flex gap-2 overflow-x-auto">
@@ -183,17 +255,57 @@ export default function Catalogo({ productos, wa }) {
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl px-4 pt-8">
+      <div className="mx-auto max-w-6xl px-4 pt-6">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap gap-2">
+            <button type="button" onClick={() => setFiltrosAbiertos(true)} className="flex min-h-11 items-center gap-2 rounded-xl border border-vino-900/10 bg-white px-4 py-2 text-sm font-semibold text-vino-900 shadow-sm hover:bg-vino-50">
+              <SlidersHorizontal size={17} />
+              Filtros
+              {cantidadFiltros > 0 && (
+                <span className="rounded-full bg-vino-800 px-2 py-0.5 text-xs text-white">{cantidadFiltros}</span>
+              )}
+            </button>
+
+            <label className="relative flex items-center">
+              <ArrowDownUp size={16} className="pointer-events-none absolute left-3 text-vino-800" />
+              <select
+                aria-label="Ordenar productos"
+                value={orden}
+                onChange={(e) => setOrden(e.target.value)}
+                className="min-h-11 max-w-[205px] rounded-xl border border-vino-900/10 bg-white py-2 pl-9 pr-2 text-sm font-semibold text-stone-800 shadow-sm"
+              >
+                <option value="catalogo">Orden del catálogo</option>
+                <option value="nombre">Nombre A–Z</option>
+                <option value="precio-asc">Precio: menor a mayor</option>
+                <option value="precio-desc">Precio: mayor a menor</option>
+              </select>
+            </label>
+          </div>
+
+          <span aria-live="polite" className="text-sm text-stone-500">
+            {filtrados.length} {filtrados.length === 1 ? 'producto' : 'productos'}
+          </span>
+        </div>
+
+        {(q.trim() || cantidadFiltros > 0) && (
+          <div className="mb-4 flex flex-wrap items-center gap-3 text-sm">
+            <span className="text-stone-600">Filtros activos</span>
+            <button type="button" onClick={limpiar} className="font-semibold text-vino-800 underline underline-offset-2">
+              Limpiar todo
+            </button>
+          </div>
+        )}
+
         {productos.length === 0 && (
           <p className="py-16 text-center text-stone-500">Pronto tendremos el catálogo aquí. Mientras tanto, escríbenos por WhatsApp.</p>
         )}
-        {productos.length > 0 && grupos.length === 0 && (
+        {productos.length > 0 && filtrados.length === 0 && (
           <div className="py-16 text-center text-stone-500">
             <PackageOpen className="mx-auto mb-3 h-10 w-10 text-vino-300" />
             No encontramos productos con esa búsqueda.
           </div>
         )}
-        {grupos.map((l) => (
+        {orden === 'catalogo' ? grupos.map((l) => (
           <div key={l.linea} className="mb-12">
             <h2 className="mb-5 font-serif text-3xl font-extrabold text-vino-800">{l.linea}</h2>
             {l.cats.map((c) => (
@@ -210,8 +322,97 @@ export default function Catalogo({ productos, wa }) {
               </div>
             ))}
           </div>
-        ))}
+        )) : (
+          <div className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {filtrados.map((p) => (
+              <Card key={p.id} p={p} qty={cart[p.id]?.qty} onAdd={add} />
+            ))}
+          </div>
+        )}
       </div>
+
+      <AnimatePresence>
+        {filtrosAbiertos && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setFiltrosAbiertos(false)}
+            className="fixed inset-0 z-[60] flex items-end justify-center bg-black/50 sm:items-center"
+          >
+            <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Filtros del catálogo"
+              initial={{ y: 70 }}
+              animate={{ y: 0 }}
+              exit={{ y: 70 }}
+              onClick={(e) => e.stopPropagation()}
+              className="flex max-h-[88dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl sm:rounded-3xl"
+            >
+              <div className="flex items-center justify-between border-b border-stone-100 p-5">
+                <div>
+                  <h3 className="font-serif text-xl font-extrabold text-vino-900">Filtrar productos</h3>
+                  <p className="text-xs text-stone-500">Encuentra exactamente lo que buscas</p>
+                </div>
+                <button type="button" onClick={() => setFiltrosAbiertos(false)} aria-label="Cerrar filtros" className="grid h-10 w-10 place-items-center rounded-full bg-stone-100">
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="space-y-6 overflow-y-auto p-5">
+                <div>
+                  <h4 className="mb-3 font-semibold">Categorías</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {['all', ...cats].map((c) => (
+                      <button type="button" key={c} onClick={() => setCat(c)} aria-pressed={cat === c} className={chip(cat === c)}>
+                        {cat === c && <Check size={12} className="mr-1 inline" />}
+                        {c === 'all' ? 'Todas' : c}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {maximoPrecio > 0 && (
+                  <div>
+                    <div className="mb-2 flex justify-between gap-3">
+                      <h4 className="font-semibold">Precio máximo</h4>
+                      <span className="text-sm font-bold text-vino-800">
+                        {precioMax === 'todos' ? 'Sin límite' : 'Bs ' + precioMax}
+                      </span>
+                    </div>
+
+                    <input
+                      type="range"
+                      aria-label="Precio máximo al por menor"
+                      min="0"
+                      max={limitePrecio}
+                      step="1"
+                      value={precioMax === 'todos' ? limitePrecio : Number(precioMax)}
+                      onChange={(e) => setPrecioMax(Number(e.target.value) >= limitePrecio ? 'todos' : e.target.value)}
+                      className="w-full accent-vino-800"
+                    />
+                    <div className="flex justify-between text-xs text-stone-500">
+                      <span>Bs 0</span>
+                      <span>Bs {limitePrecio}</span>
+                    </div>
+                    <p className="mt-2 text-xs text-stone-500">Se aplica al precio por menor.</p>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex gap-3 border-t border-stone-100 p-5">
+                <button type="button" onClick={limpiar} className="rounded-xl border border-stone-200 px-4 py-3 text-sm font-semibold">
+                  Limpiar
+                </button>
+                <button type="button" onClick={() => setFiltrosAbiertos(false)} className="flex-1 rounded-xl bg-vino-800 px-4 py-3 text-sm font-bold text-white">
+                  Ver {filtrados.length} productos
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {count > 0 && !open && (
