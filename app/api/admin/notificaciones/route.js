@@ -26,4 +26,4 @@ export const GET = admin(async () => {
     total: conteo[0]?.total ?? 0,
     pedidos
   };
-});
+}, 'notificaciones.ver');

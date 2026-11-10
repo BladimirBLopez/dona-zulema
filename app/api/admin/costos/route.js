@@ -17,4 +17,4 @@ export const POST = admin(async ({ body }) => {
     FROM jsonb_to_recordset(${JSON.stringify(items)}::jsonb) AS x(id text, costo numeric)
     WHERE p.id::text = x.id RETURNING p.id`;
   return { ok: true, actualizados: r.length };
-});
+}, 'costos.editar');
