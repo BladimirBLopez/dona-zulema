@@ -1,5 +1,6 @@
 import { LayoutGrid, Scale, Snowflake, MessageCircle, ShoppingBag, Truck, MapPin, Clock, ChevronDown } from 'lucide-react';
 import Reveal from '@/components/Reveal';
+import { RedLink } from '@/components/RedesIcons';
 
 const H2 = ({ eyebrow, children, sub }) => (
   <div className="mb-10 text-center">
@@ -129,7 +130,7 @@ export function Info({ n, wa }) {
                 {redes.length > 0 && (
                   <div className="flex flex-wrap gap-2">
                     {redes.map(([nombre, u]) => (
-                      <a key={nombre} href={u} target="_blank" rel="noopener noreferrer" className="rounded-full bg-crema px-5 py-2 text-sm font-semibold text-vino-800 ring-1 ring-oro-400/60">{nombre}</a>
+                      <RedLink key={nombre} nombre={nombre} u={u} />
                     ))}
                   </div>
                 )}
