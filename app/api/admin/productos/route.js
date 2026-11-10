@@ -60,8 +60,8 @@ export async function GET(req) {
 export async function POST(req) {
   const acceso = await autorizar(req, 'productos.gestionar');
   if (!acceso.ok) return denegar(acceso);
-  const permisoCosto = await autorizar(req, 'costos.editar');
-  if (!permisoCosto.ok) return denegar(permisoCosto);
+  const puedeEditarCostos = (await autorizar(req, 'costos.editar')).ok;
+  // Sin costos.editar se puede guardar el producto, pero el costo no se toca.
   const b = await req.json().catch(() => ({}));
   const nombre = String(b.nombre || '').trim().slice(0, 120);
   if (!nombre || !b.categoria_id) return NextResponse.json({ error: 'datos_invalidos' }, { status: 400 });
@@ -89,7 +89,7 @@ export async function POST(req) {
     await q`UPDATE productos SET categoria_id=${b.categoria_id}, nombre=${nombre},
       precio_menor=${num(b.precio_menor)}, precio_mayor=${num(b.precio_mayor)}, mayor_desde=${num(b.mayor_desde)},
       unidad=${unidad}, disponible=${disp}, codigo=${codigo},
-      costo=${num(b.costo)}, stock_min=${num(b.stock_min)},
+      costo=CASE WHEN ${puedeEditarCostos}::boolean THEN ${num(b.costo)}::numeric ELSE costo END, stock_min=${num(b.stock_min)},
       imagen_url=COALESCE(${b.imagen_url || null}, imagen_url),
       imagen_public_id=COALESCE(${b.imagen_public_id || null}, imagen_public_id)
       WHERE id=${b.id}`;
@@ -109,7 +109,7 @@ export async function POST(req) {
           ${b.categoria_id}, ${nombre},
           ${num(b.precio_menor)}, ${num(b.precio_mayor)}, ${num(b.mayor_desde)},
           ${unidad}, ${disp},
-          ${num(b.costo)}, ${stockInicial}, ${num(b.stock_min)}, ${codigo},
+          ${puedeEditarCostos ? num(b.costo) : null}, ${stockInicial}, ${num(b.stock_min)}, ${codigo},
           ${b.imagen_url || null}, ${b.imagen_public_id || null}
         )
         RETURNING id, stock
