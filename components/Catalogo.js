@@ -217,13 +217,29 @@ export default function Catalogo({ productos, wa }) {
   const totalTexto = conPrecio ? bs(total) : 'Por confirmar';
 
   const msg = [
-    'Hola, quiero hacer este pedido (' + (tipo === 'mayor' ? 'al por mayor' : 'al por menor') + '):',
-    ...detalle.map(({ p, qty, precio, subtotal }) =>
-      `• ${cantidadDe(qty, p.unidad)} de ${p.nombre}\n  ${precio === null ? 'Precio a consultar' : bs(precio) + ' x ' + qty + ' = ' + bs(subtotal)}`),
-    'Total ' + (sinPrecio ? 'parcial' : 'estimado') + ': ' + totalTexto,
-    sinPrecio ? 'Hay productos con precio a consultar.' : '',
-    nota.trim() ? 'Nota: ' + nota.trim() : '',
-  ].filter(Boolean).join('\n');
+    '🛒 *PEDIDO – DOÑA ZULEMA*',
+    '',
+    'Hola, quisiera realizar el siguiente pedido:',
+    '',
+    ...detalle.flatMap(({ p, qty, precio, subtotal }, index) => [
+      `${index + 1}. *${p.nombre}*`,
+      precio === null
+        ? `${cantidadDe(qty, p.unidad)} — Precio a consultar`
+        : `${cantidadDe(qty, p.unidad)} × ${bs(precio)} = ${bs(subtotal)}`,
+      '',
+    ]),
+    `💰 *TOTAL: ${totalTexto}${sinPrecio && conPrecio ? ' (parcial)' : ''}*`,
+    ...(sinPrecio ? [
+      '',
+      'Hay productos con precio a consultar.',
+    ] : []),
+    ...(nota.trim() ? [
+      '',
+      `Nota: ${nota.trim()}`,
+    ] : []),
+    '',
+    '¿Me confirman la disponibilidad? Gracias.',
+  ].join('\n');
   const link = `https://wa.me/${wa}?text=${encodeURIComponent(msg)}`;
 
   function guardarPedido() {
