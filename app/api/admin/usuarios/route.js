@@ -210,6 +210,14 @@ export async function PATCH(req) {
       }, 400);
     }
 
+    // Se habilitaran las cuentas cuando todas
+    // las API tengan control de permisos.
+    if (b.activo === true) {
+      return responder({
+        error: 'habilitacion_pendiente'
+      }, 409);
+    }
+
     const clave = b.clave || '';
 
     if (
