@@ -168,6 +168,36 @@ export default function NuevaVenta() {
     setKp({ idx: i, id: l.producto_id, p: l.p, nombre: l.nombre, unidad: l.unidad, modo: l.modo, buf: String(inicial || ''), fresh: true, precio: l.precio, manual: l.manual, editPrecio: false });
   }
 
+  const lector = useRef({ buf: '', t: 0 }); // lector-v1
+  const alCodigo = useRef(null);
+  alCodigo.current = leerCodigo;
+  const lectorLibre = !cobrando && !kp && !libre && !ticket && !cam && !hecho;
+  useEffect(() => {
+    if (!lectorLibre) { lector.current = { buf: '', t: 0 }; return; }
+    const onKey = (e) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const ahora = Date.now();
+      const r = lector.current;
+      if (e.key === 'Enter') {
+        const c = r.buf;
+        r.buf = '';
+        if (c.length >= 4 && ahora - r.t < 120) {
+          e.preventDefault();
+          e.stopPropagation();
+          setQ('');
+          if (alCodigo.current) alCodigo.current(c);
+        }
+        return;
+      }
+      if (e.key.length !== 1) return;
+      if (ahora - r.t > 100) r.buf = '';
+      r.buf += e.key;
+      r.t = ahora;
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [lectorLibre]);
+
   function leerCodigo(c) {
     const p = (productos || []).find((x) => x.codigo && normCod(x.codigo) === normCod(c));
     if (!p) { avisar.aviso('Código no registrado', c); return; }
