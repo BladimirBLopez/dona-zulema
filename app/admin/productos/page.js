@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Search, Plus, Pencil, Trash2, X, ImagePlus, Lock } from 'lucide-react';
 import ProductoForm from '@/components/ProductoForm';
+import { errMsg } from '@/lib/cliente';
+import { admiteDecimales } from '@/lib/unidades';
 
 const vacio = { id: null, nombre: '', categoria_id: '', precio_menor: '', precio_mayor: '', mayor_desde: '', unidad: 'kg', disponible: true, costo: '', stock: '', stock_min: '', imagen_url: '', imagen_public_id: '' };
 const bs = (v) => (v == null ? '—' : Number(v).toFixed(2));
@@ -114,13 +116,16 @@ export default function Admin() {
     if (st.cant === '' || !Number.isFinite(c)) return aviso('Escribe una cantidad');
     if (st.modo === 'ingreso' && c <= 0) return aviso('La entrada debe ser mayor a 0');
     if (st.modo === 'ajuste' && c < 0) return aviso('No puede ser negativo');
+    if (st.modo === 'merma' && c <= 0) return aviso('Escribe cuánto se perdió.');
+    if (!admiteDecimales(st.p.unidad) && !Number.isInteger(c)) return aviso('Este producto se cuenta en números enteros (por ejemplo 5, no 5.5).');
     const actual = Number(st.p.stock) || 0;
-    const delta = st.modo === 'ajuste' ? Math.round((c - actual) * 1000) / 1000 : c;
+    if (st.modo === 'merma' && c > actual) return aviso('Solo tienes ' + fmt(actual) + ' ' + (st.p.unidad || '') + ' en stock.');
+    const delta = st.modo === 'ajuste' ? Math.round((c - actual) * 1000) / 1000 : st.modo === 'merma' ? -c : c;
     if (delta === 0) return aviso('Sin cambios');
     setBusy(true);
     const r = await fetch('/api/admin/stock', { method: 'POST', body: JSON.stringify({ producto_id: String(st.p.id), cantidad: delta, motivo: st.modo }) });
     setBusy(false);
-    if (r.ok) { setSt(null); setF((x) => (x && x.id === st.p.id ? { ...x, stock: Math.round(((Number(x.stock) || 0) + delta) * 1000) / 1000 } : x)); aviso('Stock actualizado'); cargar(); } else aviso('No se pudo actualizar el stock');
+    if (r.ok) { setSt(null); setF((x) => (x && x.id === st.p.id ? { ...x, stock: Math.round(((Number(x.stock) || 0) + delta) * 1000) / 1000 } : x)); aviso('Stock actualizado'); cargar(); } else aviso(errMsg(await r.json().catch(() => null)));
   }
 
   const editar = (p) => setF({ ...p, precio_menor: p.precio_menor ?? '', precio_mayor: p.precio_mayor ?? '', mayor_desde: p.mayor_desde ?? '', costo: p.costo ?? '', stock: p.stock ?? '', stock_min: p.stock_min ?? '', imagen_url: p.imagen_url || '', imagen_public_id: p.imagen_public_id || '' });
@@ -237,13 +242,14 @@ export default function Admin() {
               <button type="button" onClick={() => setSt(null)} aria-label="Cerrar" className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-stone-100"><X size={18} /></button>
             </div>
             <div className="grid grid-cols-2 gap-2">
-              {[['ingreso', 'Entra mercadería'], ['ajuste', 'Corregir total']].map(([v, t]) => (
-                <button key={v} type="button" onClick={() => setSt({ ...st, modo: v, cant: '' })} className={'rounded-xl py-2.5 text-sm font-semibold ' + (st.modo === v ? 'bg-vino-800 text-white' : 'bg-stone-100 text-stone-700')}>{t}</button>
+              {[['ingreso', 'Entra mercadería'], ['ajuste', 'Corregir total'], ['merma', 'Se dañó o venció']].map(([v, t]) => (
+                <button key={v} type="button" onClick={() => setSt({ ...st, modo: v, cant: '' })} className={(v === 'merma' ? 'col-span-2 ' : '') + 'rounded-xl py-2.5 text-sm font-semibold ' + (st.modo === v ? 'bg-vino-800 text-white' : 'bg-stone-100 text-stone-700')}>{t}</button>
               ))}
             </div>
-            <label className="block text-xs text-stone-500">{st.modo === 'ingreso' ? 'Cantidad que entra (' + (st.p.unidad || '') + ')' : 'Stock real que hay ahora (' + (st.p.unidad || '') + ')'}
-              <input type="number" inputMode="decimal" step="any" min="0" value={st.cant} onChange={(e) => setSt({ ...st, cant: e.target.value })} autoFocus />
+            <label className="block text-xs text-stone-500">{st.modo === 'ingreso' ? 'Cantidad que entra (' + (st.p.unidad || '') + ')' : st.modo === 'merma' ? 'Cantidad que se perdió (' + (st.p.unidad || '') + ')' : 'Stock real que hay ahora (' + (st.p.unidad || '') + ')'}
+              <input type="number" inputMode={admiteDecimales(st.p.unidad) ? 'decimal' : 'numeric'} step={admiteDecimales(st.p.unidad) ? 'any' : '1'} min="0" value={st.cant} onChange={(e) => setSt({ ...st, cant: e.target.value })} autoFocus />
             </label>
+            {st.modo === 'merma' && <p className="text-xs text-stone-500">Queda registrado como pérdida (producto dañado o vencido) y baja el stock.</p>}
             <button onClick={guardarStock} disabled={busy} className="w-full rounded-full bg-vino-800 py-3 font-bold text-white disabled:opacity-50">{busy ? 'Guardando...' : 'Guardar stock'}</button>
           </div>
         </div>
