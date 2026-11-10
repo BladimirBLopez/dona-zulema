@@ -39,16 +39,53 @@ export default function Shell({ children }) {
   const marca = N || { nombre: 'Doña Zulema', logo: '' };
 
   useEffect(() => {
-    const check = () =>
-      fetch('/api/admin/negocio')
-        .then(async (r) => {
-          setOk(r.ok);
-          if (r.ok) setN(await r.json());
-        })
-        .catch(() => setOk(false));
+    let activo = true;
+
+    async function check() {
+      try {
+        const r = await fetch(
+          '/api/admin/sesion',
+          { cache: 'no-store' }
+        );
+
+        if (!activo) return;
+
+        setOk(r.ok);
+
+        if (!r.ok) {
+          setN(null);
+          return;
+        }
+
+        const negocio = await fetch(
+          '/api/admin/negocio',
+          { cache: 'no-store' }
+        );
+
+        if (negocio.ok && activo) {
+          setN(await negocio.json());
+        }
+
+      } catch {
+        if (activo) {
+          setOk(false);
+          setN(null);
+        }
+      }
+    }
+
     check();
-    window.addEventListener('admin-auth', check);
-    return () => window.removeEventListener('admin-auth', check);
+
+    window.addEventListener(
+      'admin-auth', check
+    );
+
+    return () => {
+      activo = false;
+      window.removeEventListener(
+        'admin-auth', check
+      );
+    };
   }, [path]);
 
   useEffect(() => { setMas(false); }, [path]);
