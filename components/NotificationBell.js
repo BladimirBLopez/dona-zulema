@@ -8,6 +8,7 @@ import {
 } from 'react';
 
 import Link from 'next/link';
+import PushToggle from '@/components/PushToggle';
 
 import {
   Bell,
@@ -324,6 +325,8 @@ export default function NotificationBell() {
               </button>
             </div>
           </div>
+
+          <PushToggle />
 
           {error && (
             <p className="bg-amber-50 px-4 py-2 text-xs text-amber-800">

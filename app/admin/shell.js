@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Package, ShoppingCart, Tags, Megaphone, Store, KeyRound, LogOut, ExternalLink, Wallet, X, Plus, Menu as MenuIcon } from 'lucide-react';
@@ -32,6 +32,7 @@ export default function Shell({ children }) {
   const [ok, setOk] = useState(false);
   const [N, setN] = useState(null);
   const [mas, setMas] = useState(false);
+  const saliendo = useRef(false);
   const exacto = ['/admin', '/admin/ventas'];
   const on = (href) => (exacto.includes(href) ? path === href : path.startsWith(href));
   const actual = LINKS.find(([h]) => on(h));
@@ -59,6 +60,81 @@ export default function Shell({ children }) {
     window.addEventListener('keydown', esc);
     return () => { document.body.style.overflow = ''; window.removeEventListener('keydown', esc); };
   }, [mas]);
+
+  async function salir(evento) {
+    evento.preventDefault();
+
+    if (saliendo.current) return;
+    saliendo.current = true;
+
+    try {
+      if ('serviceWorker' in navigator) {
+        const registro =
+          await navigator.serviceWorker.getRegistration(
+            '/admin/'
+          );
+
+        const suscripcion =
+          await registro?.pushManager?.getSubscription();
+
+        if (suscripcion) {
+          let eliminadoServidor = false;
+          let eliminadoNavegador = false;
+
+          try {
+            const respuesta = await fetch(
+              '/api/admin/push',
+              {
+                method: 'DELETE',
+                credentials: 'same-origin',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  endpoint: suscripcion.endpoint
+                })
+              }
+            );
+
+            eliminadoServidor = respuesta.ok;
+          } catch {
+            eliminadoServidor = false;
+          }
+
+          try {
+            eliminadoNavegador =
+              await suscripcion.unsubscribe();
+          } catch {
+            eliminadoNavegador = false;
+          }
+
+          if (
+            !eliminadoServidor &&
+            !eliminadoNavegador
+          ) {
+            window.alert(
+              'No se pudieron desactivar las ' +
+              'notificaciones de este dispositivo. ' +
+              'Intenta nuevamente antes de salir.'
+            );
+
+            saliendo.current = false;
+            return;
+          }
+        }
+      }
+
+      window.location.assign('/api/admin/logout');
+
+    } catch {
+      saliendo.current = false;
+
+      window.alert(
+        'No se pudo comprobar la suscripcion Push. ' +
+        'Intenta nuevamente para cerrar sesion.'
+      );
+    }
+  }
 
   if (!ok) return <div className="admin min-h-screen bg-panel">{children}<Avisos /></div>;
 
@@ -93,7 +169,7 @@ export default function Shell({ children }) {
         <div className="mt-auto space-y-0.5 border-t border-white/10 pt-3">
           <Link href={CLAVE[0]} className={item(on(CLAVE[0]))}><KeyRound size={18} /> Clave</Link>
           <a href="/" target="_blank" rel="noopener noreferrer" className={item(false)}><ExternalLink size={18} /> Ver sitio</a>
-          <a href="/api/admin/logout" className={item(false)}><LogOut size={18} /> Salir</a>
+          <a href="/api/admin/logout" onClick={salir} className={item(false)}><LogOut size={18} /> Salir</a>
         </div>
       </aside>
 
@@ -109,7 +185,7 @@ export default function Shell({ children }) {
         <div className="flex items-center gap-1">
           <NotificationBell />
           <a href="/" target="_blank" rel="noopener noreferrer" aria-label="Ver sitio" className="grid h-9 w-9 place-items-center rounded-full hover:bg-white/10 md:hidden"><ExternalLink size={18} /></a>
-          <a href="/api/admin/logout" aria-label="Salir" className="grid h-9 w-9 place-items-center rounded-full hover:bg-white/10 md:hidden"><LogOut size={18} /></a>
+          <a href="/api/admin/logout" onClick={salir} aria-label="Salir" className="grid h-9 w-9 place-items-center rounded-full hover:bg-white/10 md:hidden"><LogOut size={18} /></a>
         </div>
       </header>
 
@@ -157,7 +233,7 @@ export default function Shell({ children }) {
             <div className="mt-6 space-y-0.5 border-t border-white/10 pt-3">
               <Link href={CLAVE[0]} className={item(on(CLAVE[0]))}><KeyRound size={18} /> Clave</Link>
               <a href="/" target="_blank" rel="noopener noreferrer" className={item(false)}><ExternalLink size={18} /> Ver sitio</a>
-              <a href="/api/admin/logout" className={item(false)}><LogOut size={18} /> Salir</a>
+              <a href="/api/admin/logout" onClick={salir} className={item(false)}><LogOut size={18} /> Salir</a>
             </div>
           </aside>
         </div>
