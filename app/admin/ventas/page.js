@@ -79,6 +79,27 @@ export default function Ventas() {
 
   const aviso = avisoAuto;
 
+  useEffect(() => {
+    const verPedidos = () => setTab('pedidos');
+
+    if (
+      new URLSearchParams(window.location.search)
+        .get('tab') === 'pedidos'
+    ) {
+      verPedidos();
+    }
+
+    window.addEventListener(
+      'dz-ver-pedidos', verPedidos
+    );
+
+    return () => {
+      window.removeEventListener(
+        'dz-ver-pedidos', verPedidos
+      );
+    };
+  }, []);
+
   const cargar = useCallback(async () => {
     const [d, h] = rango(per, a, b);
     const [v, pe] = await Promise.all([

@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import { Package, ShoppingCart, Tags, Megaphone, Store, KeyRound, LogOut, ExternalLink, Wallet, X, Plus, Menu as MenuIcon } from 'lucide-react';
 import Marca from '@/components/Marca';
 import Avisos from '@/components/Avisos';
+import NotificationBell from '@/components/NotificationBell';
 
 const Svg = ({ size = 20, children }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">{children}</svg>
@@ -96,8 +97,8 @@ export default function Shell({ children }) {
         </div>
       </aside>
 
-      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-white/10 bg-vino-950 px-4 py-2.5 text-white md:hidden">
-        <div className="flex min-w-0 items-center gap-2.5">
+      <header className="sticky top-0 z-30 flex items-center justify-between border-b border-white/10 bg-vino-950 px-4 py-2.5 text-white md:fixed md:right-5 md:top-3 md:z-40 md:w-auto md:border-0 md:bg-transparent md:p-0">
+        <div className="flex min-w-0 items-center gap-2.5 md:hidden">
           <button type="button" onClick={() => setMas(true)} aria-label="Abrir menú" className="-ml-1 grid h-10 w-10 shrink-0 place-items-center rounded-full hover:bg-white/10"><MenuIcon size={22} /></button>
           <span className="shrink-0 [&>*]:!h-8 [&>*]:!w-8 [&>*]:!text-base"><Marca N={marca} /></span>
           <div className="min-w-0 leading-tight">
@@ -105,9 +106,10 @@ export default function Shell({ children }) {
             <p className="truncate text-[11px] text-vino-200">{marca.nombre}</p>
           </div>
         </div>
-        <div className="flex gap-1">
-          <a href="/" target="_blank" rel="noopener noreferrer" aria-label="Ver sitio" className="grid h-9 w-9 place-items-center rounded-full hover:bg-white/10"><ExternalLink size={18} /></a>
-          <a href="/api/admin/logout" aria-label="Salir" className="grid h-9 w-9 place-items-center rounded-full hover:bg-white/10"><LogOut size={18} /></a>
+        <div className="flex items-center gap-1">
+          <NotificationBell />
+          <a href="/" target="_blank" rel="noopener noreferrer" aria-label="Ver sitio" className="grid h-9 w-9 place-items-center rounded-full hover:bg-white/10 md:hidden"><ExternalLink size={18} /></a>
+          <a href="/api/admin/logout" aria-label="Salir" className="grid h-9 w-9 place-items-center rounded-full hover:bg-white/10 md:hidden"><LogOut size={18} /></a>
         </div>
       </header>
 
