@@ -32,10 +32,10 @@ function Campo({ label, ayuda, children }) {
 
 function Fila({ pre, post, children }) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 [&>input]:min-w-0">
       {pre && <span className="text-sm font-semibold text-stone-500">{pre}</span>}
       {children}
-      {post && <span className="min-w-[3rem] text-sm text-stone-500">{post}</span>}
+      {post && <span className="shrink-0 text-sm text-stone-500">{post}</span>}
     </div>
   );
 }
@@ -57,7 +57,8 @@ export default function ProductoForm({ f, setF, categorias, busy, onSubir, onGua
   const quiereGuardar = useRef(false);
 
   const set = (k, v) => setF({ ...f, [k]: v });
-  const u = f.unidad || 'unidad';
+  const rawU = String(f.unidad || '').trim();
+  const u = /^unidad/i.test(rawU) ? 'unidad' : rawU.toLowerCase() || 'unidad';
   const esOtra = !UNIDADES.some(([v]) => v === f.unidad);
   const precio = nz(f.precio_menor);
   const costo = nz(f.costo);
@@ -95,6 +96,10 @@ export default function ProductoForm({ f, setF, categorias, busy, onSubir, onGua
       setIntento(true);
       setTab(0);
       return setMsg('Escribe el nombre y elige la sección de la tienda.');
+    }
+    if (esp && (desde == null || desde <= 0)) {
+      setTab(1);
+      return setMsg('Escribe desde cuánto aplica el precio especial.');
     }
     if (esp && (pEsp == null || pEsp <= 0)) {
       setTab(1);
@@ -207,7 +212,7 @@ export default function ProductoForm({ f, setF, categorias, busy, onSubir, onGua
                         </Fila>
                       </Campo>
                     </div>
-                    <p className="text-xs leading-relaxed text-stone-500">Si no pones cantidad, este precio se usa solo cuando el cliente pide al por mayor.</p>
+                    <p className="text-xs leading-relaxed text-stone-500">El cliente verá este precio en la tienda desde esa cantidad.</p>
                     {pEsp != null && precio != null && pEsp > precio && (
                       <p className="rounded-xl bg-amber-50 p-2 text-xs font-semibold text-amber-800">El precio especial es más alto que el normal. Revísalo.</p>
                     )}

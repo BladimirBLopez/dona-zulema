@@ -27,7 +27,7 @@ export async function POST(req) {
   const nombre = String(b.nombre || '').trim().slice(0, 120);
   if (!nombre || !b.categoria_id) return NextResponse.json({ error: 'datos_invalidos' }, { status: 400 });
   const q = sql();
-  const unidad = String(b.unidad || 'kg').slice(0, 20);
+  const unidad = String(b.unidad || 'kg').trim().slice(0, 20);
   const disp = b.disponible !== false;
   if (b.id) {
     const old = await q`SELECT imagen_public_id FROM productos WHERE id = ${b.id}`;

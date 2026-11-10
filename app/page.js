@@ -16,7 +16,7 @@ export const revalidate = 60;
 
 async function getProductos() {
   const rows = await sql()`
-    SELECT p.id, p.nombre, p.precio_menor, p.precio_mayor, p.unidad, p.imagen_url,
+    SELECT p.id, p.nombre, p.precio_menor, p.precio_mayor, p.mayor_desde, p.unidad, p.imagen_url,
            c.nombre AS categoria, l.nombre AS linea, l.slug AS lslug
     FROM productos p
     JOIN categorias c ON c.id = p.categoria_id
@@ -28,6 +28,7 @@ async function getProductos() {
     nombre: r.nombre,
     precio_menor: r.precio_menor,
     precio_mayor: r.precio_mayor,
+    mayor_desde: r.mayor_desde,
     unidad: r.unidad || 'kg',
     categoria: r.categoria,
     linea: r.linea,

@@ -9,6 +9,16 @@ const bs = (v) => (v == null || v === '' ? null : 'Bs ' + Number(v).toFixed(2));
 const stepOf = (u) => (String(u).toLowerCase() === 'kg' ? 0.5 : 1);
 const Icono = ({ lslug, className }) => (lslug === 'pollo' ? <Drumstick className={className} /> : <Milk className={className} />);
 
+const unidadDe = (u) => { const x = String(u || 'unidad').trim().toLowerCase(); return x === 'kg' ? 'kilo' : x.startsWith('unidad') ? 'unidad' : x; };
+const cantidadDe = (n, u) => {
+  const v = String(Math.round(Number(n) * 1000) / 1000);
+  const x = unidadDe(u);
+  if (x === 'kilo') return v + ' kg';
+  if (x === 'unidad') return v + (Number(n) === 1 ? ' unidad' : ' unidades');
+  return v + ' ' + x + (Number(n) === 1 || /s$/.test(x) ? '' : 's');
+};
+const porUnidad = (u) => { const x = unidadDe(u); return x === 'unidad' ? 'c/u' : 'por ' + x; };
+
 function Card({ p, qty, onAdd }) {
   const st = stepOf(p.unidad);
   const menor = bs(p.precio_menor);
@@ -31,10 +41,21 @@ function Card({ p, qty, onAdd }) {
       </div>
       <div className="flex flex-1 flex-col p-4">
         <h4 className="font-semibold leading-snug text-stone-900"><Link href={`/producto/${p.id}`} className="after:absolute after:inset-0 hover:text-vino-700">{p.nombre}</Link></h4>
-        <div className="mt-3 flex flex-wrap gap-2 text-xs">
-          {menor && <span className="rounded-lg bg-vino-50 px-2 py-1 text-vino-800">Menor <b>{menor}</b>/{p.unidad}</span>}
-          {mayor && <span className="rounded-lg bg-oro-200/50 px-2 py-1 text-amber-900">Mayor <b>{mayor}</b>/{p.unidad}</span>}
-          {!menor && !mayor && <span className="rounded-lg bg-stone-100 px-2 py-1 text-stone-500">Consultar precio</span>}
+        <div className="mt-3">
+          {menor ? (
+            <p className="flex flex-wrap items-baseline gap-x-1.5">
+              <span className="text-xl font-extrabold text-vino-800">{menor}</span>
+              <span className="text-xs text-stone-500">{'por ' + unidadDe(p.unidad)}</span>
+            </p>
+          ) : (
+            <span className="rounded-lg bg-stone-100 px-2 py-1 text-xs text-stone-500">Consultar precio</span>
+          )}
+          {mayor && (
+            <p className="mt-2 rounded-lg bg-oro-200/50 px-2.5 py-1.5 text-xs leading-snug text-amber-900">
+              {p.mayor_desde != null && Number(p.mayor_desde) > 0 ? 'Desde ' + cantidadDe(p.mayor_desde, p.unidad) + ': ' : 'Por mayor: '}
+              <b>{mayor}</b> {porUnidad(p.unidad)}
+            </p>
+          )}
         </div>
         <div className="relative z-10 mt-auto pt-4">
           {qty ? (
