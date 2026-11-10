@@ -68,6 +68,11 @@ export default function ProductoForm({ f, setF, categorias, busy, onSubir, onGua
   const g2 = esp && pEsp != null && costo != null ? Math.round((pEsp - costo) * 100) / 100 : null;
   const falta = !String(f.nombre).trim() || !f.categoria_id;
   const nuevo = !f.id;
+  const stockAct = nz(f.stock);
+  const minimo = nz(f.stock_min);
+  const avisoBajo = minimo == null ? '' : stockAct == null
+    ? 'Para que el aviso funcione, indica cuánto tienes ahora.'
+    : stockAct <= minimo ? 'Ya estarías en stock bajo: tienes ' + fmt(stockAct) + ' ' + u + ' y el aviso es desde ' + fmt(minimo) + '.' : '';
 
   function irA(i) {
     if (nuevo && tab === 0 && i > 0 && falta) {
@@ -92,6 +97,13 @@ export default function ProductoForm({ f, setF, categorias, busy, onSubir, onGua
     if (!quiereGuardar.current) { e.preventDefault(); return; }
     quiereGuardar.current = false;
     e.preventDefault();
+    const neg = (v) => nz(v) != null && nz(v) < 0;
+    const enPrecio = [f.precio_menor, f.precio_mayor, f.mayor_desde].some(neg);
+    const enStock = [f.costo, f.stock_min, ...(nuevo ? [f.stock] : [])].some(neg);
+    if (enPrecio || enStock) {
+      setTab(enPrecio ? 1 : 2);
+      return setMsg('Los precios, el costo y el stock no pueden ser negativos.');
+    }
     if (falta) {
       setIntento(true);
       setTab(0);
@@ -260,7 +272,7 @@ export default function ProductoForm({ f, setF, categorias, busy, onSubir, onGua
                 </Campo>
               )}
 
-              <Campo label="Avísame cuando queden menos de" ayuda="Entonces aparecerá en tu Inicio como Stock bajo.">
+              <Campo label="Avísame cuando queden menos de" ayuda={<>Es solo un aviso: no limita lo que puedes vender. Aparecerá en tu Inicio como Stock bajo.{avisoBajo && <b className="mt-1 block text-amber-700">{avisoBajo}</b>}</>}>
                 <Fila post={u}>
                   <input type="number" inputMode="decimal" step="any" min="0" placeholder="Ej: 3" value={f.stock_min} onChange={(e) => set('stock_min', e.target.value)} />
                 </Fila>

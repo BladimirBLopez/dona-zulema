@@ -26,6 +26,8 @@ export async function POST(req) {
   const b = await req.json().catch(() => ({}));
   const nombre = String(b.nombre || '').trim().slice(0, 120);
   if (!nombre || !b.categoria_id) return NextResponse.json({ error: 'datos_invalidos' }, { status: 400 });
+  const nums = [b.precio_menor, b.precio_mayor, b.mayor_desde, b.costo, b.stock_min].map(num);
+  if (nums.some((x) => x !== null && x < 0)) return NextResponse.json({ error: 'datos_invalidos' }, { status: 400 });
   const q = sql();
   const unidad = String(b.unidad || 'kg').trim().slice(0, 20);
   const disp = b.disponible !== false;
