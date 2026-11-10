@@ -140,8 +140,16 @@ export default function PushToggle() {
       });
 
       if (!respuesta.ok) {
+        const detalle = await respuesta.json()
+          .catch(() => ({}));
+
+        const codigo =
+          typeof detalle.error === 'string'
+            ? detalle.error
+            : 'respuesta_invalida';
+
         throw new Error(
-          'No se pudo registrar el dispositivo.'
+          `Error HTTP ${respuesta.status}: ${codigo}`
         );
       }
 
