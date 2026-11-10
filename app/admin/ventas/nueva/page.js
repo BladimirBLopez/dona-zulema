@@ -7,6 +7,7 @@ import { api, errMsg } from '@/lib/cliente';
 import { avisar } from '@/lib/avisos';
 import Escaner from '@/components/Escaner';
 import { bs, hoyBO, reciboTexto, waLink } from '@/lib/fmt';
+import { imprimirTicket } from '@/lib/ticket';
 
 const METODOS = [['efectivo', 'Efectivo'], ['qr', 'QR'], ['transferencia', 'Transf.']];
 const BILLETES = [10, 20, 50, 100, 200];
@@ -358,6 +359,7 @@ export default function NuevaVenta() {
           <button onClick={otra} className="rounded-full bg-vino-800 py-3.5 font-bold text-white">Nueva venta</button>
           <a href={waLink(hecho.cliente_tel, reciboTexto(hecho, negocio))} target="_blank" rel="noopener noreferrer"
             className="flex items-center justify-center gap-2 rounded-full bg-green-500 py-3 font-bold text-white"><MessageCircle size={18} /> Enviar recibo por WhatsApp</a>
+          <button onClick={() => imprimirTicket(hecho, negocio)} className="rounded-full bg-white py-3 font-semibold text-vino-800 ring-1 ring-vino-800/30">Imprimir ticket</button>
           <Link href="/admin/ventas" className="rounded-full bg-white py-3 font-semibold text-stone-700 ring-1 ring-stone-200">Ver ventas</Link>
         </div>
       </main>

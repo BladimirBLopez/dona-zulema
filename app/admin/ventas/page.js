@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Plus, Search, ChevronDown, MessageCircle, Ban, Inbox, ShoppingCart } from 'lucide-react';
 import { api, errMsg } from '@/lib/cliente';
 import { bs, qty, hoyBO, horaBO, diaBO, reciboTexto, waLink } from '@/lib/fmt';
+import { imprimirTicket } from '@/lib/ticket';
 
 const MET = { efectivo: 'Efectivo', qr: 'QR', transferencia: 'Transferencia', fiado: 'Fiado' };
 
@@ -56,6 +57,7 @@ function VentaCard({ v, negocio, onChange, aviso }) {
           <div className="flex gap-2">
             <a href={waLink(v.cliente_tel, reciboTexto(v, negocio))} target="_blank" rel="noopener noreferrer"
               className="flex flex-1 items-center justify-center gap-2 rounded-full bg-green-500 py-2.5 text-sm font-bold text-white"><MessageCircle size={16} /> Recibo</a>
+            <button onClick={() => imprimirTicket(v, negocio)} className="flex items-center justify-center rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-vino-800 ring-1 ring-stone-200">Imprimir</button>
             {!anulada && <button onClick={anular} className="flex items-center gap-2 rounded-full bg-red-50 px-5 py-2.5 text-sm font-semibold text-red-600"><Ban size={16} /> Anular</button>}
           </div>
         </div>
