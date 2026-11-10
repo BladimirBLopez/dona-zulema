@@ -7,7 +7,7 @@ import ProductoForm from '@/components/ProductoForm';
 import { errMsg } from '@/lib/cliente';
 import { admiteDecimales } from '@/lib/unidades';
 
-const vacio = { id: null, nombre: '', categoria_id: '', precio_menor: '', precio_mayor: '', mayor_desde: '', unidad: 'kg', disponible: true, costo: '', stock: '', stock_min: '', imagen_url: '', imagen_public_id: '' };
+const vacio = { id: null, nombre: '', categoria_id: '', precio_menor: '', precio_mayor: '', mayor_desde: '', unidad: 'kg', disponible: true, costo: '', stock: '', stock_min: '', imagen_url: '', imagen_public_id: '', codigo: '' };
 const bs = (v) => (v == null ? '—' : Number(v).toFixed(2));
 const mini = (u) => u.replace('/upload/', '/upload/f_auto,q_auto,w_160,h_160,c_fill/');
 const nz = (v) => (v == null || v === '' || isNaN(Number(v)) ? null : Number(v));
@@ -95,7 +95,7 @@ export default function Admin() {
     setBusy(true);
     const r = await fetch('/api/admin/productos', { method: 'POST', body: JSON.stringify(f) });
     setBusy(false);
-    if (r.ok) { setF(null); aviso('Producto guardado'); cargar(); } else aviso('No se pudo guardar');
+    if (r.ok) { setF(null); aviso('Producto guardado'); cargar(); } else aviso(errMsg(await r.json().catch(() => null)));
   }
 
   async function alternar(p) {
@@ -128,14 +128,23 @@ export default function Admin() {
     if (r.ok) { setSt(null); setF((x) => (x && x.id === st.p.id ? { ...x, stock: Math.round(((Number(x.stock) || 0) + delta) * 1000) / 1000 } : x)); aviso('Stock actualizado'); cargar(); } else aviso(errMsg(await r.json().catch(() => null)));
   }
 
-  const editar = (p) => setF({ ...p, precio_menor: p.precio_menor ?? '', precio_mayor: p.precio_mayor ?? '', mayor_desde: p.mayor_desde ?? '', costo: p.costo ?? '', stock: p.stock ?? '', stock_min: p.stock_min ?? '', imagen_url: p.imagen_url || '', imagen_public_id: p.imagen_public_id || '' });
+  const editar = (p) => setF({ ...p, precio_menor: p.precio_menor ?? '', precio_mayor: p.precio_mayor ?? '', mayor_desde: p.mayor_desde ?? '', costo: p.costo ?? '', stock: p.stock ?? '', stock_min: p.stock_min ?? '', imagen_url: p.imagen_url || '', imagen_public_id: p.imagen_public_id || '', codigo: p.codigo ?? '' });
 
   const lista = useMemo(() => {
     const t = q.trim().toLowerCase();
     return data.productos.filter((p) =>
       (filtro === 'todos' || (filtro === 'visibles' ? p.disponible : !p.disponible)) &&
-      (!t || (p.nombre + ' ' + p.categoria).toLowerCase().includes(t)));
+      (!t || (p.nombre + ' ' + p.categoria + ' ' + (p.codigo || '')).toLowerCase().includes(t)));
   }, [data.productos, q, filtro]);
+
+  function buscarEnter(e) {
+    if (e.key !== 'Enter') return;
+    const t = q.trim();
+    if (!/^\d{6,40}$/.test(t)) return;
+    e.preventDefault();
+    if (lista.length === 1) return editar(lista[0]);
+    if (lista.length === 0) return setF({ ...vacio, codigo: t });
+  }
 
   if (auth === null) return <p className="p-8 text-center text-stone-500">Cargando...</p>;
 
@@ -182,7 +191,7 @@ export default function Admin() {
       <div className="mb-4 space-y-3">
         <div className="relative">
           <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar producto..." style={{ paddingLeft: '2.75rem' }} />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar o escanear..." onKeyDown={buscarEnter} style={{ paddingLeft: '2.75rem' }} />
         </div>
         <div className="flex gap-2">
           {[['todos', 'Todos'], ['visibles', 'Visibles'], ['ocultos', 'Ocultos']].map(([v, t]) => (
@@ -199,7 +208,7 @@ export default function Admin() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate font-semibold">{p.nombre}</p>
-              <p className="truncate text-xs text-stone-500">{p.categoria}</p>
+              <p className="truncate text-xs text-stone-500">{p.categoria}{p.codigo ? ' · ' + p.codigo : ''}</p>
               <p className="mt-0.5 text-xs"><span className="font-semibold text-vino-800">{p.precio_menor == null ? 'Sin precio' : 'Bs ' + bs(p.precio_menor) + ' / ' + (p.unidad || 'unidad')}</span>{p.precio_mayor != null && <span className="text-amber-700">{' · ' + (p.mayor_desde != null ? 'desde ' + fmt(p.mayor_desde) + ' ' + (p.unidad || '') + ': ' : 'mayor: ') + 'Bs ' + bs(p.precio_mayor)}</span>}</p>
               <Info p={p} />
             </div>

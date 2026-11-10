@@ -39,6 +39,12 @@ export async function POST(req) {
     return NextResponse.json({ error: 'cantidad_entera' }, { status: 400 });
   }
   const disp = b.disponible !== false;
+  // codigo-v1
+  const codigo = String(b.codigo ?? '').replace(/\s+/g, '').slice(0, 40) || null;
+  if (codigo) {
+    const dup = await q`SELECT nombre FROM productos WHERE codigo = ${codigo} AND id IS DISTINCT FROM ${b.id ? Number(b.id) : null}::int LIMIT 1`;
+    if (dup.length) return NextResponse.json({ error: 'codigo_repetido', producto: dup[0].nombre }, { status: 409 });
+  }
   if (b.id) {
     const old = await q`SELECT imagen_public_id FROM productos WHERE id = ${b.id}`;
     if (b.imagen_public_id && old[0]?.imagen_public_id && old[0].imagen_public_id !== b.imagen_public_id) {
@@ -46,7 +52,7 @@ export async function POST(req) {
     }
     await q`UPDATE productos SET categoria_id=${b.categoria_id}, nombre=${nombre},
       precio_menor=${num(b.precio_menor)}, precio_mayor=${num(b.precio_mayor)}, mayor_desde=${num(b.mayor_desde)},
-      unidad=${unidad}, disponible=${disp},
+      unidad=${unidad}, disponible=${disp}, codigo=${codigo},
       costo=${num(b.costo)}, stock_min=${num(b.stock_min)},
       imagen_url=COALESCE(${b.imagen_url || null}, imagen_url),
       imagen_public_id=COALESCE(${b.imagen_public_id || null}, imagen_public_id)
@@ -60,14 +66,14 @@ export async function POST(req) {
       WITH creado AS (
         INSERT INTO productos (
           categoria_id, nombre, precio_menor, precio_mayor, mayor_desde,
-          unidad, disponible, costo, stock, stock_min,
+          unidad, disponible, costo, stock, stock_min, codigo,
           imagen_url, imagen_public_id
         )
         VALUES (
           ${b.categoria_id}, ${nombre},
           ${num(b.precio_menor)}, ${num(b.precio_mayor)}, ${num(b.mayor_desde)},
           ${unidad}, ${disp},
-          ${num(b.costo)}, ${stockInicial}, ${num(b.stock_min)},
+          ${num(b.costo)}, ${stockInicial}, ${num(b.stock_min)}, ${codigo},
           ${b.imagen_url || null}, ${b.imagen_public_id || null}
         )
         RETURNING id, stock

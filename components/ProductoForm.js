@@ -178,6 +178,13 @@ export default function ProductoForm({ f, setF, categorias, busy, onSubir, onGua
                 <input placeholder="Ej: Queso calceño" value={f.nombre} onChange={(e) => set('nombre', e.target.value)} className={intento && !String(f.nombre).trim() ? '!border-red-500' : ''} />
               </Campo>
 
+              <Campo label="Código de barras (opcional)" ayuda="Escanéalo con el lector o escríbelo. Si no trae, genera uno interno.">
+                <div className="flex gap-2">
+                  <input inputMode="numeric" placeholder="Escanea o escribe" value={f.codigo || ''} onChange={(e) => set('codigo', e.target.value)} className="min-w-0 flex-1" />
+                  <button type="button" onClick={() => set('codigo', '99' + String(Date.now()).slice(-8))} className="shrink-0 rounded-xl bg-vino-50 px-4 text-sm font-bold text-vino-800">Generar</button>
+                </div>
+              </Campo>
+
               <Campo label="¿En qué sección de la tienda aparece?">
                 <select value={f.categoria_id} onChange={(e) => set('categoria_id', e.target.value)} className={intento && !f.categoria_id ? '!border-red-500' : ''}>
                   <option value="">Elige una sección...</option>
