@@ -64,6 +64,37 @@ function CompraCard({ c, onAnular }) {
   );
 }
 
+const MARGEN_BAJO = 10; // % de ganancia por debajo del cual se avisa
+
+function AvisoCosto({ l, unit }) {
+  if (unit == null) return null;
+  const avisos = [];
+  const ant = Number(l.actual);
+  if (l.actual != null && ant > 0) {
+    const d = r2(unit - ant);
+    if (Math.abs(d) >= 0.01) {
+      const pct = Math.round((Math.abs(d) / ant) * 100);
+      avisos.push([d > 0 ? 'text-amber-700' : 'text-green-700', (d > 0 ? 'Sube ' : 'Baja ') + bs(Math.abs(d)) + ' (' + pct + '%) frente al costo anterior']);
+    }
+  }
+  for (const [nombre, precio] of [['menor', l.pmenor], ['mayor', l.pmayor]]) {
+    const p = Number(precio);
+    if (!(p > 0)) continue;
+    const gana = r2(p - unit);
+    const pct = Math.round((gana / p) * 100);
+    const x = '/' + l.unidad;
+    if (gana < -0.004) avisos.push(['font-bold text-red-600', 'Por ' + nombre + ': pierdes ' + bs(-gana) + x]);
+    else if (gana < 0.005) avisos.push(['font-bold text-red-600', 'Por ' + nombre + ': no ganas nada']);
+    else avisos.push([pct < MARGEN_BAJO ? 'text-amber-700' : 'text-stone-500', 'Por ' + nombre + ': ganas ' + bs(gana) + x + ' (' + pct + '%)' + (pct < MARGEN_BAJO ? ' · poco' : '')]);
+  }
+  if (!avisos.length) return null;
+  return (
+    <div className="mt-1 space-y-0.5 text-xs">
+      {avisos.map(([cls, t], i) => <p key={i} className={cls}>{t}</p>)}
+    </div>
+  );
+}
+
 function NuevaCompra({ onCerrar, onListo }) {
   const [productos, setProductos] = useState(null);
   const [provs, setProvs] = useState([]);
@@ -96,12 +127,12 @@ function NuevaCompra({ onCerrar, onListo }) {
       .slice(0, 8);
   }, [productos, q]);
 
-  const total = r2(lineas.reduce((a, l) => a + r2(n(l.cantidad) * r2(n(l.costo))), 0));
+  const total = r2(lineas.reduce((a, l) => a + r2(n(l.total)), 0));
 
   function agregar(p) {
     const id = String(p.id);
     if (lineas.some((l) => l.id === id)) return avisar.aviso(p.nombre + ' ya está en la lista');
-    setLineas([...lineas, { id, nombre: p.nombre, unidad: p.unidad || 'u', cantidad: '', costo: '', actual: p.costo == null ? null : Number(p.costo) }]);
+    setLineas([...lineas, { id, nombre: p.nombre, unidad: p.unidad || 'u', cantidad: '', total: '', pmenor: p.precio_menor ?? null, pmayor: p.precio_mayor ?? null, actual: p.costo == null ? null : Number(p.costo) }]);
     setQ('');
   }
 
@@ -140,7 +171,8 @@ function NuevaCompra({ onCerrar, onListo }) {
     for (const l of lineas) {
       const c = n(l.cantidad);
       if (!(c > 0)) return setErr('Revisa la cantidad de ' + l.nombre + '.');
-      if (!(r2(n(l.costo)) > 0)) return setErr('Escribe el costo de ' + l.nombre + '.');
+      if (!(r3(c) > 0)) return setErr('Revisa la cantidad de ' + l.nombre + '.');
+      if (!(r2(n(l.total)) > 0)) return setErr('Escribe cuánto pagaste por ' + l.nombre + '.');
       if (!admiteDecimales(l.unidad) && !Number.isInteger(c)) return setErr(l.nombre + ' se cuenta en números enteros.');
     }
     const body = {
@@ -150,8 +182,9 @@ function NuevaCompra({ onCerrar, onListo }) {
       nota: nota.trim(),
       items: lineas.map((l) => {
         const cantidad = r3(n(l.cantidad));
-        const costo = r2(n(l.costo));
-        return { producto_id: l.id, cantidad, costo, subtotal: r2(cantidad * costo) };
+        const subtotal = r2(n(l.total));
+        const costo = r2(subtotal / cantidad);
+        return { producto_id: l.id, cantidad, costo, subtotal };
       }),
     };
     const sig = JSON.stringify(body);
@@ -232,13 +265,15 @@ function NuevaCompra({ onCerrar, onListo }) {
             <ul className="space-y-2">
               {lineas.map((l) => {
                 const dec = admiteDecimales(l.unidad);
-                const sub = r2(n(l.cantidad) * r2(n(l.costo)));
+                const sub = r2(n(l.total));
+                const unit = n(l.cantidad) > 0 && sub > 0 ? r2(sub / n(l.cantidad)) : null;
                 return (
                   <li key={l.id} className="rounded-2xl bg-stone-50 p-3">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
                         <p className="truncate font-semibold">{l.nombre}</p>
                         {l.actual != null && <p className="text-xs text-stone-500">{'Costo actual ' + bs(l.actual) + '/' + l.unidad}</p>}
+                        <AvisoCosto l={l} unit={unit} />
                       </div>
                       <button type="button" onClick={() => quitar(l.id)} aria-label="Quitar" className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-red-50 text-red-600"><Trash2 size={15} /></button>
                     </div>
@@ -246,12 +281,12 @@ function NuevaCompra({ onCerrar, onListo }) {
                       <label className="text-[11px] text-stone-500">{'Cantidad (' + l.unidad + ')'}
                         <input type="number" inputMode={dec ? 'decimal' : 'numeric'} step={dec ? 'any' : '1'} min="0" placeholder="0" value={l.cantidad} onChange={(e) => cambiar(l.id, 'cantidad', e.target.value)} />
                       </label>
-                      <label className="text-[11px] text-stone-500">Costo c/u Bs
-                        <input type="number" inputMode="decimal" step="0.01" min="0" placeholder="0.00" value={l.costo} onChange={(e) => cambiar(l.id, 'costo', e.target.value)} />
+                      <label className="text-[11px] text-stone-500">Total pagado Bs
+                        <input type="number" inputMode="decimal" step="0.01" min="0" placeholder="0.00" value={l.total} onChange={(e) => cambiar(l.id, 'total', e.target.value)} />
                       </label>
                       <div className="text-right">
-                        <p className="text-[11px] text-stone-500">Subtotal</p>
-                        <p className="pt-2 font-extrabold text-stone-900">{bs(sub)}</p>
+                        <p className="text-[11px] text-stone-500">Te cuesta</p>
+                        <p className="pt-2 font-extrabold text-stone-900">{unit == null ? '—' : bs(unit) + '/' + l.unidad}</p>
                       </div>
                     </div>
                   </li>
