@@ -11,8 +11,8 @@ export default function Marca({ N, big = false, horizontal = false }) {
         : N.logo;
 
       const estilo = big
-        ? 'mx-auto block h-20 w-auto max-w-[85vw] rounded-xl bg-white p-2 object-contain shadow-sm'
-        : 'block h-12 w-auto max-w-[48vw] rounded-md bg-white p-1 object-contain shadow-sm sm:h-14 sm:max-w-[240px]';
+        ? 'mx-auto block h-20 w-auto max-w-[85vw] object-contain'
+        : 'block h-12 w-auto max-w-[48vw] object-contain sm:h-14 sm:max-w-[240px]';
 
       return (
         <img
