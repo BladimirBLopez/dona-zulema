@@ -8,8 +8,8 @@ import { bs, hoyBO } from '@/lib/fmt';
 import { admiteDecimales } from '@/lib/unidades';
 import Escaner from '@/components/Escaner';
 
-const MET = { efectivo: 'Efectivo', qr: 'QR', transferencia: 'Transferencia' };
-const METODOS = [['efectivo', 'Efectivo'], ['qr', 'QR'], ['transferencia', 'Transf.']];
+const MET = { efectivo: 'Efectivo', qr: 'QR', transferencia: 'Transferencia', otro: 'Otro' };
+const METODOS = [['caja', 'Efectivo de la caja'], ['transferencia', 'QR o transferencia'], ['otro', 'Otro (no sale de la caja)']];
 const n = (v) => Number(v) || 0;
 const r2 = (x) => Math.round((x + Number.EPSILON) * 100) / 100;
 const r3 = (x) => Math.round(x * 1000) / 1000;
@@ -36,7 +36,7 @@ function CompraCard({ c, onAnular }) {
           <p className="truncate font-semibold">{c.proveedor || 'Sin proveedor'}</p>
           <p className="truncate text-xs text-stone-500">{dm(c.fecha) + ' · ' + c.items.map((i) => i.nombre).join(', ')}</p>
           <div className="mt-1 flex flex-wrap gap-1 text-[11px] font-semibold">
-            <span className="rounded-full bg-stone-100 px-2 py-0.5 text-stone-600">{MET[c.metodo] || c.metodo}</span>
+            <span className="rounded-full bg-stone-100 px-2 py-0.5 text-stone-600">{c.de_caja ? 'Efectivo de la caja' : (MET[c.metodo] || c.metodo)}</span>
             {anulada && <span className="rounded-full bg-red-100 px-2 py-0.5 text-red-700">Anulada</span>}
           </div>
         </div>
@@ -100,7 +100,7 @@ function NuevaCompra({ onCerrar, onListo }) {
   const [provs, setProvs] = useState([]);
   const [prov, setProv] = useState('');
   const [fecha, setFecha] = useState(hoyBO());
-  const [metodo, setMetodo] = useState('efectivo');
+  const [metodo, setMetodo] = useState('caja');
   const [nota, setNota] = useState('');
   const [lineas, setLineas] = useState([]);
   const [q, setQ] = useState('');
@@ -178,7 +178,8 @@ function NuevaCompra({ onCerrar, onListo }) {
     const body = {
       proveedor_id: prov || null,
       fecha: fecha && fecha !== hoyBO() ? fecha : null,
-      metodo,
+      metodo: metodo === 'caja' ? 'efectivo' : metodo,
+      de_caja: metodo === 'caja',
       nota: nota.trim(),
       items: lineas.map((l) => {
         const cantidad = r3(n(l.cantidad));
@@ -234,7 +235,8 @@ function NuevaCompra({ onCerrar, onListo }) {
               <button type="button" onClick={() => setNuevoProv({ nombre: '', telefono: '' })} className="text-xs font-bold text-vino-800 underline">Nuevo proveedor</button>
             )}
 
-            <div className="grid grid-cols-3 gap-2">
+            <p className="text-xs font-semibold text-stone-500">¿De dónde salió la plata?</p>
+            <div className="grid grid-cols-1 gap-2">
               {METODOS.map(([v, t]) => (
                 <button key={v} type="button" onClick={() => setMetodo(v)} className={`rounded-xl py-2.5 text-sm font-semibold ${metodo === v ? 'bg-vino-800 text-white' : 'bg-stone-100 text-stone-700'}`}>{t}</button>
               ))}

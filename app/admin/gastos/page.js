@@ -5,10 +5,10 @@ import { Plus, Trash2, Wallet } from 'lucide-react';
 import { api, errMsg } from '@/lib/cliente';
 import { bs, hoyBO } from '@/lib/fmt';
 
-const CATS = ['Mercadería', 'Transporte', 'Servicios', 'Sueldos', 'Alquiler', 'Otros'];
+const CATS = ['Transporte', 'Servicios', 'Sueldos', 'Alquiler', 'Bolsas', 'Otros'];
 const PER = [['hoy', 'Hoy'], ['7d', '7 días'], ['mes', 'Este mes']];
 const rango = (p) => (p === 'hoy' ? [hoyBO(), hoyBO()] : p === '7d' ? [hoyBO(-6), hoyBO()] : [hoyBO().slice(0, 8) + '01', hoyBO()]);
-const vacio = () => ({ concepto: '', monto: '', categoria: 'Mercadería', fecha: hoyBO() });
+const vacio = () => ({ concepto: '', monto: '', categoria: 'Otros', fecha: hoyBO(), de_caja: true });
 const dia = (f) => new Date(f + 'T12:00:00').toLocaleDateString('es-BO', { day: '2-digit', month: 'short' });
 const chip = (a) => `shrink-0 rounded-full px-4 py-1.5 text-sm font-semibold transition ${a ? 'bg-vino-800 text-white' : 'bg-white text-stone-600 ring-1 ring-stone-200'}`;
 
@@ -59,7 +59,7 @@ export default function Gastos() {
   return (
     <main className="fade-in px-4 pb-6 pt-4">
       <h1 className="font-serif text-3xl font-extrabold text-vino-800">Gastos</h1>
-      <p className="mb-4 text-sm text-stone-500">Mercadería, transporte, servicios y todo lo que sale de caja.</p>
+      <p className="mb-4 text-sm text-stone-500">Luz, alquiler, sueldos, transporte, bolsas y todo lo que no es mercadería. La mercadería va en Compras.</p>
 
       {fallo && <p className="mb-3 rounded-2xl bg-red-50 p-3 text-sm font-semibold text-red-700">{fallo}</p>}
 
@@ -82,6 +82,11 @@ export default function Gastos() {
         </div>
         <div className="flex flex-wrap gap-2">
           {CATS.map((c) => <button key={c} type="button" onClick={() => setF({ ...f, categoria: c })} className={chip(f.categoria === c)}>{c}</button>)}
+        </div>
+        <p className="text-xs font-semibold text-stone-500">¿Esta plata salió de la caja?</p>
+        <div className="grid grid-cols-2 gap-2">
+          <button type="button" onClick={() => setF({ ...f, de_caja: true })} className={`rounded-xl py-2.5 text-sm font-semibold ${f.de_caja ? 'bg-vino-800 text-white' : 'bg-stone-100 text-stone-700'}`}>Sí, de la caja</button>
+          <button type="button" onClick={() => setF({ ...f, de_caja: false })} className={`rounded-xl py-2.5 text-sm font-semibold ${!f.de_caja ? 'bg-vino-800 text-white' : 'bg-stone-100 text-stone-700'}`}>No, de otro lado</button>
         </div>
         <button onClick={guardar} disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-full bg-vino-800 py-3 font-bold text-white disabled:opacity-50">
           <Plus size={18} /> {busy ? 'Guardando...' : 'Agregar gasto'}
@@ -107,7 +112,7 @@ export default function Gastos() {
             <li key={g.id} className="flex items-center gap-3 rounded-2xl bg-white p-3 shadow-card">
               <div className="min-w-0 flex-1">
                 <p className="truncate font-semibold">{g.concepto}</p>
-                <p className="text-xs text-stone-500">{dia(g.fecha)} · {g.categoria || 'Otros'}</p>
+                <p className="text-xs text-stone-500">{dia(g.fecha)} · {g.categoria || 'Otros'} · {g.de_caja ? 'De la caja' : 'No de la caja'}</p>
               </div>
               <p className="shrink-0 font-extrabold text-vino-800">{bs(g.monto)}</p>
               <button onClick={() => borrar(g)} aria-label="Borrar" className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-red-50 text-red-600"><Trash2 size={15} /></button>
