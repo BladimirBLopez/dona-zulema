@@ -57,9 +57,8 @@ export default async function Home() {
       <header className="sticky top-0 z-30 border-b border-white/10 bg-vino-950/95 text-white backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
           <Menu items={menu} pedido={pedido} />
-          <a href="#" className="flex items-center gap-3">
-            <Marca N={N} />
-            <span className="font-serif text-xl font-extrabold tracking-tight">{N.nombre}</span>
+          <a href="#" className="flex min-w-0 items-center">
+            <Marca N={N} horizontal />
           </a>
           <a href={pedido} className="flex items-center gap-2 rounded-full bg-green-500 px-4 py-2 text-sm font-bold shadow transition hover:bg-green-600">
             <WhatsApp size={18} /> <span className="hidden min-[400px]:inline">Escríbenos</span>
@@ -113,8 +112,7 @@ export default async function Home() {
       <Info n={N} wa={wa} />
 
       <footer className="bg-vino-950 pb-24 pt-12 text-center text-vino-100">
-        <Marca N={N} big />
-        <p className="font-serif text-2xl font-extrabold text-white">{N.nombre}</p>
+        <Marca N={N} big horizontal />
         {N.slogan && <p className="mt-1 text-sm text-vino-200">{N.slogan}</p>}
         <a href={pedido} className="mt-5 inline-flex items-center gap-2 rounded-full bg-green-500 px-6 py-2.5 font-bold text-white">
           <WhatsApp size={20} /> {tel}
