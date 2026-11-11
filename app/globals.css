@@ -39,7 +39,7 @@ html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
 .admin input::placeholder, .admin textarea::placeholder { color: #a8a29e; }
 .skeleton { background: linear-gradient(90deg, #efe8da 25%, #f7f1e4 37%, #efe8da 63%); background-size: 400% 100%; animation: skeleton 1.4s ease infinite; border-radius: .75rem; }
 @keyframes skeleton { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
-.fade-in { animation: fade-in .25s ease both; }
+.fade-in { animation: fade-in .25s ease backwards; }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .skeleton, .fade-in { animation: none; } }
 
