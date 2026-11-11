@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Package, ShoppingCart, Tags, Megaphone, Store, KeyRound, LogOut, ExternalLink, Wallet, X, Plus, Menu as MenuIcon } from 'lucide-react';
-import { UsersRound } from 'lucide-react';
+import { UsersRound, Truck } from 'lucide-react';
 import { puedeAbrirRuta } from '@/lib/rutas-admin';
 import Marca from '@/components/Marca';
 import Avisos from '@/components/Avisos';
@@ -23,7 +23,7 @@ const GRUPOS = [
   ['Principal', [['/admin/inicio', 'Inicio', Inicio]]],
   ['Ventas', [['/admin/ventas/nueva', 'Nueva venta', Plus], ['/admin/ventas', 'Ventas', ShoppingCart]]],
   ['Inventario', [['/admin/productos', 'Productos', Package], ['/admin/categorias', 'Categorías', Tags]]],
-  ['Contabilidad', [['/admin/gastos', 'Gastos', Wallet], ['/admin/costos', 'Costos', Costos], ['/admin/reportes', 'Reportes', Reportes], ['/admin/cierre', 'Cierre de caja', Cierre]]],
+  ['Contabilidad', [['/admin/compras', 'Compras', Truck], ['/admin/gastos', 'Gastos', Wallet], ['/admin/costos', 'Costos', Costos], ['/admin/reportes', 'Reportes', Reportes], ['/admin/cierre', 'Cierre de caja', Cierre]]],
   ['Tienda web', [['/admin/banners', 'Ofertas', Megaphone], ['/admin/negocio', 'Negocio', Store]]],
   ['Administración', [['/admin/usuarios', 'Usuarios y permisos', UsersRound]]],
 ];
