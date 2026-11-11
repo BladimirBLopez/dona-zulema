@@ -16,7 +16,7 @@ export const metadata = {
   openGraph: { title, description, type: 'website', locale: 'es_BO', siteName: 'Doña Zulema' },
 };
 
-export const viewport = { themeColor: '#3b0909' };
+export const viewport = { themeColor: '#0033AA' };
 
 export default function RootLayout({ children }) {
   return (

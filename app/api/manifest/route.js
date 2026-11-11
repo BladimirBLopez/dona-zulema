@@ -10,8 +10,8 @@ export function GET() {
     start_url: '/admin/inicio',
     scope: '/admin',
     display: 'standalone',
-    background_color: '#3b0909',
-    theme_color: '#3b0909',
+    background_color: '#061943',
+    theme_color: '#0033AA',
     icons: [
       { src: '/pwa-icon/192', sizes: '192x192', type: 'image/png', purpose: 'any' },
       { src: '/pwa-icon/512', sizes: '512x512', type: 'image/png', purpose: 'any' },

@@ -30,7 +30,7 @@ export default function Categorias() {
 
   return (
     <main className="mx-auto max-w-2xl p-4">
-      <h1 className="mb-4 text-2xl font-bold text-[#7a1414]">Categorías</h1>
+      <h1 className="mb-4 text-2xl font-bold text-marca-azul">Categorías</h1>
       {msg && <p className="mb-3 text-sm text-green-700">{msg}</p>}
       {d.lineas.map((l) => (
         <section key={l.id} className="mb-6 rounded-xl bg-white p-4 shadow">
@@ -49,7 +49,7 @@ export default function Categorias() {
             <input placeholder="Nueva categoría" className="w-full rounded border p-2" value={nuevo[l.id] || ''}
               onChange={(e) => setNuevo({ ...nuevo, [l.id]: e.target.value })} />
             <button onClick={() => { guardar({ linea_id: l.id, nombre: nuevo[l.id] || '' }); setNuevo({ ...nuevo, [l.id]: '' }); }}
-              className="rounded bg-[#7a1414] px-4 font-bold text-white">Agregar</button>
+              className="rounded bg-marca-azul px-4 font-bold text-white">Agregar</button>
           </div>
         </section>
       ))}
