@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
-::selection { background: #fcd34d; color: #3b0909; }
+::selection { background: #FFC400; color: #061943; }
 .no-scrollbar { scrollbar-width: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
 
@@ -22,8 +22,8 @@ html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
 .admin input:not([type='checkbox']):not([type='file']):focus,
 .admin select:focus,
 .admin textarea:focus {
-  border-color: #cf4237;
-  box-shadow: 0 0 0 4px rgba(207, 66, 55, 0.12);
+  border-color: #0D53D6;
+  box-shadow: 0 0 0 4px rgba(13, 83, 214, 0.12);
 }
 .admin section { border-radius: 1.25rem; }
 
@@ -35,7 +35,7 @@ html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
 .admin button:not(:disabled):active { transform: scale(.97); }
 .admin input:not([type='checkbox']):not([type='file']),
 .admin select,
-.admin textarea { border-color: #d6d3d1; box-shadow: 0 1px 1px rgba(59, 9, 9, 0.04); }
+.admin textarea { border-color: #d6d3d1; box-shadow: 0 1px 1px rgba(0, 51, 170, 0.04); }
 .admin input::placeholder, .admin textarea::placeholder { color: #a8a29e; }
 .skeleton { background: linear-gradient(90deg, #efe8da 25%, #f7f1e4 37%, #efe8da 63%); background-size: 400% 100%; animation: skeleton 1.4s ease infinite; border-radius: .75rem; }
 @keyframes skeleton { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
@@ -43,7 +43,7 @@ html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) { .skeleton, .fade-in { animation: none; } }
 
-.admin a:focus-visible, .admin button:focus-visible { outline: 2px solid #cf4237; outline-offset: 2px; }
+.admin a:focus-visible, .admin button:focus-visible { outline: 2px solid #0D53D6; outline-offset: 2px; }
 
 /* admin-sobrio */
 .admin .shadow-card { box-shadow: none; border: 1px solid #e5e7eb; }
@@ -58,8 +58,8 @@ html { scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
 .admin textarea { border-color: #d1d5db; }
 .admin input:not([type='checkbox']):not([type='file']):focus,
 .admin select:focus,
-.admin textarea:focus { border-color: #7a1414; box-shadow: 0 0 0 3px rgba(122, 20, 20, 0.12); }
-.admin a:focus-visible, .admin button:focus-visible { outline-color: #7a1414; }
+.admin textarea:focus { border-color: #0033AA; box-shadow: 0 0 0 3px rgba(0, 51, 170, 0.12); }
+.admin a:focus-visible, .admin button:focus-visible { outline-color: #0033AA; }
 .skeleton { background: linear-gradient(90deg, #e5e7eb 25%, #f1f3f5 37%, #e5e7eb 63%); background-size: 400% 100%; }
 
 /* escaner-v1 */
