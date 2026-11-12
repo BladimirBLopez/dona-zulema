@@ -1,6 +1,8 @@
+import crypto from 'node:crypto';
 import { NextResponse } from 'next/server';
 import { isAdmin } from '@/lib/admin';
 import { sql } from '@/lib/db';
+import { COOKIE_USUARIO } from '@/lib/usuarios';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -10,6 +12,29 @@ const json = (datos, status = 200) =>
     status,
     headers: { 'Cache-Control': 'no-store' }
   });
+
+function hashSesion(req) {
+  const cookies = req.headers.get('cookie') || '';
+  let token = '';
+
+  for (const parte of cookies.split(';')) {
+    const [nombre, ...valor] = parte.trim().split('=');
+
+    if (nombre === COOKIE_USUARIO) {
+      token = valor.join('=');
+      break;
+    }
+  }
+
+  if (!/^[A-Za-z0-9_-]{43}$/.test(token)) {
+    return null;
+  }
+
+  return crypto
+    .createHash('sha256')
+    .update(token)
+    .digest('hex');
+}
 
 async function autorizado(req) {
   return await isAdmin(req);
@@ -104,17 +129,41 @@ export async function POST(req) {
     return json({ error: 'push_no_configurado' }, 503);
   }
 
+  const tokenHash = hashSesion(req);
+
+  if (!tokenHash) {
+    return json({ error: 'no_autorizado' }, 401);
+  }
+
   try {
-    await sql()`
+    const filas = await sql()`
       INSERT INTO admin_push_subscriptions
-        (endpoint, p256dh, auth)
-      VALUES (${endpoint}, ${p256dh}, ${auth})
+        (endpoint, p256dh, auth, sesion_token_hash)
+      SELECT
+        ${endpoint},
+        ${p256dh},
+        ${auth},
+        s.token_hash
+      FROM dz_sesiones s
+      JOIN dz_usuarios u
+        ON u.id = s.usuario_id
+      WHERE s.token_hash = ${tokenHash}
+        AND s.revocado_en IS NULL
+        AND s.expira_en > now()
+        AND u.activo = true
+        AND u.rol = 'propietario'
       ON CONFLICT (endpoint)
       DO UPDATE SET
         p256dh = EXCLUDED.p256dh,
         auth = EXCLUDED.auth,
+        sesion_token_hash = EXCLUDED.sesion_token_hash,
         updated_at = now()
+      RETURNING endpoint
     `;
+
+    if (!filas.length) {
+      return json({ error: 'no_autorizado' }, 401);
+    }
 
     return json({ ok: true });
   } catch (error) {
