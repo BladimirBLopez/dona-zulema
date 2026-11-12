@@ -47,6 +47,64 @@ export default function NotificationBell({
   const consultando = useRef(false);
   const contenedor = useRef(null);
 
+  // Recuperar una suscripcion existente para la
+  // sesion actual, sin pedir permisos ni crear otra.
+  useEffect(() => {
+    if (
+      !permitirPush ||
+      !('serviceWorker' in navigator)
+    ) return;
+
+    let cancelado = false;
+
+    async function revincularPush() {
+      try {
+        const registro =
+          await navigator.serviceWorker.getRegistration(
+            '/admin/'
+          );
+
+        if (cancelado || !registro) return;
+
+        const suscripcion =
+          await registro.pushManager.getSubscription();
+
+        if (cancelado || !suscripcion) return;
+
+        const respuesta = await fetch(
+          '/api/admin/push',
+          {
+            method: 'PATCH',
+            credentials: 'same-origin',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              endpoint: suscripcion.endpoint
+            })
+          }
+        );
+
+        if (!respuesta.ok) {
+          console.warn(
+            'No se pudo revincular Push:',
+            respuesta.status
+          );
+        }
+      } catch {
+        console.warn(
+          'No se pudo comprobar la revinculacion Push'
+        );
+      }
+    }
+
+    revincularPush();
+
+    return () => {
+      cancelado = true;
+    };
+  }, [permitirPush]);
+
   const tocar = useCallback(() => {
     const ctx = audio.current;
 

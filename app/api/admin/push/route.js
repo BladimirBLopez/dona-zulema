@@ -172,6 +172,60 @@ export async function POST(req) {
   }
 }
 
+export async function PATCH(req) {
+  if (!await autorizado(req)) {
+    return json({ error: 'no_autorizado' }, 401);
+  }
+
+  if (!origenValido(req)) {
+    return json({ error: 'origen_invalido' }, 403);
+  }
+
+  const b = await req.json().catch(() => ({}));
+
+  if (!endpointValido(b.endpoint)) {
+    return json({ error: 'endpoint_invalido' }, 400);
+  }
+
+  const tokenHash = hashSesion(req);
+
+  if (!tokenHash) {
+    return json({ error: 'no_autorizado' }, 401);
+  }
+
+  try {
+    const filas = await sql()`
+      UPDATE admin_push_subscriptions p
+      SET
+        sesion_token_hash = s.token_hash,
+        updated_at = now()
+      FROM dz_sesiones s
+      JOIN dz_usuarios u
+        ON u.id = s.usuario_id
+      WHERE p.endpoint = ${b.endpoint}
+        AND s.token_hash = ${tokenHash}
+        AND s.revocado_en IS NULL
+        AND s.expira_en > now()
+        AND u.activo = true
+        AND u.rol = 'propietario'
+      RETURNING p.endpoint
+    `;
+
+    return json({
+      ok: true,
+      vinculada: filas.length === 1
+    });
+
+  } catch (error) {
+    console.error(
+      'push revincular',
+      error?.code || ''
+    );
+
+    return json({ error: 'error_servidor' }, 500);
+  }
+}
+
 export async function DELETE(req) {
   if (!await autorizado(req)) {
     return json({ error: 'no_autorizado' }, 401);

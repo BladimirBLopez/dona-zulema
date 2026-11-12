@@ -59,7 +59,40 @@ export default function PushToggle() {
           ? await registro.pushManager.getSubscription()
           : null;
 
-        setEstado(suscripcion ? 'activo' : 'inactivo');
+        if (!suscripcion) {
+          setEstado('inactivo');
+          return;
+        }
+
+        // Comprobar la vinculacion real en Neon.
+        // No solicitar permisos ni crear suscripciones.
+        const respuestaVinculo = await fetch(
+          '/api/admin/push',
+          {
+            method: 'PATCH',
+            credentials: 'same-origin',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              endpoint: suscripcion.endpoint
+            })
+          }
+        );
+
+        if (!respuestaVinculo.ok) {
+          throw new Error(
+            'No se pudo verificar la vinculacion Push'
+          );
+        }
+
+        const vinculo = await respuestaVinculo.json();
+
+        setEstado(
+          vinculo?.vinculada === true
+            ? 'activo'
+            : 'inactivo'
+        );
       } catch {
         setEstado('error');
       }
