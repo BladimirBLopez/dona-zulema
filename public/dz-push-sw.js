@@ -9,9 +9,36 @@ self.addEventListener('push', (event) => {
 
   const id = Number(datos.pedidoId) || 0;
 
-  event.waitUntil(
-    self.registration.showNotification(
-      'Doña Zulema · Nuevo pedido',
+  event.waitUntil((async () => {
+    let sesion;
+
+    try {
+      const respuesta = await fetch(
+        '/api/admin/sesion',
+        {
+          method: 'GET',
+          credentials: 'same-origin',
+          cache: 'no-store',
+          redirect: 'error'
+        }
+      );
+
+      if (!respuesta.ok) return;
+
+      sesion = await respuesta.json();
+    } catch {
+      return;
+    }
+
+    if (
+      !sesion?.ok ||
+      sesion?.usuario?.rol !== 'propietario'
+    ) {
+      return;
+    }
+
+    await self.registration.showNotification(
+      'Frial Jurado · Nuevo pedido',
       {
         body: id
           ? `Pedido #${id} pendiente de confirmar`
@@ -24,8 +51,8 @@ self.addEventListener('push', (event) => {
           url: '/admin/ventas?tab=pedidos'
         }
       }
-    )
-  );
+    );
+  })());
 });
 
 self.addEventListener('notificationclick', (event) => {
