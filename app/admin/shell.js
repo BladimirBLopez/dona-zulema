@@ -208,17 +208,15 @@ export default function Shell({ children }) {
           }
 
           if (
-            !eliminadoServidor &&
+            !eliminadoServidor ||
             !eliminadoNavegador
           ) {
             window.alert(
-              'No se pudieron desactivar las ' +
-              'notificaciones de este dispositivo. ' +
-              'Intenta nuevamente antes de salir.'
+              'No se pudo confirmar que las ' +
+              'notificaciones estén desactivadas. ' +
+              'Se intentará cerrar la sesión. ' +
+              'Revisa las notificaciones del dispositivo.'
             );
-
-            saliendo.current = false;
-            return;
           }
         }
       }
@@ -226,12 +224,13 @@ export default function Shell({ children }) {
       window.location.assign('/api/admin/logout');
 
     } catch {
-      saliendo.current = false;
-
       window.alert(
-        'No se pudo comprobar la suscripcion Push. ' +
-        'Intenta nuevamente para cerrar sesion.'
+        'No se pudo comprobar la suscripción Push. ' +
+        'Se intentará cerrar la sesión. ' +
+        'Revisa las notificaciones del dispositivo.'
       );
+
+      window.location.assign('/api/admin/logout');
     }
   }
 
