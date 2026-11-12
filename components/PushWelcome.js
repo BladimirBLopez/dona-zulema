@@ -76,8 +76,25 @@ export default function PushWelcome() {
 
     revisar();
 
+    // Permitir abrir la ayuda desde la campanita,
+    // aunque la bienvenida ya se haya cerrado.
+    function abrirAyudaPush() {
+      setMensaje('');
+      setEstado('bloqueado');
+      setMostrar(true);
+    }
+
+    window.addEventListener(
+      'dz-push-abrir-ayuda',
+      abrirAyudaPush
+    );
+
     return () => {
       montado = false;
+      window.removeEventListener(
+        'dz-push-abrir-ayuda',
+        abrirAyudaPush
+      );
     };
   }, []);
 
@@ -211,12 +228,14 @@ export default function PushWelcome() {
 
         {estado === 'bloqueado' ? (
           <p className="mt-3 text-sm leading-6 text-stone-600">
-            Chrome tiene bloqueados los avisos.
-            Abre la configuración del sitio,
-            entra en Permisos, selecciona
-            Notificaciones y cambia a Permitir.
-            Después recarga Doña Zulema
-            y activa los avisos desde la campanita.
+            Chrome tiene bloqueadas las notificaciones
+            de Frial Jurado.
+            Para habilitarlas una sola vez, toca el
+            icono junto a la dirección web, abre
+            los permisos del sitio y cambia
+            Notificaciones a Permitir.
+            Después recarga la página y pulsa
+            Activar desde la campanita.
           </p>
         ) : (
           <p className="mt-3 text-sm leading-6 text-stone-600">
