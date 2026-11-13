@@ -56,13 +56,10 @@ export default async function Home() {
   return (
     <>
       <header className="sticky top-0 z-30 border-b border-white/10 bg-vino-950/95 text-white backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
+        <div className="mx-auto flex h-16 max-w-6xl items-center gap-3 px-4">
           <Menu items={menu} pedido={pedido} />
           <a href="#" className="flex min-w-0 items-center">
             <Marca N={N} horizontal />
-          </a>
-          <a href={pedido} className="flex items-center gap-2 rounded-full bg-green-500 px-4 py-2 text-sm font-bold shadow transition hover:bg-green-600">
-            <WhatsApp size={18} /> <span className="hidden min-[400px]:inline">Escríbenos</span>
           </a>
         </div>
       </header>
@@ -90,15 +87,7 @@ export default async function Home() {
                   <MapPin size={20} /> Cómo llegar
                 </a>
               )}
-              <a href={pedido} className="flex items-center gap-2 rounded-full border border-white/30 px-8 py-3.5 font-semibold transition hover:bg-white/10">
-                <WhatsApp size={20} /> Pedir por WhatsApp
-              </a>
             </div>
-            <ul className="mt-10 flex flex-wrap justify-center gap-x-8 gap-y-3 text-sm text-oro-200">
-              <li className="flex items-center gap-2"><Scale size={16} /> Mayor y menor</li>
-              <li className="flex items-center gap-2"><Snowflake size={16} /> Cadena de frío</li>
-              <li className="flex items-center gap-2"><WhatsApp size={16} /> Pedidos por WhatsApp</li>
-            </ul>
           </Reveal>
         </div>
         <svg viewBox="0 0 1440 80" preserveAspectRatio="none" className="absolute bottom-0 block w-full fill-crema" style={{ height: 48 }} aria-hidden="true">

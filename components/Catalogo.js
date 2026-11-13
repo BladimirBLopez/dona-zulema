@@ -649,12 +649,10 @@ export default function Catalogo({ productos, wa, negocio }) {
         )}
       </AnimatePresence>
 
-      {count === 0 && (
-        <a href={`https://wa.me/${wa}?text=${encodeURIComponent('Hola, quiero hacer un pedido')}`} aria-label="WhatsApp"
-          className="fixed bottom-5 right-5 z-40 grid h-14 w-14 place-items-center rounded-full bg-green-500 text-white shadow-lift transition hover:scale-110">
+      <a href={`https://wa.me/${wa}?text=${encodeURIComponent('Hola, quiero hacer un pedido')}`} aria-label="WhatsApp"
+          className={`fixed right-5 z-40 ${count > 0 ? 'bottom-24' : 'bottom-5'} grid h-14 w-14 place-items-center rounded-full bg-green-500 text-white shadow-lift transition hover:scale-110`}>
           <WhatsApp size={30} />
         </a>
-      )}
 
       <AnimatePresence>
         {open && count > 0 && (
