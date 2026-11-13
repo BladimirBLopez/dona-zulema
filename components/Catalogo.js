@@ -7,7 +7,7 @@ import { Search, Plus, Minus, X, ShoppingBag, Milk, Drumstick, Trash2, PackageOp
 import Link from 'next/link';
 import WhatsApp from '@/components/WhatsApp';
 
-const bs = (v) => (v == null || v === '' ? null : 'Bs ' + Number(v).toFixed(2));
+const bs = (v) => (v == null || v === '' ? null : 'Bs ' + Number(v).toFixed(2).replace('.', ','));
 const normalizar = (v) => String(v ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 const stepOf = pasoDe;
 const CLAVE_CARRITO = 'frial-jurado-carrito-v1';
