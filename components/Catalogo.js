@@ -33,19 +33,38 @@ function Card({ p, qty, onAdd }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-40px' }}
       transition={{ duration: 0.35 }}
-      className="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-vino-900/10 transition hover:shadow-lift"
+      className="group relative flex min-w-0 flex-col overflow-hidden rounded-[20px] border border-vino-100 bg-white shadow-[0_4px_18px_rgba(7,37,114,0.07)] transition hover:shadow-[0_10px_26px_rgba(7,37,114,0.13)]"
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-oro-200/60 to-vino-100">
+      <div className="relative aspect-[5/4] overflow-hidden bg-[#f5f7fb]">
         {p.img ? (
-          <img src={p.imgSmall || p.img} srcSet={p.imgSmall ? `${p.imgSmall} 360w, ${p.img} 600w` : undefined} sizes="(min-width:1280px) 25vw, (min-width:1024px) 33vw, (min-width:360px) 50vw, 100vw" alt={p.nombre} loading="lazy" decoding="async" className="h-full w-full object-contain p-2 transition duration-300 group-hover:scale-[1.03]" />
+          <>
+            <img
+              src={p.imgSmall || p.img}
+              alt=""
+              aria-hidden="true"
+              loading="lazy"
+              decoding="async"
+              className="absolute inset-0 h-full w-full scale-125 object-cover opacity-25 blur-xl"
+            />
+            <div className="absolute inset-0 bg-white/40" />
+            <img
+              src={p.imgSmall || p.img}
+              srcSet={p.imgSmall ? `${p.imgSmall} 360w, ${p.img} 600w` : undefined}
+              sizes="(min-width:1280px) 25vw, (min-width:1024px) 33vw, (min-width:360px) 50vw, 100vw"
+              alt={p.nombre}
+              loading="lazy"
+              decoding="async"
+              className="relative z-[1] h-full w-full object-contain p-1.5 transition-transform duration-300 group-hover:scale-[1.02]"
+            />
+          </>
         ) : (
           <div className="grid h-full place-items-center text-vino-300"><Icono lslug={p.lslug} className="h-14 w-14" /></div>
         )}
-        <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-vino-800 backdrop-blur">{p.categoria}</span>
       </div>
       <div className="flex flex-1 flex-col p-3 sm:p-4">
-        <h4 className="text-sm font-semibold leading-snug text-stone-900 sm:text-base"><Link href={`/producto/${p.id}`} className="after:absolute after:inset-0 hover:text-vino-700">{p.nombre}</Link></h4>
-        <div className="mt-3">
+        <span className="mb-1 text-[10px] font-bold uppercase tracking-wide text-vino-600">{p.categoria}</span>
+        <h4 className="line-clamp-2 min-h-[2.5rem] text-sm font-bold leading-snug text-stone-900 sm:text-base"><Link href={`/producto/${p.id}`} className="after:absolute after:inset-0 hover:text-vino-700">{p.nombre}</Link></h4>
+        <div className="mt-1">
           {menor ? (
             <p className="flex flex-wrap items-baseline gap-x-1.5">
               <span className="text-lg font-extrabold text-vino-800 sm:text-xl">{menor}</span>
@@ -55,7 +74,7 @@ function Card({ p, qty, onAdd }) {
             <span className="rounded-lg bg-stone-100 px-2 py-1 text-xs text-stone-500">Consultar precio</span>
           )}
           {mayor && (
-            <p className="mt-2 rounded-lg bg-oro-200/50 px-2.5 py-1.5 text-xs leading-snug text-amber-900">
+            <p className="mt-1 rounded-lg bg-vino-50 px-2 py-1 text-[11px] leading-snug text-vino-800">
               {p.mayor_desde != null && Number(p.mayor_desde) > 0 ? 'Desde ' + cantidadDe(p.mayor_desde, p.unidad) + ': ' : 'Por mayor: '}
               <b>{mayor}</b> {porUnidad(p.unidad)}
             </p>
@@ -524,10 +543,10 @@ export default function Catalogo({ productos, wa, negocio }) {
         )}
         {orden === 'catalogo' ? grupos.map((l) => (
           <div key={l.linea} className="mb-12">
-            <h2 className="mb-5 font-serif text-3xl font-extrabold text-vino-800">{l.linea}</h2>
+            <h2 className="mb-4 font-sans text-2xl font-extrabold tracking-tight text-vino-900 sm:text-3xl">{l.linea}</h2>
             {l.cats.map((c) => (
               <div key={l.linea + c.nombre} className="mb-9">
-                <h3 className="mb-4 flex items-center gap-3 text-lg font-bold text-stone-800">
+                <h3 className="mb-3 flex items-center gap-2 text-base font-bold text-stone-800 sm:text-lg">
                   <span className="h-6 w-1.5 rounded bg-oro-400" /> {c.nombre}
                   <span className="text-sm font-normal text-stone-400">{c.items.length}</span>
                 </h3>
