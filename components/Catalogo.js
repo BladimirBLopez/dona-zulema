@@ -35,12 +35,12 @@ function Card({ p, qty, onAdd, compacta = false, sinCat = false }) {
       transition={{ duration: 0.35 }}
       className="group relative flex flex-col overflow-hidden rounded-3xl bg-white shadow-card ring-1 ring-vino-900/5 transition hover:-translate-y-1 hover:shadow-lift"
     >
-      <div className={'relative overflow-hidden bg-[#f5f7fb] ' + (compacta ? 'aspect-square' : 'aspect-[4/3]')}>
+      <div className={'relative overflow-hidden border-b border-stone-100 bg-white ' + (compacta ? 'aspect-square' : 'aspect-[4/3]')}>
         {p.img ? (
           <>
-            <img src={p.imgSmall || p.img} alt="" aria-hidden="true" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full scale-125 object-cover opacity-25 blur-xl" />
-            <div className="absolute inset-0 bg-white/40" />
-            <img src={p.imgSmall || p.img} srcSet={p.imgSmall ? `${p.imgSmall} 360w, ${p.img} 600w` : undefined} sizes={compacta ? '(min-width:1280px) 25vw, (min-width:1024px) 33vw, 50vw' : '(min-width:1280px) 25vw, (min-width:1024px) 33vw, (min-width:480px) 50vw, 100vw'} alt={p.nombre} loading="lazy" decoding="async" className="relative z-[1] h-full w-full object-contain p-1.5 transition-transform duration-300 group-hover:scale-[1.02]" />
+            
+            
+            <img src={p.imgSmall || p.img} srcSet={p.imgSmall ? `${p.imgSmall} 360w, ${p.img} 600w` : undefined} sizes={compacta ? '(min-width:1280px) 25vw, (min-width:1024px) 33vw, 50vw' : '(min-width:1280px) 25vw, (min-width:1024px) 33vw, (min-width:480px) 50vw, 100vw'} alt={p.nombre} loading="lazy" decoding="async" className="relative z-[1] h-full w-full object-contain p-2 transition-transform duration-300 group-hover:scale-[1.02]" />
           </>
         ) : (
           <div className="grid h-full place-items-center text-vino-300"><Icono lslug={p.lslug} className="h-14 w-14" /></div>
@@ -49,23 +49,23 @@ function Card({ p, qty, onAdd, compacta = false, sinCat = false }) {
       <div className={'flex flex-1 flex-col ' + (compacta ? 'p-3' : 'p-4')}>
         {!sinCat && <span className="mb-1 text-[10px] font-bold uppercase tracking-wide text-vino-600">{p.categoria}</span>}
         <h4 className={'font-semibold leading-snug text-stone-900' + (compacta ? ' line-clamp-2 min-h-[2.5rem] text-sm' : '')}><Link href={`/producto/${p.id}`} className="after:absolute after:inset-0 hover:text-vino-700">{p.nombre}</Link></h4>
-        <div className="mt-3">
+        <div className={compacta ? 'mt-2' : 'mt-3'}>
           {menor ? (
             <p className="flex flex-wrap items-baseline gap-x-1.5">
               <span className={'font-extrabold text-vino-800 ' + (compacta ? 'text-lg' : 'text-xl')}>{menor}</span>
-              <span className="text-xs text-stone-500">{'por ' + unidadDe(p.unidad)}</span>
+              <span className="text-xs text-stone-500">{(compacta ? '/ ' : 'por ') + unidadDe(p.unidad)}</span>
             </p>
           ) : (
             <span className="rounded-lg bg-stone-100 px-2 py-1 text-xs text-stone-500">Consultar precio</span>
           )}
           {mayor && (
-            <p className="mt-2 rounded-lg bg-oro-200/50 px-2.5 py-1.5 text-xs leading-snug text-amber-900">
+            <p className={'mt-2 rounded-lg bg-oro-200/50 leading-snug text-amber-900 ' + (compacta ? 'px-2 py-1 text-[11px]' : 'px-2.5 py-1.5 text-xs')}>
               {p.mayor_desde != null && Number(p.mayor_desde) > 0 ? 'Desde ' + cantidadDe(p.mayor_desde, p.unidad) + ': ' : 'Por mayor: '}
               <b>{mayor}</b> {porUnidad(p.unidad)}
             </p>
           )}
         </div>
-        <div className="relative z-10 mt-auto pt-4">
+        <div className={'relative z-10 mt-auto ' + (compacta ? 'pt-3' : 'pt-4')}>
           {qty ? (
             <div className="flex items-center justify-between rounded-full bg-vino-800 p-1 text-white">
               <button onClick={() => onAdd(p, -st)} aria-label="Quitar" className="grid h-9 w-9 place-items-center rounded-full hover:bg-white/15"><Minus size={16} /></button>
