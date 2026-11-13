@@ -34,11 +34,11 @@ function CardCompacta({ p, qty, onAdd }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-40px' }}
       transition={{ duration: 0.3 }}
-      className="relative flex flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-stone-200"
+      className="relative flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md"
     >
-      <div className="relative aspect-[4/3] bg-white">
+      <div className="relative aspect-[4/3] overflow-hidden bg-stone-50">
         {p.img ? (
-          <img src={p.imgSmall || p.img} srcSet={p.imgSmall ? `${p.imgSmall} 360w, ${p.img} 600w` : undefined} sizes="(min-width:1280px) 25vw, (min-width:1024px) 33vw, 50vw" alt={p.nombre} loading="lazy" decoding="async" className="h-full w-full object-contain p-2" />
+          <img src={p.imgSmall || p.img} srcSet={p.imgSmall ? `${p.imgSmall} 360w, ${p.img} 600w` : undefined} sizes="(min-width:1280px) 25vw, (min-width:1024px) 33vw, 50vw" alt={p.nombre} loading="lazy" decoding="async" className="absolute inset-0 block h-full w-full object-contain p-2" />
         ) : (
           <div className="grid h-full place-items-center text-vino-300"><Icono lslug={p.lslug} className="h-12 w-12" /></div>
         )}
@@ -55,17 +55,17 @@ function CardCompacta({ p, qty, onAdd }) {
         </div>
       </div>
       <div className="flex flex-1 flex-col border-t border-stone-100 px-3 pb-3 pt-2">
-        <h4 className="line-clamp-2 min-h-[2.2rem] text-[13px] font-medium leading-tight text-stone-800"><Link href={`/producto/${p.id}`} className="after:absolute after:inset-0">{p.nombre}</Link></h4>
+        <h4 className="line-clamp-2 min-h-[2.2rem] text-[13px] font-semibold leading-tight text-stone-800"><Link href={`/producto/${p.id}`} className="after:absolute after:inset-0">{p.nombre}</Link></h4>
         {menor ? (
-          <p className="mt-1 flex items-baseline gap-1">
-            <span className="text-lg font-extrabold leading-none text-vino-800">{menor}</span>
+          <p className="mt-1 flex flex-wrap items-baseline gap-x-1 gap-y-0.5">
+            <span className="text-[17px] font-extrabold leading-tight text-vino-800">{menor}</span>
             <span className="text-[11px] text-stone-500">/ {unidadDe(p.unidad)}</span>
           </p>
         ) : (
           <span className="mt-1 text-xs text-stone-500">Consultar precio</span>
         )}
         {mayor && (
-          <p className="mt-1.5 rounded-md bg-oro-200/50 px-1.5 py-1 text-[10.5px] font-medium leading-snug text-amber-900">
+          <p className="mt-2 rounded-lg bg-oro-200/50 px-2 py-1.5 text-[11px] font-medium leading-snug text-amber-900">
             {desde ? 'Desde ' + desde + ': ' : 'Por mayor: '}<b>{mayor}</b> {porUnidad(p.unidad)}
           </p>
         )}
@@ -92,7 +92,7 @@ function Card({ p, qty, onAdd, compacta = false, sinCat = false }) {
           <>
             
             
-            <img src={p.imgSmall || p.img} srcSet={p.imgSmall ? `${p.imgSmall} 360w, ${p.img} 600w` : undefined} sizes={compacta ? '(min-width:1280px) 25vw, (min-width:1024px) 33vw, 50vw' : '(min-width:1280px) 25vw, (min-width:1024px) 33vw, (min-width:480px) 50vw, 100vw'} alt={p.nombre} loading="lazy" decoding="async" className="relative z-[1] h-full w-full object-contain p-2 transition-transform duration-300 group-hover:scale-[1.02]" />
+            <img src={p.imgSmall || p.img} srcSet={p.imgSmall ? `${p.imgSmall} 360w, ${p.img} 600w` : undefined} sizes={compacta ? '(min-width:1280px) 25vw, (min-width:1024px) 33vw, 50vw' : '(min-width:1280px) 25vw, (min-width:1024px) 33vw, (min-width:480px) 50vw, 100vw'} alt={p.nombre} loading="lazy" decoding="async" className="absolute inset-0 z-[1] block h-full w-full object-contain p-2 transition-transform duration-300 group-hover:scale-[1.02]" />
           </>
         ) : (
           <div className="grid h-full place-items-center text-vino-300"><Icono lslug={p.lslug} className="h-14 w-14" /></div>
