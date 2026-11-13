@@ -60,7 +60,7 @@ function Card({ p, qty, onAdd, sinCat = false }) {
         )}
       </Link>
 
-      <div className="flex flex-1 flex-col px-3 pb-3 pt-3 sm:px-4 sm:pb-4">
+      <div className="flex flex-1 flex-col px-3 pb-3 pt-2.5 sm:px-4 sm:pb-4">
         {!sinCat && (
           <p className="mb-1 truncate text-[10px] font-semibold uppercase tracking-wide text-vino-600">
             {p.categoria}
@@ -69,18 +69,15 @@ function Card({ p, qty, onAdd, sinCat = false }) {
 
         <Link
           href={`/producto/${p.id}`}
-          className="line-clamp-2 min-h-[2.5rem] text-[13px] font-bold leading-snug text-stone-900 hover:text-vino-800 sm:text-[15px]"
+          className="line-clamp-2 min-h-[2.25rem] text-[13px] font-bold leading-snug text-stone-900 hover:text-vino-800 sm:text-[15px]"
         >
           {p.nombre}
         </Link>
 
-        <div className="mt-2.5">
+        <div className="mt-1">
           {menor ? (
             <>
-              <span className="block text-[10px] font-medium text-stone-500">
-                Precio por menor
-              </span>
-              <p className="mt-0.5 flex flex-wrap items-baseline gap-x-1">
+              <p className="flex flex-wrap items-baseline gap-x-1">
                 <strong className="text-[19px] font-extrabold leading-tight tracking-tight text-vino-800 sm:text-[22px]">
                   {menor}
                 </strong>
@@ -96,7 +93,7 @@ function Card({ p, qty, onAdd, sinCat = false }) {
           )}
 
           {mayor && (
-            <div className="mt-2 rounded-lg bg-oro-200/50 p-2 text-[11px] leading-snug text-vino-950">
+            <div className="mt-2 rounded-lg bg-oro-200/50 px-2 py-1.5 text-[11px] leading-snug text-vino-950">
               <p className="font-bold">
                 Mayorista: {mayor}{' '}
                 <span className="font-normal">{porUnidad(p.unidad)}</span>
@@ -108,7 +105,7 @@ function Card({ p, qty, onAdd, sinCat = false }) {
           )}
         </div>
 
-        <div className="relative z-10 mt-auto pt-3">
+        <div className="relative z-10 mt-auto pt-2.5">
           {qty ? (
             <div className="flex min-h-11 items-center justify-between rounded-xl bg-vino-800 text-white">
               <button
