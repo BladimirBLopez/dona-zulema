@@ -3,7 +3,7 @@ import { pasoDe, cantidadValida } from '@/lib/unidades';
 import { obtenerPrecioPedido, redondearDinero } from '@/lib/precio-pedido';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Search, Plus, Minus, X, ShoppingBag, Milk, Drumstick, Trash2, PackageOpen, SlidersHorizontal, ArrowDownUp, Check, LayoutGrid } from 'lucide-react';
+import { Search, Plus, Minus, X, ShoppingBag, Milk, Drumstick, Trash2, PackageOpen, SlidersHorizontal, ArrowDownUp, Check } from 'lucide-react';
 import Link from 'next/link';
 import WhatsApp from '@/components/WhatsApp';
 
@@ -23,110 +23,126 @@ const cantidadDe = (n, u) => {
 };
 const porUnidad = (u) => { const x = unidadDe(u); return x === 'unidad' ? 'c/u' : 'por ' + x; };
 
-function CardCompacta({ p, qty, onAdd }) {
-  const st = stepOf(p.unidad);
+function Card({ p, qty, onAdd, sinCat = false }) {
+  const paso = stepOf(p.unidad);
   const menor = bs(p.precio_menor);
   const mayor = bs(p.precio_mayor);
-  const desde = p.mayor_desde != null && Number(p.mayor_desde) > 0 ? cantidadDe(p.mayor_desde, p.unidad) : null;
-  return (
-    <motion.article
-      initial={{ opacity: 0, y: 12 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-40px' }}
-      transition={{ duration: 0.3 }}
-      className="relative flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition-shadow duration-200 hover:shadow-md"
-    >
-      <div className="relative aspect-[4/3] overflow-hidden bg-stone-50">
-        {p.img ? (
-          <img src={p.imgSmall || p.img} srcSet={p.imgSmall ? `${p.imgSmall} 360w, ${p.img} 600w` : undefined} sizes="(min-width:1280px) 25vw, (min-width:1024px) 33vw, 50vw" alt={p.nombre} loading="lazy" decoding="async" className="absolute inset-0 block h-full w-full object-contain p-2" />
-        ) : (
-          <div className="grid h-full place-items-center text-vino-300"><Icono lslug={p.lslug} className="h-12 w-12" /></div>
-        )}
-        <div className="absolute bottom-2 right-2 z-10">
-          {qty ? (
-            <div className="flex items-center rounded-full bg-vino-800 text-white shadow-lift">
-              <button onClick={() => onAdd(p, -st)} aria-label="Quitar" className="grid h-9 w-9 place-items-center rounded-full active:bg-white/20"><Minus size={16} /></button>
-              <span className="min-w-[1.6rem] text-center text-xs font-bold leading-tight">{qty}<span className="block text-[9px] font-normal opacity-80">{p.unidad}</span></span>
-              <button onClick={() => onAdd(p, st)} aria-label="Agregar" className="grid h-9 w-9 place-items-center rounded-full active:bg-white/20"><Plus size={16} /></button>
-            </div>
-          ) : (
-            <button onClick={() => onAdd(p, st)} aria-label={'Agregar ' + p.nombre} className="grid h-10 w-10 place-items-center rounded-full bg-vino-800 text-white shadow-lift transition active:scale-90"><Plus size={20} /></button>
-          )}
-        </div>
-      </div>
-      <div className="flex flex-1 flex-col border-t border-stone-100 px-3 pb-3 pt-2">
-        <h4 className="line-clamp-2 min-h-[2.2rem] text-[13px] font-semibold leading-tight text-stone-800"><Link href={`/producto/${p.id}`} className="after:absolute after:inset-0">{p.nombre}</Link></h4>
-        {menor ? (
-          <p className="mt-1 flex flex-wrap items-baseline gap-x-1 gap-y-0.5">
-            <span className="text-[17px] font-extrabold leading-tight text-vino-800">{menor}</span>
-            <span className="text-[11px] text-stone-500">/ {unidadDe(p.unidad)}</span>
-          </p>
-        ) : (
-          <span className="mt-1 text-xs text-stone-500">Consultar precio</span>
-        )}
-        {mayor && (
-          <p className="mt-2 rounded-lg bg-oro-200/50 px-2 py-1.5 text-[11px] font-medium leading-snug text-amber-900">
-            {desde ? 'Desde ' + desde + ': ' : 'Por mayor: '}<b>{mayor}</b> {porUnidad(p.unidad)}
-          </p>
-        )}
-      </div>
-    </motion.article>
-  );
-}
+  const desde = Number(p.mayor_desde) > 0
+    ? cantidadDe(p.mayor_desde, p.unidad) : null;
 
-function Card({ p, qty, onAdd, compacta = false, sinCat = false }) {
-  if (compacta) return <CardCompacta p={p} qty={qty} onAdd={onAdd} />;
-  const st = stepOf(p.unidad);
-  const menor = bs(p.precio_menor);
-  const mayor = bs(p.precio_mayor);
   return (
     <motion.article
-      initial={{ opacity: 0, y: 16 }}
+      initial={{ opacity: 0, y: 10 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-40px' }}
-      transition={{ duration: 0.35 }}
-      className="group relative flex flex-col overflow-hidden rounded-3xl bg-white shadow-card ring-1 ring-vino-900/5 transition hover:-translate-y-1 hover:shadow-lift"
+      viewport={{ once: true, margin: '-30px' }}
+      transition={{ duration: 0.25 }}
+      className="flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition-shadow hover:shadow-card"
     >
-      <div className={'relative overflow-hidden border-b border-stone-100 bg-white ' + (compacta ? 'aspect-square' : 'aspect-[4/3]')}>
+      <Link
+        href={`/producto/${p.id}`}
+        aria-label={`Ver detalle de ${p.nombre}`}
+        className="relative block aspect-square w-full overflow-hidden bg-[#f7f9fc]"
+      >
         {p.img ? (
-          <>
-            
-            
-            <img src={p.imgSmall || p.img} srcSet={p.imgSmall ? `${p.imgSmall} 360w, ${p.img} 600w` : undefined} sizes={compacta ? '(min-width:1280px) 25vw, (min-width:1024px) 33vw, 50vw' : '(min-width:1280px) 25vw, (min-width:1024px) 33vw, (min-width:480px) 50vw, 100vw'} alt={p.nombre} loading="lazy" decoding="async" className="absolute inset-0 z-[1] block h-full w-full object-contain p-2 transition-transform duration-300 group-hover:scale-[1.02]" />
-          </>
+          <img
+            src={p.imgSmall || p.img}
+            srcSet={p.imgSmall ? `${p.imgSmall} 360w, ${p.img} 600w` : undefined}
+            sizes="(min-width:1280px) 260px, (min-width:1024px) 33vw, 50vw"
+            alt={p.nombre}
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 block h-full w-full object-contain p-1.5 sm:p-3"
+          />
         ) : (
-          <div className="grid h-full place-items-center text-vino-300"><Icono lslug={p.lslug} className="h-14 w-14" /></div>
+          <span className="absolute inset-0 grid place-items-center text-vino-300">
+            <Icono lslug={p.lslug} className="h-12 w-12" />
+          </span>
         )}
-      </div>
-      <div className={'flex flex-1 flex-col ' + (compacta ? 'p-3' : 'p-4')}>
-        {!sinCat && <span className="mb-1 text-[10px] font-bold uppercase tracking-wide text-vino-600">{p.categoria}</span>}
-        <h4 className={'font-semibold leading-snug text-stone-900' + (compacta ? ' line-clamp-2 min-h-[2.5rem] text-sm' : '')}><Link href={`/producto/${p.id}`} className="after:absolute after:inset-0 hover:text-vino-700">{p.nombre}</Link></h4>
-        <div className={compacta ? 'mt-2' : 'mt-3'}>
+      </Link>
+
+      <div className="flex flex-1 flex-col px-3 pb-3 pt-3 sm:px-4 sm:pb-4">
+        {!sinCat && (
+          <p className="mb-1 truncate text-[10px] font-semibold uppercase tracking-wide text-vino-600">
+            {p.categoria}
+          </p>
+        )}
+
+        <Link
+          href={`/producto/${p.id}`}
+          className="line-clamp-2 min-h-[2.5rem] text-[13px] font-bold leading-snug text-stone-900 hover:text-vino-800 sm:text-[15px]"
+        >
+          {p.nombre}
+        </Link>
+
+        <div className="mt-2.5">
           {menor ? (
-            <p className="flex flex-wrap items-baseline gap-x-1.5">
-              <span className={'font-extrabold text-vino-800 ' + (compacta ? 'text-lg' : 'text-xl')}>{menor}</span>
-              <span className="text-xs text-stone-500">{(compacta ? '/ ' : 'por ') + unidadDe(p.unidad)}</span>
-            </p>
+            <>
+              <span className="block text-[10px] font-medium text-stone-500">
+                Precio por menor
+              </span>
+              <p className="mt-0.5 flex flex-wrap items-baseline gap-x-1">
+                <strong className="text-[19px] font-extrabold leading-tight tracking-tight text-vino-800 sm:text-[22px]">
+                  {menor}
+                </strong>
+                <span className="text-[10px] text-stone-500">
+                  {porUnidad(p.unidad)}
+                </span>
+              </p>
+            </>
           ) : (
-            <span className="rounded-lg bg-stone-100 px-2 py-1 text-xs text-stone-500">Consultar precio</span>
-          )}
-          {mayor && (
-            <p className={'mt-2 rounded-lg bg-oro-200/50 leading-snug text-amber-900 ' + (compacta ? 'px-2 py-1 text-[11px]' : 'px-2.5 py-1.5 text-xs')}>
-              {p.mayor_desde != null && Number(p.mayor_desde) > 0 ? 'Desde ' + cantidadDe(p.mayor_desde, p.unidad) + ': ' : 'Por mayor: '}
-              <b>{mayor}</b> {porUnidad(p.unidad)}
+            <p className="text-sm font-semibold text-stone-600">
+              Consultar precio
             </p>
+          )}
+
+          {mayor && (
+            <div className="mt-2 rounded-lg bg-oro-200/50 p-2 text-[11px] leading-snug text-vino-950">
+              <p className="font-bold">
+                Mayorista: {mayor}{' '}
+                <span className="font-normal">{porUnidad(p.unidad)}</span>
+              </p>
+              <p className="mt-0.5 text-[10px]">
+                {desde ? `Desde ${desde}` : 'Al seleccionar compra por mayor'}
+              </p>
+            </div>
           )}
         </div>
-        <div className={'relative z-10 mt-auto ' + (compacta ? 'pt-3' : 'pt-4')}>
+
+        <div className="relative z-10 mt-auto pt-3">
           {qty ? (
-            <div className="flex items-center justify-between rounded-full bg-vino-800 p-1 text-white">
-              <button onClick={() => onAdd(p, -st)} aria-label="Quitar" className="grid h-9 w-9 place-items-center rounded-full hover:bg-white/15"><Minus size={16} /></button>
-              <span className="text-sm font-bold">{qty} {p.unidad}</span>
-              <button onClick={() => onAdd(p, st)} aria-label="Agregar" className="grid h-9 w-9 place-items-center rounded-full hover:bg-white/15"><Plus size={16} /></button>
+            <div className="flex min-h-11 items-center justify-between rounded-xl bg-vino-800 text-white">
+              <button
+                type="button"
+                onClick={() => onAdd(p, -paso)}
+                aria-label={`Quitar ${p.nombre}`}
+                className="grid h-11 w-9 shrink-0 place-items-center rounded-l-xl hover:bg-white/15 sm:w-11"
+              >
+                <Minus size={17} />
+              </button>
+              <span className="min-w-0 flex-1 text-center text-xs font-bold leading-tight">
+                {qty}
+                <span className="block text-[9px] font-normal opacity-80">
+                  {p.unidad}
+                </span>
+              </span>
+              <button
+                type="button"
+                onClick={() => onAdd(p, paso)}
+                aria-label={`Agregar otro ${p.nombre}`}
+                className="grid h-11 w-9 shrink-0 place-items-center rounded-r-xl hover:bg-white/15 sm:w-11"
+              >
+                <Plus size={17} />
+              </button>
             </div>
           ) : (
-            <button onClick={() => onAdd(p, st)} className="flex w-full items-center justify-center gap-2 rounded-full bg-vino-800 py-2.5 text-sm font-bold text-white transition hover:bg-vino-700 active:scale-95">
-              <Plus size={16} /> {compacta ? 'Agregar' : 'Agregar al pedido'}
+            <button
+              type="button"
+              onClick={() => onAdd(p, paso)}
+              aria-label={`Agregar ${p.nombre} al carrito`}
+              className="flex min-h-11 w-full items-center justify-center gap-1 rounded-xl bg-vino-800 px-1.5 py-2 text-center text-[11px] font-bold leading-tight text-white transition hover:bg-vino-700 active:scale-95 sm:gap-2 sm:text-sm"
+            >
+              <ShoppingBag size={15} className="shrink-0" />
+              <span>Agregar al carrito</span>
             </button>
           )}
         </div>
@@ -141,18 +157,6 @@ export default function Catalogo({ productos, wa, negocio }) {
   const [cat, setCat] = useState('all');
   const [precioMax, setPrecioMax] = useState('todos');
   const [orden, setOrden] = useState('catalogo');
-  const [vista, setVista] = useState('dos');
-  useEffect(() => {
-    try {
-      const v = window.localStorage.getItem('dz_vista');
-      if (v === 'dos' || v === 'grande') setVista(v);
-    } catch {}
-  }, []);
-  const cambiarVista = () => {
-    const nueva = vista === 'dos' ? 'grande' : 'dos';
-    setVista(nueva);
-    try { window.localStorage.setItem('dz_vista', nueva); } catch {}
-  };
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false);
   const [cart, setCart] = useState({});
   const [open, setOpen] = useState(false);
@@ -347,10 +351,7 @@ export default function Catalogo({ productos, wa, negocio }) {
     Number(cat !== 'all') +
     Number(precioMax !== 'todos');
 
-  // vista-v1
-  const rejilla = vista === 'dos'
-    ? 'grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4'
-    : 'grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
+  const rejilla = 'grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4';
 
   const limpiar = () => {
     setQ('');
@@ -512,7 +513,7 @@ export default function Catalogo({ productos, wa, negocio }) {
   const chip = (act) => `whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold transition ${act ? 'bg-oro-400 text-vino-950' : 'bg-white text-stone-600 ring-1 ring-stone-200'}`;
 
   return (
-    <section id="catalogo" className="scroll-mt-16 bg-crema pb-10 pt-6">
+    <section id="catalogo" className="scroll-mt-16 bg-crema pb-28 pt-6">
       <div className="mx-auto max-w-6xl space-y-3 px-4 py-3">
           <div className="relative">
             <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-stone-400" />
@@ -579,7 +580,6 @@ export default function Catalogo({ productos, wa, negocio }) {
           <span aria-live="polite" className="text-sm text-stone-500">
             {filtrados.length} {filtrados.length === 1 ? 'producto' : 'productos'}
           </span>
-          <button type="button" onClick={cambiarVista} className="flex shrink-0 items-center gap-1.5 rounded-full border border-vino-900/10 bg-white px-3 py-1.5 text-xs font-semibold text-vino-800 lg:hidden"><LayoutGrid size={14} /> {vista === 'dos' ? 'Ver grande' : 'Ver en 2 columnas'}</button>
         </div>
         {(q.trim() || cantidadFiltros > 0) && (
           <div className="mb-4 flex flex-wrap items-center gap-3 text-sm">
@@ -610,7 +610,7 @@ export default function Catalogo({ productos, wa, negocio }) {
                 </h3>
                 <div className={rejilla}>
                   {c.items.map((p) => (
-                    <Card key={p.id} p={p} qty={cart[p.id]?.qty} onAdd={add} sinCat compacta={vista === 'dos'} />
+                    <Card key={p.id} p={p} qty={cart[p.id]?.qty} onAdd={add} sinCat />
                   ))}
                 </div>
               </div>
@@ -619,7 +619,7 @@ export default function Catalogo({ productos, wa, negocio }) {
         )) : (
           <div className={rejilla}>
             {filtrados.map((p) => (
-              <Card key={p.id} p={p} qty={cart[p.id]?.qty} onAdd={add} compacta={vista === 'dos'} />
+              <Card key={p.id} p={p} qty={cart[p.id]?.qty} onAdd={add} />
             ))}
           </div>
         )}
@@ -722,10 +722,6 @@ export default function Catalogo({ productos, wa, negocio }) {
         )}
       </AnimatePresence>
 
-      <a href={`https://wa.me/${wa}?text=${encodeURIComponent('Hola, quiero hacer un pedido')}`} aria-label="WhatsApp"
-          className={`fixed right-5 z-40 ${count > 0 ? 'bottom-24' : 'bottom-5'} grid h-14 w-14 place-items-center rounded-full bg-green-500 text-white shadow-lift transition hover:scale-110`}>
-          <WhatsApp size={30} />
-        </a>
 
       <AnimatePresence>
         {open && count > 0 && (
