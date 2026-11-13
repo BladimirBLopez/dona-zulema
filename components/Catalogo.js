@@ -89,7 +89,18 @@ export default function Catalogo({ productos, wa, negocio }) {
   const [cat, setCat] = useState('all');
   const [precioMax, setPrecioMax] = useState('todos');
   const [orden, setOrden] = useState('catalogo');
-  const [vista, setVista] = useState('grande');
+  const [vista, setVista] = useState('dos');
+  useEffect(() => {
+    try {
+      const v = window.localStorage.getItem('dz_vista');
+      if (v === 'dos' || v === 'grande') setVista(v);
+    } catch {}
+  }, []);
+  const cambiarVista = () => {
+    const nueva = vista === 'dos' ? 'grande' : 'dos';
+    setVista(nueva);
+    try { window.localStorage.setItem('dz_vista', nueva); } catch {}
+  };
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false);
   const [cart, setCart] = useState({});
   const [open, setOpen] = useState(false);
@@ -513,7 +524,7 @@ export default function Catalogo({ productos, wa, negocio }) {
           <span aria-live="polite" className="text-sm text-stone-500">
             {filtrados.length} {filtrados.length === 1 ? 'producto' : 'productos'}
           </span>
-          <button type="button" onClick={() => setVista(vista === 'dos' ? 'grande' : 'dos')} className="flex shrink-0 items-center gap-1.5 rounded-full border border-vino-900/10 bg-white px-3 py-1.5 text-xs font-semibold text-vino-800 lg:hidden"><LayoutGrid size={14} /> {vista === 'dos' ? 'Ver grande' : 'Ver en 2 columnas'}</button>
+          <button type="button" onClick={cambiarVista} className="flex shrink-0 items-center gap-1.5 rounded-full border border-vino-900/10 bg-white px-3 py-1.5 text-xs font-semibold text-vino-800 lg:hidden"><LayoutGrid size={14} /> {vista === 'dos' ? 'Ver grande' : 'Ver en 2 columnas'}</button>
         </div>
         {(q.trim() || cantidadFiltros > 0) && (
           <div className="mb-4 flex flex-wrap items-center gap-3 text-sm">
