@@ -67,12 +67,12 @@ export default async function Producto({ params }) {
 
   return (
     <main className="min-h-screen bg-crema">
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
+      <div className="mx-auto max-w-4xl px-4 py-6">
         <Link href="/#catalogo" className="inline-flex items-center gap-2 text-sm font-semibold text-vino-800">
           <ArrowLeft size={18} /> Volver al catálogo
         </Link>
-        <section className="mt-5 grid gap-5 overflow-hidden rounded-3xl bg-white p-4 shadow-card ring-1 ring-vino-900/10 md:grid-cols-2 md:gap-8 md:p-8">
-          <div className="flex aspect-square items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-white to-vino-50 p-4 sm:p-7">
+        <section className="mt-5 grid gap-6 overflow-hidden rounded-3xl bg-white p-4 shadow-card md:grid-cols-2 md:p-6">
+          <div className="aspect-square overflow-hidden rounded-2xl bg-gradient-to-br from-oro-200/60 to-vino-100">
             {p.imagen_url ? (
               <img
                 src={thumb(p.imagen_url, 900)}
@@ -83,7 +83,7 @@ export default async function Producto({ params }) {
                 fetchPriority="high"
                 decoding="async"
                 alt={p.nombre}
-                className="h-full w-full object-contain"
+                className="h-full w-full object-cover"
               />
             ) : (
               <span className="text-sm font-medium text-stone-500">
@@ -93,37 +93,30 @@ export default async function Producto({ params }) {
           </div>
           <div className="flex flex-col">
             <span className="w-fit rounded-full bg-vino-50 px-3 py-1 text-xs font-semibold text-vino-800">{p.categoria}</span>
-            <h1 className="mt-3 font-serif text-2xl font-extrabold leading-tight text-vino-900 sm:text-3xl">{p.nombre}</h1>
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <h1 className="mt-3 font-serif text-3xl font-extrabold text-vino-800">{p.nombre}</h1>
+            <div className="mt-4 flex flex-wrap gap-2 text-sm">
               {menor && (
-                <div className="rounded-2xl border border-vino-100 bg-vino-50 p-4">
-                  <p className="text-xs font-semibold text-vino-700">PRECIO POR MENOR</p>
-                  <p className="mt-2 text-2xl font-extrabold text-vino-900">{menor}</p>
-                  <p className="text-xs text-vino-700">Por {u}</p>
-                </div>
+                <span className="rounded-lg bg-vino-50 px-3 py-1.5 text-vino-800">
+                  Menor <b>{menor}</b>/{u}
+                </span>
               )}
               {mayor && (
-                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                  <p className="text-xs font-semibold text-amber-900">PRECIO POR MAYOR</p>
-                  <p className="mt-2 text-2xl font-extrabold text-amber-950">{mayor}</p>
-                  <p className="text-xs text-amber-900">
-                    {mayorDesde
-                      ? `Desde ${mayorDesde} ${u}`
-                      : `Por ${u} · mínimo a consultar`}
-                  </p>
-                </div>
+                <span className="rounded-lg bg-oro-200/50 px-3 py-1.5 text-amber-900">
+                  Mayor <b>{mayor}</b>/{u}
+                  {mayorDesde ? ` · desde ${mayorDesde} ${u}` : ' · mínimo a consultar'}
+                </span>
               )}
               {!menor && !mayor && (
-                <p className="rounded-xl bg-stone-100 p-4 text-sm text-stone-600">
+                <span className="rounded-lg bg-stone-100 px-3 py-1.5 text-stone-500">
                   Consultar precio
-                </p>
+                </span>
               )}
             </div>
             <p className="mt-4 text-sm text-stone-600">El precio final se confirma al momento del pedido.</p>
-            <div className="mt-auto space-y-3 pt-6">
+            <div className="mt-auto space-y-3 pt-4">
               <Link
                 href={`/?agregar=${p.id}#catalogo`}
-                className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-vino-800 px-5 py-3 text-center font-bold text-white shadow transition hover:bg-vino-700"
+                className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-vino-800 px-5 py-3 text-center font-bold text-white shadow transition hover:bg-vino-700"
               >
                 Agregar al pedido
               </Link>
@@ -131,7 +124,7 @@ export default async function Producto({ params }) {
                 href={wa(`Hola, quisiera consultar por ${p.nombre}.`)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-green-600 px-4 py-2 text-center text-sm font-bold text-green-700 hover:bg-green-50"
+                className="flex min-h-11 items-center justify-center gap-2 rounded-full border border-green-600 px-4 py-2 text-center text-sm font-bold text-green-700 hover:bg-green-50"
               >
                 <WhatsApp size={20} /> Consultar por WhatsApp
               </a>
@@ -145,7 +138,7 @@ export default async function Producto({ params }) {
               {rel.map((r) => (
                 <Link key={r.id} href={`/producto/${r.id}`} className="overflow-hidden rounded-2xl bg-white shadow-card">
                   <div className="aspect-[4/3] bg-vino-100">
-                    {r.imagen_url && <img src={thumb(r.imagen_url, 400)} alt={r.nombre} loading="lazy" decoding="async" className="h-full w-full object-contain p-2" />}
+                    {r.imagen_url && <img src={thumb(r.imagen_url, 400)} alt={r.nombre} loading="lazy" decoding="async" className="h-full w-full object-cover" />}
                   </div>
                   <div className="p-3">
                     <p className="text-sm font-semibold text-stone-900">{r.nombre}</p>
