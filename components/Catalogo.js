@@ -517,7 +517,7 @@ export default function Catalogo({ productos, wa, negocio }) {
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Buscar queso, jamón, pollo..."
+              placeholder="Buscar productos..."
               className="w-full rounded-2xl border-0 bg-white py-3.5 pl-11 pr-4 text-sm shadow-card outline-none ring-1 ring-stone-200 focus:ring-2 focus:ring-vino-500"
             />
           </div>
@@ -541,23 +541,31 @@ export default function Catalogo({ productos, wa, negocio }) {
 
       <div className="sticky top-16 z-20 border-b border-vino-900/5 bg-crema/95 backdrop-blur">
         <div className="mx-auto max-w-6xl px-4 py-2">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => setFiltrosAbiertos(true)} className="flex min-h-11 items-center gap-2 rounded-xl border border-vino-900/10 bg-white px-4 py-2 text-sm font-semibold text-vino-900 shadow-sm hover:bg-vino-50">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:justify-end">
+            <button
+              type="button"
+              onClick={() => setFiltrosAbiertos(true)}
+              className="flex min-h-11 min-w-0 items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white px-3 text-sm font-semibold text-vino-900 shadow-sm hover:bg-vino-50"
+            >
               <SlidersHorizontal size={17} />
               Filtros
               {cantidadFiltros > 0 && (
-                <span className="rounded-full bg-vino-800 px-2 py-0.5 text-xs text-white">{cantidadFiltros}</span>
+                <span className="rounded-full bg-vino-800 px-2 py-0.5 text-xs text-white">
+                  {cantidadFiltros}
+                </span>
               )}
             </button>
 
-            <label className="relative flex items-center">
-              <ArrowDownUp size={16} className="pointer-events-none absolute left-3 text-vino-800" />
+            <label className="relative flex min-w-0 items-center sm:w-60">
+              <ArrowDownUp
+                size={16}
+                className="pointer-events-none absolute left-3 text-vino-800"
+              />
               <select
                 aria-label="Ordenar productos"
                 value={orden}
                 onChange={(e) => setOrden(e.target.value)}
-                className="min-h-11 max-w-[205px] rounded-xl border border-vino-900/10 bg-white py-2 pl-9 pr-2 text-sm font-semibold text-stone-800 shadow-sm"
+                className="min-h-11 w-full min-w-0 rounded-xl border border-stone-200 bg-white py-2 pl-9 pr-2 text-xs font-semibold text-stone-800 shadow-sm sm:text-sm"
               >
                 <option value="catalogo">Orden del catálogo</option>
                 <option value="nombre">Nombre A–Z</option>
@@ -566,9 +574,6 @@ export default function Catalogo({ productos, wa, negocio }) {
               </select>
             </label>
           </div>
-
-        </div>
-
         </div>
       </div>
 
@@ -711,10 +716,10 @@ export default function Catalogo({ productos, wa, negocio }) {
             initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 80, opacity: 0 }}
             onClick={() => setOpen(true)}
             aria-label={`Revisar pedido: ${count} producto${count === 1 ? '' : 's'}, ${totalTexto}`}
-            className="fixed bottom-4 left-3 right-3 z-40 flex min-h-14 items-center justify-between gap-3 rounded-2xl bg-vino-900 px-4 py-3 font-bold text-white shadow-lift md:left-auto md:right-6 md:w-96"
+            className="fixed bottom-3 right-3 z-40 flex min-h-12 max-w-[calc(100vw-1.5rem)] items-center gap-2 rounded-full bg-vino-900 py-1.5 pl-3 pr-1.5 font-semibold text-white shadow-lift md:bottom-6 md:right-6"
           >
-            <span className="flex min-w-0 items-center gap-2"><ShoppingBag size={20} className="shrink-0 text-oro-300" /> Mi pedido ({count})</span>
-            <span className="shrink-0 rounded-xl bg-oro-400 px-3 py-2 text-sm text-vino-950">{totalTexto}</span>
+            <span className="flex min-w-0 items-center gap-1.5 text-xs sm:text-sm"><ShoppingBag size={18} className="shrink-0 text-oro-300" /> Mi pedido ({count})</span>
+            <span className="shrink-0 rounded-full bg-oro-400 px-2.5 py-1.5 text-xs text-vino-950 sm:text-sm">{totalTexto}</span>
           </motion.button>
         )}
       </AnimatePresence>
