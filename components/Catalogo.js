@@ -35,15 +35,19 @@ function Card({ p, qty, onAdd }) {
       transition={{ duration: 0.35 }}
       className="group relative flex flex-col overflow-hidden rounded-3xl bg-white shadow-card ring-1 ring-vino-900/5 transition hover:-translate-y-1 hover:shadow-lift"
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-oro-200/60 to-vino-100">
+      <div className="relative aspect-[4/3] overflow-hidden bg-[#f5f7fb]">
         {p.img ? (
-          <img src={p.img} alt={p.nombre} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+          <>
+            <img src={p.imgSmall || p.img} alt="" aria-hidden="true" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full scale-125 object-cover opacity-25 blur-xl" />
+            <div className="absolute inset-0 bg-white/40" />
+            <img src={p.imgSmall || p.img} srcSet={p.imgSmall ? `${p.imgSmall} 360w, ${p.img} 600w` : undefined} sizes="(min-width:1280px) 25vw, (min-width:1024px) 33vw, (min-width:480px) 50vw, 100vw" alt={p.nombre} loading="lazy" decoding="async" className="relative z-[1] h-full w-full object-contain p-1.5 transition-transform duration-300 group-hover:scale-[1.02]" />
+          </>
         ) : (
           <div className="grid h-full place-items-center text-vino-300"><Icono lslug={p.lslug} className="h-14 w-14" /></div>
         )}
-        <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-vino-800 backdrop-blur">{p.categoria}</span>
       </div>
       <div className="flex flex-1 flex-col p-4">
+        <span className="mb-1 text-[10px] font-bold uppercase tracking-wide text-vino-600">{p.categoria}</span>
         <h4 className="font-semibold leading-snug text-stone-900"><Link href={`/producto/${p.id}`} className="after:absolute after:inset-0 hover:text-vino-700">{p.nombre}</Link></h4>
         <div className="mt-3">
           {menor ? (

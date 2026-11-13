@@ -8,7 +8,7 @@ import WhatsApp from '@/components/WhatsApp';
 
 export const revalidate = 60;
 
-const bs = (v) => (v == null || v === '' ? null : 'Bs ' + Number(v).toFixed(2));
+const bs = (v) => (v == null || v === '' ? null : 'Bs ' + Number(v).toFixed(2).replace('.', ','));
 
 async function getProducto(id) {
   try {
@@ -38,7 +38,7 @@ export async function generateMetadata({ params }) {
   const titulo = `${p.nombre} | Frial Jurado`;
   const precio = p.precio_menor == null
     ? ''
-    : ` Precio por menor: Bs ${Number(p.precio_menor).toFixed(2)}.`;
+    : ` Precio por menor: Bs ${Number(p.precio_menor).toFixed(2).replace('.', ',')}.`;
   const descripcion = `${p.nombre} (${p.categoria}) en Frial Jurado.${precio} Venta al por mayor y menor. Pedidos por WhatsApp.`;
 
   return {
@@ -72,7 +72,7 @@ export default async function Producto({ params }) {
           <ArrowLeft size={18} /> Volver al catálogo
         </Link>
         <section className="mt-5 grid gap-6 overflow-hidden rounded-3xl bg-white p-4 shadow-card md:grid-cols-2 md:p-6">
-          <div className="aspect-square overflow-hidden rounded-2xl bg-gradient-to-br from-oro-200/60 to-vino-100">
+          <div className="aspect-square overflow-hidden rounded-2xl bg-[#f5f7fb] ring-1 ring-stone-100">
             {p.imagen_url ? (
               <img
                 src={thumb(p.imagen_url, 900)}
@@ -83,7 +83,7 @@ export default async function Producto({ params }) {
                 fetchPriority="high"
                 decoding="async"
                 alt={p.nombre}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain p-2"
               />
             ) : (
               <span className="text-sm font-medium text-stone-500">
@@ -96,13 +96,13 @@ export default async function Producto({ params }) {
             <h1 className="mt-3 font-serif text-3xl font-extrabold text-vino-800">{p.nombre}</h1>
             <div className="mt-4 flex flex-wrap gap-2 text-sm">
               {menor && (
-                <span className="rounded-lg bg-vino-50 px-3 py-1.5 text-vino-800">
-                  Menor <b>{menor}</b>/{u}
+                <span className="rounded-xl bg-vino-50 px-4 py-2 text-vino-800">
+                  Menor <b className="text-2xl font-extrabold">{menor}</b>/{u}
                 </span>
               )}
               {mayor && (
                 <span className="rounded-lg bg-oro-200/50 px-3 py-1.5 text-amber-900">
-                  Mayor <b>{mayor}</b>/{u}
+                  Mayor <b className="text-lg font-extrabold">{mayor}</b>/{u}
                   {mayorDesde ? ` · desde ${mayorDesde} ${u}` : ' · mínimo a consultar'}
                 </span>
               )}
