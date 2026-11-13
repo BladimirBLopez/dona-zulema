@@ -23,7 +23,59 @@ const cantidadDe = (n, u) => {
 };
 const porUnidad = (u) => { const x = unidadDe(u); return x === 'unidad' ? 'c/u' : 'por ' + x; };
 
+function CardCompacta({ p, qty, onAdd }) {
+  const st = stepOf(p.unidad);
+  const menor = bs(p.precio_menor);
+  const mayor = bs(p.precio_mayor);
+  const desde = p.mayor_desde != null && Number(p.mayor_desde) > 0 ? cantidadDe(p.mayor_desde, p.unidad) : null;
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 12 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '-40px' }}
+      transition={{ duration: 0.3 }}
+      className="relative flex flex-col overflow-hidden rounded-2xl bg-white ring-1 ring-stone-200"
+    >
+      <div className="relative aspect-[4/3] bg-white">
+        {p.img ? (
+          <img src={p.imgSmall || p.img} srcSet={p.imgSmall ? `${p.imgSmall} 360w, ${p.img} 600w` : undefined} sizes="(min-width:1280px) 25vw, (min-width:1024px) 33vw, 50vw" alt={p.nombre} loading="lazy" decoding="async" className="h-full w-full object-contain p-2" />
+        ) : (
+          <div className="grid h-full place-items-center text-vino-300"><Icono lslug={p.lslug} className="h-12 w-12" /></div>
+        )}
+        <div className="absolute bottom-2 right-2 z-10">
+          {qty ? (
+            <div className="flex items-center rounded-full bg-vino-800 text-white shadow-lift">
+              <button onClick={() => onAdd(p, -st)} aria-label="Quitar" className="grid h-9 w-9 place-items-center rounded-full active:bg-white/20"><Minus size={16} /></button>
+              <span className="min-w-[1.6rem] text-center text-xs font-bold leading-tight">{qty}<span className="block text-[9px] font-normal opacity-80">{p.unidad}</span></span>
+              <button onClick={() => onAdd(p, st)} aria-label="Agregar" className="grid h-9 w-9 place-items-center rounded-full active:bg-white/20"><Plus size={16} /></button>
+            </div>
+          ) : (
+            <button onClick={() => onAdd(p, st)} aria-label={'Agregar ' + p.nombre} className="grid h-10 w-10 place-items-center rounded-full bg-vino-800 text-white shadow-lift transition active:scale-90"><Plus size={20} /></button>
+          )}
+        </div>
+      </div>
+      <div className="flex flex-1 flex-col border-t border-stone-100 px-3 pb-3 pt-2">
+        <h4 className="line-clamp-2 min-h-[2.2rem] text-[13px] font-medium leading-tight text-stone-800"><Link href={`/producto/${p.id}`} className="after:absolute after:inset-0">{p.nombre}</Link></h4>
+        {menor ? (
+          <p className="mt-1 flex items-baseline gap-1">
+            <span className="text-lg font-extrabold leading-none text-vino-800">{menor}</span>
+            <span className="text-[11px] text-stone-500">/ {unidadDe(p.unidad)}</span>
+          </p>
+        ) : (
+          <span className="mt-1 text-xs text-stone-500">Consultar precio</span>
+        )}
+        {mayor && (
+          <p className="mt-1.5 rounded-md bg-oro-200/50 px-1.5 py-1 text-[10.5px] font-medium leading-snug text-amber-900">
+            {desde ? 'Desde ' + desde + ': ' : 'Por mayor: '}<b>{mayor}</b> {porUnidad(p.unidad)}
+          </p>
+        )}
+      </div>
+    </motion.article>
+  );
+}
+
 function Card({ p, qty, onAdd, compacta = false, sinCat = false }) {
+  if (compacta) return <CardCompacta p={p} qty={qty} onAdd={onAdd} />;
   const st = stepOf(p.unidad);
   const menor = bs(p.precio_menor);
   const mayor = bs(p.precio_mayor);
