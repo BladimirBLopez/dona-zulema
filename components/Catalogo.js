@@ -1,5 +1,5 @@
 'use client';
-import { pasoDe } from '@/lib/unidades';
+import { pasoDe, cantidadValida } from '@/lib/unidades';
 import { obtenerPrecioPedido, redondearDinero } from '@/lib/precio-pedido';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -10,6 +10,7 @@ import WhatsApp from '@/components/WhatsApp';
 const bs = (v) => (v == null || v === '' ? null : 'Bs ' + Number(v).toFixed(2));
 const normalizar = (v) => String(v ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
 const stepOf = pasoDe;
+const CLAVE_CARRITO = 'frial-jurado-carrito-v1';
 const Icono = ({ lslug, className }) => (lslug === 'pollo' ? <Drumstick className={className} /> : <Milk className={className} />);
 
 const unidadDe = (u) => { const x = String(u || 'unidad').trim().toLowerCase(); return x === 'kg' ? 'kilo' : x.startsWith('unidad') ? 'unidad' : x; };
@@ -32,22 +33,22 @@ function Card({ p, qty, onAdd }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-40px' }}
       transition={{ duration: 0.35 }}
-      className="group relative flex flex-col overflow-hidden rounded-3xl bg-white shadow-card ring-1 ring-vino-900/5 transition hover:-translate-y-1 hover:shadow-lift"
+      className="group relative flex flex-col overflow-hidden rounded-2xl bg-white shadow-card ring-1 ring-vino-900/10 transition hover:shadow-lift"
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-oro-200/60 to-vino-100">
         {p.img ? (
-          <img src={p.img} alt={p.nombre} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
+          <img src={p.imgSmall || p.img} srcSet={p.imgSmall ? `${p.imgSmall} 360w, ${p.img} 600w` : undefined} sizes="(min-width:1280px) 25vw, (min-width:1024px) 33vw, (min-width:360px) 50vw, 100vw" alt={p.nombre} loading="lazy" decoding="async" className="h-full w-full object-contain p-2 transition duration-300 group-hover:scale-[1.03]" />
         ) : (
           <div className="grid h-full place-items-center text-vino-300"><Icono lslug={p.lslug} className="h-14 w-14" /></div>
         )}
         <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-vino-800 backdrop-blur">{p.categoria}</span>
       </div>
-      <div className="flex flex-1 flex-col p-4">
-        <h4 className="font-semibold leading-snug text-stone-900"><Link href={`/producto/${p.id}`} className="after:absolute after:inset-0 hover:text-vino-700">{p.nombre}</Link></h4>
+      <div className="flex flex-1 flex-col p-3 sm:p-4">
+        <h4 className="text-sm font-semibold leading-snug text-stone-900 sm:text-base"><Link href={`/producto/${p.id}`} className="after:absolute after:inset-0 hover:text-vino-700">{p.nombre}</Link></h4>
         <div className="mt-3">
           {menor ? (
             <p className="flex flex-wrap items-baseline gap-x-1.5">
-              <span className="text-xl font-extrabold text-vino-800">{menor}</span>
+              <span className="text-lg font-extrabold text-vino-800 sm:text-xl">{menor}</span>
               <span className="text-xs text-stone-500">{'por ' + unidadDe(p.unidad)}</span>
             </p>
           ) : (
@@ -68,8 +69,8 @@ function Card({ p, qty, onAdd }) {
               <button onClick={() => onAdd(p, st)} aria-label="Agregar" className="grid h-9 w-9 place-items-center rounded-full hover:bg-white/15"><Plus size={16} /></button>
             </div>
           ) : (
-            <button onClick={() => onAdd(p, st)} className="flex w-full items-center justify-center gap-2 rounded-full bg-vino-800 py-2.5 text-sm font-bold text-white transition hover:bg-vino-700 active:scale-95">
-              <Plus size={16} /> Agregar al pedido
+            <button onClick={() => onAdd(p, st)} className="flex min-h-10 w-full items-center justify-center gap-1 rounded-xl bg-vino-800 px-1 py-2 text-xs font-bold text-white transition hover:bg-vino-700 active:scale-95 sm:gap-2 sm:text-sm">
+              <Plus size={16} /> <span className="sm:hidden">Agregar</span><span className="hidden sm:inline">Agregar al pedido</span>
             </button>
           )}
         </div>
@@ -78,7 +79,7 @@ function Card({ p, qty, onAdd }) {
   );
 }
 
-export default function Catalogo({ productos, wa }) {
+export default function Catalogo({ productos, wa, negocio }) {
   const [q, setQ] = useState('');
   const [linea, setLinea] = useState('all');
   const [cat, setCat] = useState('all');
@@ -89,7 +90,109 @@ export default function Catalogo({ productos, wa }) {
   const [open, setOpen] = useState(false);
   const [tipo, setTipo] = useState('menor');
   const [nota, setNota] = useState('');
+  const [enviandoPedido, setEnviandoPedido] = useState(false);
+  const [errorPedido, setErrorPedido] = useState('');
+  const enviandoRef = useRef(false);
   const ultimo = useRef({ k: '', t: 0 });
+  const recuperacionIniciada = useRef(false);
+  const [carritoListo, setCarritoListo] = useState(false);
+
+  // Recuperar solo cantidades, nunca precios antiguos.
+  useEffect(() => {
+    if (productos.length === 0) return;
+    if (recuperacionIniciada.current) return;
+    recuperacionIniciada.current = true;
+
+    try {
+      const datos = JSON.parse(
+        window.localStorage.getItem(CLAVE_CARRITO) || '{}'
+      );
+
+      if (datos && typeof datos === 'object' && !Array.isArray(datos)) {
+        const recuperados = {};
+
+        for (const p of productos) {
+          const cantidad = Number(datos[String(p.id)]);
+
+          if (
+            cantidadValida(cantidad, p.unidad) &&
+            cantidad <= 10000
+          ) {
+            recuperados[p.id] = { p, qty: cantidad };
+          }
+        }
+
+        if (Object.keys(recuperados).length > 0) {
+          setCart(recuperados);
+        }
+      }
+    } catch (error) {
+      console.warn('No se pudo recuperar el carrito');
+    }
+
+    setCarritoListo(true);
+  }, [productos]);
+
+  // Guardar únicamente identificadores y cantidades.
+  useEffect(() => {
+    if (!carritoListo || productos.length === 0) return;
+
+    try {
+      const cantidades = {};
+
+      for (const { p, qty } of Object.values(cart)) {
+        cantidades[String(p.id)] = qty;
+      }
+
+      window.localStorage.setItem(
+        CLAVE_CARRITO,
+        JSON.stringify(cantidades)
+      );
+    } catch (error) {
+      console.warn('No se pudo guardar el carrito');
+    }
+  }, [cart, carritoListo, productos.length]);
+
+  // Recibe un producto desde su ficha individual.
+  useEffect(() => {
+    if (productos.length === 0) return;
+    const url = new URL(window.location.href);
+    const id = url.searchParams.get('agregar');
+    if (!id) return;
+
+    // Evita agregarlo dos veces en una misma navegación.
+    url.searchParams.delete('agregar');
+    window.history.replaceState(
+      window.history.state,
+      '',
+      url.pathname + url.search + url.hash
+    );
+
+    const producto = productos.find(
+      (p) => String(p.id) === id
+    );
+    if (!producto) return;
+
+    setCart((actual) => {
+      const anterior = Number(
+        actual[producto.id]?.qty || 0
+      );
+      const cantidad = Math.round(
+        (anterior + stepOf(producto.unidad)) * 1000
+      ) / 1000;
+
+      if (
+        cantidad > 10000 ||
+        !cantidadValida(cantidad, producto.unidad)
+      ) return actual;
+
+      return {
+        ...actual,
+        [producto.id]: { p: producto, qty: cantidad }
+      };
+    });
+    setOpen(true);
+  }, [productos]);
   useEffect(() => {
     if (!filtrosAbiertos) return;
     const cerrar = (e) => {
@@ -192,14 +295,33 @@ export default function Catalogo({ productos, wa }) {
   const add = (p, d) =>
     setCart((c) => {
       const n = { ...c };
-      const qty = (c[p.id]?.qty || 0) + d;
+      const qty = Math.round(
+        ((c[p.id]?.qty || 0) + d) * 1000
+      ) / 1000;
       if (qty <= 0) delete n[p.id];
+      else if (
+        qty > 10000 ||
+        !cantidadValida(qty, p.unidad)
+      ) return c;
       else n[p.id] = { p, qty };
       return n;
     });
 
   const items = Object.values(cart);
   const count = items.length;
+
+  useEffect(() => {
+    if (open && count === 0) setOpen(false);
+  }, [open, count]);
+
+  useEffect(() => {
+    if (!open) return;
+    const cerrar = (e) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    document.addEventListener('keydown', cerrar);
+    return () => document.removeEventListener('keydown', cerrar);
+  }, [open]);
 
   const detalle = items.map(({ p, qty }) => {
     const info = obtenerPrecioPedido(p, qty, tipo);
@@ -217,7 +339,7 @@ export default function Catalogo({ productos, wa }) {
   const totalTexto = conPrecio ? bs(total) : 'Por confirmar';
 
   const msg = [
-    '🛒 *PEDIDO – DOÑA ZULEMA*',
+    `🛒 *PEDIDO – ${negocio}*`,
     '',
     'Hola, quisiera realizar el siguiente pedido:',
     '',
@@ -242,20 +364,74 @@ export default function Catalogo({ productos, wa }) {
   ].join('\n');
   const link = `https://wa.me/${wa}?text=${encodeURIComponent(msg)}`;
 
-  function guardarPedido() {
+  async function guardarPedido() {
+    if (enviandoRef.current || items.length === 0) return;
+
+    const lista = items.map(({ p, qty }) => ({
+      id: p.id,
+      qty
+    }));
+    const clave = JSON.stringify({ lista, tipo });
+
+    if (
+      ultimo.current.k === clave &&
+      Date.now() - ultimo.current.t < 120000
+    ) {
+      window.location.assign(link);
+      return;
+    }
+
+    enviandoRef.current = true;
+    setEnviandoPedido(true);
+    setErrorPedido('');
+
     try {
-      const lista = items.map(({ p, qty }) => ({ id: p.id, qty }));
-      const k = JSON.stringify({ lista, tipo });
-      const ahora = Date.now();
-      if (ultimo.current.k === k && ahora - ultimo.current.t < 120000) return;
-      ultimo.current = { k, t: ahora };
-      fetch('/api/pedido', {
+      const res = await fetch('/api/pedido', {
         method: 'POST',
-        keepalive: true,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: lista, tipo }),
-      }).catch(() => {});
-    } catch {}
+        body: JSON.stringify({ items: lista, tipo })
+      });
+
+      const data = await res.json().catch(() => null);
+
+      if (!res.ok || !data?.ok || !data?.id) {
+        const errores = {
+          producto_inexistente:
+            'Un producto ya no está disponible. Actualiza la tienda y revisa el pedido.',
+          producto_repetido:
+            'Hay productos duplicados. Revisa tu pedido.',
+          cantidad_entera:
+            'Revisa las cantidades: algunos productos solo se venden por unidades enteras.',
+          items_invalidos:
+            'Hay cantidades o productos inválidos.',
+          sin_items:
+            'Agrega al menos un producto.',
+          demasiados:
+            'Demasiados intentos. Intenta nuevamente en un minuto.'
+        };
+
+        setErrorPedido(
+          errores[data?.error] ||
+          'No se pudo registrar el pedido. Intenta nuevamente.'
+        );
+        return;
+      }
+
+      ultimo.current = {
+        k: clave,
+        t: Date.now()
+      };
+
+      window.location.assign(link);
+
+    } catch {
+      setErrorPedido(
+        'No se pudo comprobar el registro. Revisa tu conexión antes de reintentar.'
+      );
+    } finally {
+      enviandoRef.current = false;
+      setEnviandoPedido(false);
+    }
   }
 
   const tab = (act) => `whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition ${act ? 'bg-vino-800 text-white shadow' : 'bg-white text-stone-700 ring-1 ring-stone-200 hover:bg-vino-50'}`;
@@ -355,7 +531,7 @@ export default function Catalogo({ productos, wa }) {
                   <span className="h-6 w-1.5 rounded bg-oro-400" /> {c.nombre}
                   <span className="text-sm font-normal text-stone-400">{c.items.length}</span>
                 </h3>
-                <div className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
                   {c.items.map((p) => (
                     <Card key={p.id} p={p} qty={cart[p.id]?.qty} onAdd={add} />
                   ))}
@@ -364,7 +540,7 @@ export default function Catalogo({ productos, wa }) {
             ))}
           </div>
         )) : (
-          <div className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
             {filtrados.map((p) => (
               <Card key={p.id} p={p} qty={cart[p.id]?.qty} onAdd={add} />
             ))}
@@ -460,10 +636,11 @@ export default function Catalogo({ productos, wa }) {
           <motion.button
             initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 80, opacity: 0 }}
             onClick={() => setOpen(true)}
-            className="fixed bottom-4 left-4 right-4 z-40 flex items-center justify-between rounded-full bg-vino-900 px-5 py-4 font-bold text-white shadow-lift md:left-auto md:right-6 md:w-96"
+            aria-label={`Revisar pedido: ${count} producto${count === 1 ? '' : 's'}, ${totalTexto}`}
+            className="fixed bottom-4 left-3 right-3 z-40 flex min-h-14 items-center justify-between gap-3 rounded-2xl bg-vino-900 px-4 py-3 font-bold text-white shadow-lift md:left-auto md:right-6 md:w-96"
           >
-            <span className="flex items-center gap-2"><ShoppingBag size={20} className="text-oro-300" /> Mi pedido ({count})</span>
-            <span className="rounded-full bg-oro-400 px-4 py-1 text-sm text-vino-950">Ver</span>
+            <span className="flex min-w-0 items-center gap-2"><ShoppingBag size={20} className="shrink-0 text-oro-300" /> Mi pedido ({count})</span>
+            <span className="shrink-0 rounded-xl bg-oro-400 px-3 py-2 text-sm text-vino-950">{totalTexto}</span>
           </motion.button>
         )}
       </AnimatePresence>
@@ -476,25 +653,28 @@ export default function Catalogo({ productos, wa }) {
       )}
 
       <AnimatePresence>
-        {open && (
+        {open && count > 0 && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={() => setOpen(false)}
-            className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 md:items-center"
+            className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 md:items-center md:p-4"
           >
             <motion.div
               initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white p-5 md:rounded-3xl"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Revisar mi pedido"
+              className="max-h-[92dvh] w-full max-w-lg overflow-y-auto overscroll-contain rounded-t-3xl bg-white p-4 shadow-2xl md:max-h-[88dvh] md:rounded-3xl md:p-6"
             >
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="font-serif text-2xl font-extrabold text-vino-800">Mi pedido</h3>
-                <button onClick={() => setOpen(false)} aria-label="Cerrar" className="grid h-9 w-9 place-items-center rounded-full bg-stone-100"><X size={18} /></button>
+                <button onClick={() => setOpen(false)} aria-label="Cerrar pedido" className="grid h-11 w-11 place-items-center rounded-full bg-stone-100"><X size={18} /></button>
               </div>
 
               <div className="mb-4 grid grid-cols-2 gap-1 rounded-full bg-stone-100 p-1 text-sm font-semibold">
                 {[['menor', 'Al por menor'], ['mayor', 'Al por mayor']].map(([v, t]) => (
-                  <button key={v} onClick={() => setTipo(v)} className={`rounded-full py-2 transition ${tipo === v ? 'bg-vino-800 text-white shadow' : 'text-stone-600'}`}>{t}</button>
+                  <button key={v} onClick={() => setTipo(v)} aria-pressed={tipo === v} className={`min-h-11 rounded-full px-2 py-2 transition ${tipo === v ? 'bg-vino-800 text-white shadow' : 'text-stone-600'}`}>{t}</button>
                 ))}
               </div>
 
@@ -518,9 +698,9 @@ export default function Catalogo({ productos, wa }) {
                       </strong>
                     </div>
                     <div className="mt-2 flex justify-end gap-2">
-                      <button onClick={() => add(p, -stepOf(p.unidad))} aria-label="Quitar" className="grid h-8 w-8 place-items-center rounded-full bg-white shadow"><Minus size={14} /></button>
-                      <button onClick={() => add(p, stepOf(p.unidad))} aria-label="Agregar" className="grid h-8 w-8 place-items-center rounded-full bg-white shadow"><Plus size={14} /></button>
-                      <button onClick={() => add(p, -qty)} aria-label="Eliminar" className="grid h-8 w-8 place-items-center rounded-full text-red-600"><Trash2 size={16} /></button>
+                      <button onClick={() => add(p, -stepOf(p.unidad))} aria-label="Quitar" className="grid h-11 w-11 place-items-center rounded-full bg-white shadow"><Minus size={14} /></button>
+                      <button onClick={() => add(p, stepOf(p.unidad))} aria-label="Agregar" className="grid h-11 w-11 place-items-center rounded-full bg-white shadow"><Plus size={14} /></button>
+                      <button onClick={() => add(p, -qty)} aria-label="Eliminar" className="grid h-11 w-11 place-items-center rounded-full text-red-600"><Trash2 size={16} /></button>
                     </div>
                   </li>
                 ))}
@@ -528,6 +708,7 @@ export default function Catalogo({ productos, wa }) {
 
               <textarea
                 value={nota} onChange={(e) => setNota(e.target.value)} rows={2} maxLength={200}
+                aria-label="Nota opcional del pedido"
                 placeholder="Nota (opcional): hora de entrega, zona, etc."
                 className="mt-4 w-full rounded-2xl border border-stone-200 p-3 text-sm outline-none focus:border-vino-500"
               />
@@ -545,11 +726,26 @@ export default function Catalogo({ productos, wa }) {
                   : 'El precio final se confirma por WhatsApp.'}
               </p>
 
-              <a href={link} onClick={guardarPedido} target="_blank" rel="noopener noreferrer"
-                className="mt-4 flex items-center justify-center gap-2 rounded-full bg-green-500 py-3.5 font-bold text-white shadow-lg transition hover:bg-green-600">
-                <WhatsApp size={22} /> Enviar pedido por WhatsApp
-              </a>
-              <button onClick={() => { setCart({}); setOpen(false); }} className="mt-3 w-full text-sm text-stone-500">Vaciar pedido</button>
+              <button type="button" onClick={guardarPedido} disabled={enviandoPedido}
+                className="mt-4 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-3 font-bold text-white shadow-lg transition hover:bg-green-700">
+                <WhatsApp size={22} /> {enviandoPedido
+                  ? 'Registrando pedido...'
+                  : 'Registrar pedido y abrir WhatsApp'}
+              </button>
+              {errorPedido && (
+                <div role="alert" className="mt-3 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+                  <p>{errorPedido}</p>
+                  <a
+                    href={link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-2 inline-block font-bold underline"
+                  >
+                    Continuar solo por WhatsApp (sin registro confirmado)
+                  </a>
+                </div>
+              )}
+              <button onClick={() => { setCart({}); setOpen(false); }} className="mt-2 min-h-11 w-full rounded-xl text-sm font-medium text-stone-600 hover:bg-stone-50">Vaciar pedido</button>
             </motion.div>
           </motion.div>
         )}

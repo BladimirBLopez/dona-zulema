@@ -34,6 +34,7 @@ async function getProductos() {
     linea: r.linea,
     lslug: r.lslug,
     img: r.imagen_url ? thumb(r.imagen_url, 600) : null,
+    imgSmall: r.imagen_url ? thumb(r.imagen_url, 360) : null,
   }));
 }
 
@@ -75,12 +76,12 @@ export default async function Home() {
         )}
         <div className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full bg-oro-400/20 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-32 -left-24 h-96 w-96 rounded-full bg-vino-500/30 blur-3xl" />
-        <div className="relative mx-auto max-w-4xl px-4 pb-28 pt-16 text-center md:pt-28">
+        <div className="relative mx-auto max-w-4xl px-4 pb-20 pt-12 text-center md:pb-24 md:pt-20">
           <Reveal>
             {N.slogan && (
               <span className="inline-block rounded-full border border-oro-300/40 bg-white/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-oro-300">{N.slogan}</span>
             )}
-            <h1 className="mt-6 font-serif text-4xl font-extrabold leading-[1.1] md:text-6xl">{N.titulo}</h1>
+            <h1 className="mt-5 font-serif text-3xl font-extrabold leading-tight sm:text-4xl md:text-6xl">{N.titulo}</h1>
             {N.subtitulo && <p className="mx-auto mt-5 max-w-xl text-lg text-vino-100">{N.subtitulo}</p>}
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <a href="#catalogo" className="rounded-full bg-oro-400 px-8 py-3.5 font-bold text-vino-950 shadow-lift transition hover:bg-oro-300">Ver catálogo</a>
@@ -107,7 +108,7 @@ export default async function Home() {
 
       <JsonLd n={N} />
       <Ofertas banners={banners} wa={N.whatsapp} />
-      <Catalogo productos={productos} wa={N.whatsapp} />
+      <Catalogo productos={productos} wa={N.whatsapp} negocio={N.nombre} />
       <Beneficios n={N} />
       <Info n={N} wa={wa} />
 
