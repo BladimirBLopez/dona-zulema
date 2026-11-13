@@ -3,7 +3,7 @@ import { pasoDe, cantidadValida } from '@/lib/unidades';
 import { obtenerPrecioPedido, redondearDinero } from '@/lib/precio-pedido';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Search, Plus, Minus, X, ShoppingBag, Milk, Drumstick, Trash2, PackageOpen, SlidersHorizontal, ArrowDownUp, Check } from 'lucide-react';
+import { Search, Plus, Minus, X, ShoppingBag, Milk, Drumstick, Trash2, PackageOpen, SlidersHorizontal, ArrowDownUp, Check, LayoutGrid } from 'lucide-react';
 import Link from 'next/link';
 import WhatsApp from '@/components/WhatsApp';
 
@@ -23,7 +23,7 @@ const cantidadDe = (n, u) => {
 };
 const porUnidad = (u) => { const x = unidadDe(u); return x === 'unidad' ? 'c/u' : 'por ' + x; };
 
-function Card({ p, qty, onAdd }) {
+function Card({ p, qty, onAdd, compacta = false }) {
   const st = stepOf(p.unidad);
   const menor = bs(p.precio_menor);
   const mayor = bs(p.precio_mayor);
@@ -46,13 +46,13 @@ function Card({ p, qty, onAdd }) {
           <div className="grid h-full place-items-center text-vino-300"><Icono lslug={p.lslug} className="h-14 w-14" /></div>
         )}
       </div>
-      <div className="flex flex-1 flex-col p-4">
+      <div className={'flex flex-1 flex-col ' + (compacta ? 'p-3' : 'p-4')}>
         <span className="mb-1 text-[10px] font-bold uppercase tracking-wide text-vino-600">{p.categoria}</span>
-        <h4 className="font-semibold leading-snug text-stone-900"><Link href={`/producto/${p.id}`} className="after:absolute after:inset-0 hover:text-vino-700">{p.nombre}</Link></h4>
+        <h4 className={'font-semibold leading-snug text-stone-900' + (compacta ? ' text-sm' : '')}><Link href={`/producto/${p.id}`} className="after:absolute after:inset-0 hover:text-vino-700">{p.nombre}</Link></h4>
         <div className="mt-3">
           {menor ? (
             <p className="flex flex-wrap items-baseline gap-x-1.5">
-              <span className="text-xl font-extrabold text-vino-800">{menor}</span>
+              <span className={'font-extrabold text-vino-800 ' + (compacta ? 'text-lg' : 'text-xl')}>{menor}</span>
               <span className="text-xs text-stone-500">{'por ' + unidadDe(p.unidad)}</span>
             </p>
           ) : (
@@ -74,7 +74,7 @@ function Card({ p, qty, onAdd }) {
             </div>
           ) : (
             <button onClick={() => onAdd(p, st)} className="flex w-full items-center justify-center gap-2 rounded-full bg-vino-800 py-2.5 text-sm font-bold text-white transition hover:bg-vino-700 active:scale-95">
-              <Plus size={16} /> Agregar al pedido
+              <Plus size={16} /> {compacta ? 'Agregar' : 'Agregar al pedido'}
             </button>
           )}
         </div>
@@ -89,6 +89,7 @@ export default function Catalogo({ productos, wa, negocio }) {
   const [cat, setCat] = useState('all');
   const [precioMax, setPrecioMax] = useState('todos');
   const [orden, setOrden] = useState('catalogo');
+  const [vista, setVista] = useState('grande');
   const [filtrosAbiertos, setFiltrosAbiertos] = useState(false);
   const [cart, setCart] = useState({});
   const [open, setOpen] = useState(false);
@@ -282,6 +283,11 @@ export default function Catalogo({ productos, wa, negocio }) {
     Number(linea !== 'all') +
     Number(cat !== 'all') +
     Number(precioMax !== 'todos');
+
+  // vista-v1
+  const rejilla = vista === 'dos'
+    ? 'grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-4'
+    : 'grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
 
   const limpiar = () => {
     setQ('');
@@ -503,10 +509,11 @@ export default function Catalogo({ productos, wa, negocio }) {
       </div>
 
       <div className="mx-auto max-w-6xl px-4 pt-6">
-        <div className="mb-4">
+        <div className="mb-4 flex items-center justify-between gap-3">
           <span aria-live="polite" className="text-sm text-stone-500">
             {filtrados.length} {filtrados.length === 1 ? 'producto' : 'productos'}
           </span>
+          <button type="button" onClick={() => setVista(vista === 'dos' ? 'grande' : 'dos')} className="flex shrink-0 items-center gap-1.5 rounded-full border border-vino-900/10 bg-white px-3 py-1.5 text-xs font-semibold text-vino-800 lg:hidden"><LayoutGrid size={14} /> {vista === 'dos' ? 'Ver grande' : 'Ver en 2 columnas'}</button>
         </div>
         {(q.trim() || cantidadFiltros > 0) && (
           <div className="mb-4 flex flex-wrap items-center gap-3 text-sm">
@@ -535,18 +542,18 @@ export default function Catalogo({ productos, wa, negocio }) {
                   <span className="h-6 w-1.5 rounded bg-oro-400" /> {c.nombre}
                   <span className="text-sm font-normal text-stone-400">{c.items.length}</span>
                 </h3>
-                <div className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <div className={rejilla}>
                   {c.items.map((p) => (
-                    <Card key={p.id} p={p} qty={cart[p.id]?.qty} onAdd={add} />
+                    <Card key={p.id} p={p} qty={cart[p.id]?.qty} onAdd={add} compacta={vista === 'dos'} />
                   ))}
                 </div>
               </div>
             ))}
           </div>
         )) : (
-          <div className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className={rejilla}>
             {filtrados.map((p) => (
-              <Card key={p.id} p={p} qty={cart[p.id]?.qty} onAdd={add} />
+              <Card key={p.id} p={p} qty={cart[p.id]?.qty} onAdd={add} compacta={vista === 'dos'} />
             ))}
           </div>
         )}
