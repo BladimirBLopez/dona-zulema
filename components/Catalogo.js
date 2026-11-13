@@ -23,7 +23,7 @@ const cantidadDe = (n, u) => {
 };
 const porUnidad = (u) => { const x = unidadDe(u); return x === 'unidad' ? 'c/u' : 'por ' + x; };
 
-function Card({ p, qty, onAdd, compacta = false }) {
+function Card({ p, qty, onAdd, compacta = false, sinCat = false }) {
   const st = stepOf(p.unidad);
   const menor = bs(p.precio_menor);
   const mayor = bs(p.precio_mayor);
@@ -35,20 +35,20 @@ function Card({ p, qty, onAdd, compacta = false }) {
       transition={{ duration: 0.35 }}
       className="group relative flex flex-col overflow-hidden rounded-3xl bg-white shadow-card ring-1 ring-vino-900/5 transition hover:-translate-y-1 hover:shadow-lift"
     >
-      <div className="relative aspect-[4/3] overflow-hidden bg-[#f5f7fb]">
+      <div className={'relative overflow-hidden bg-[#f5f7fb] ' + (compacta ? 'aspect-square' : 'aspect-[4/3]')}>
         {p.img ? (
           <>
             <img src={p.imgSmall || p.img} alt="" aria-hidden="true" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full scale-125 object-cover opacity-25 blur-xl" />
             <div className="absolute inset-0 bg-white/40" />
-            <img src={p.imgSmall || p.img} srcSet={p.imgSmall ? `${p.imgSmall} 360w, ${p.img} 600w` : undefined} sizes="(min-width:1280px) 25vw, (min-width:1024px) 33vw, (min-width:480px) 50vw, 100vw" alt={p.nombre} loading="lazy" decoding="async" className="relative z-[1] h-full w-full object-contain p-1.5 transition-transform duration-300 group-hover:scale-[1.02]" />
+            <img src={p.imgSmall || p.img} srcSet={p.imgSmall ? `${p.imgSmall} 360w, ${p.img} 600w` : undefined} sizes={compacta ? '(min-width:1280px) 25vw, (min-width:1024px) 33vw, 50vw' : '(min-width:1280px) 25vw, (min-width:1024px) 33vw, (min-width:480px) 50vw, 100vw'} alt={p.nombre} loading="lazy" decoding="async" className="relative z-[1] h-full w-full object-contain p-1.5 transition-transform duration-300 group-hover:scale-[1.02]" />
           </>
         ) : (
           <div className="grid h-full place-items-center text-vino-300"><Icono lslug={p.lslug} className="h-14 w-14" /></div>
         )}
       </div>
       <div className={'flex flex-1 flex-col ' + (compacta ? 'p-3' : 'p-4')}>
-        <span className="mb-1 text-[10px] font-bold uppercase tracking-wide text-vino-600">{p.categoria}</span>
-        <h4 className={'font-semibold leading-snug text-stone-900' + (compacta ? ' text-sm' : '')}><Link href={`/producto/${p.id}`} className="after:absolute after:inset-0 hover:text-vino-700">{p.nombre}</Link></h4>
+        {!sinCat && <span className="mb-1 text-[10px] font-bold uppercase tracking-wide text-vino-600">{p.categoria}</span>}
+        <h4 className={'font-semibold leading-snug text-stone-900' + (compacta ? ' line-clamp-2 min-h-[2.5rem] text-sm' : '')}><Link href={`/producto/${p.id}`} className="after:absolute after:inset-0 hover:text-vino-700">{p.nombre}</Link></h4>
         <div className="mt-3">
           {menor ? (
             <p className="flex flex-wrap items-baseline gap-x-1.5">
@@ -456,6 +456,7 @@ export default function Catalogo({ productos, wa, negocio }) {
   }
 
   const tab = (act) => `whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition ${act ? 'bg-vino-800 text-white shadow' : 'bg-white text-stone-700 ring-1 ring-stone-200 hover:bg-vino-50'}`;
+  const catChip = (act) => (lineas.length > 1 ? chip(act) : tab(act));
   const chip = (act) => `whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold transition ${act ? 'bg-oro-400 text-vino-950' : 'bg-white text-stone-600 ring-1 ring-stone-200'}`;
 
   return (
@@ -470,17 +471,19 @@ export default function Catalogo({ productos, wa, negocio }) {
               className="w-full rounded-2xl border-0 bg-white py-3.5 pl-11 pr-4 text-sm shadow-card outline-none ring-1 ring-stone-200 focus:ring-2 focus:ring-vino-500"
             />
           </div>
+          {lineas.length > 1 && (
           <div className="no-scrollbar flex gap-2 overflow-x-auto">
             <button onClick={() => pickLinea('all')} className={tab(linea === 'all')}>Todo</button>
             {lineas.map(([s, n]) => (
               <button key={s} onClick={() => pickLinea(s)} className={tab(linea === s)}>{n}</button>
             ))}
           </div>
+          )}
           {cats.length > 1 && (
             <div className="no-scrollbar flex gap-2 overflow-x-auto">
-              <button onClick={() => setCat('all')} className={chip(cat === 'all')}>Todas</button>
+              <button onClick={() => setCat('all')} className={catChip(cat === 'all')}>Todas</button>
               {cats.map((c) => (
-                <button key={c} onClick={() => setCat(c)} className={chip(cat === c)}>{c}</button>
+                <button key={c} onClick={() => setCat(c)} className={catChip(cat === c)}>{c}</button>
               ))}
             </div>
           )}
@@ -519,7 +522,7 @@ export default function Catalogo({ productos, wa, negocio }) {
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl px-4 pt-6">
+      <div className="mx-auto max-w-6xl px-4 pt-3">
         <div className="mb-4 flex items-center justify-between gap-3">
           <span aria-live="polite" className="text-sm text-stone-500">
             {filtrados.length} {filtrados.length === 1 ? 'producto' : 'productos'}
@@ -546,7 +549,7 @@ export default function Catalogo({ productos, wa, negocio }) {
         )}
         {orden === 'catalogo' ? grupos.map((l) => (
           <div key={l.linea} className="mb-12">
-            <h2 className="mb-5 font-serif text-3xl font-extrabold text-vino-800">{l.linea}</h2>
+            {grupos.length > 1 && <h2 className="mb-5 font-serif text-3xl font-extrabold text-vino-800">{l.linea}</h2>}
             {l.cats.map((c) => (
               <div key={l.linea + c.nombre} className="mb-9">
                 <h3 className="mb-4 flex items-center gap-3 text-lg font-bold text-stone-800">
@@ -555,7 +558,7 @@ export default function Catalogo({ productos, wa, negocio }) {
                 </h3>
                 <div className={rejilla}>
                   {c.items.map((p) => (
-                    <Card key={p.id} p={p} qty={cart[p.id]?.qty} onAdd={add} compacta={vista === 'dos'} />
+                    <Card key={p.id} p={p} qty={cart[p.id]?.qty} onAdd={add} sinCat compacta={vista === 'dos'} />
                   ))}
                 </div>
               </div>
