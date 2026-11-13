@@ -33,48 +33,29 @@ function Card({ p, qty, onAdd }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-40px' }}
       transition={{ duration: 0.35 }}
-      className="group relative flex min-w-0 flex-col overflow-hidden rounded-[20px] border border-vino-100 bg-white shadow-[0_4px_18px_rgba(7,37,114,0.07)] transition hover:shadow-[0_10px_26px_rgba(7,37,114,0.13)]"
+      className="group relative flex flex-col overflow-hidden rounded-3xl bg-white shadow-card ring-1 ring-vino-900/5 transition hover:-translate-y-1 hover:shadow-lift"
     >
-      <div className="relative aspect-[5/4] overflow-hidden bg-[#f5f7fb]">
+      <div className="relative aspect-[4/3] overflow-hidden bg-gradient-to-br from-oro-200/60 to-vino-100">
         {p.img ? (
-          <>
-            <img
-              src={p.imgSmall || p.img}
-              alt=""
-              aria-hidden="true"
-              loading="lazy"
-              decoding="async"
-              className="absolute inset-0 h-full w-full scale-125 object-cover opacity-25 blur-xl"
-            />
-            <div className="absolute inset-0 bg-white/40" />
-            <img
-              src={p.imgSmall || p.img}
-              srcSet={p.imgSmall ? `${p.imgSmall} 360w, ${p.img} 600w` : undefined}
-              sizes="(min-width:1280px) 25vw, (min-width:1024px) 33vw, (min-width:360px) 50vw, 100vw"
-              alt={p.nombre}
-              loading="lazy"
-              decoding="async"
-              className="relative z-[1] h-full w-full object-contain p-1.5 transition-transform duration-300 group-hover:scale-[1.02]"
-            />
-          </>
+          <img src={p.img} alt={p.nombre} loading="lazy" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" />
         ) : (
           <div className="grid h-full place-items-center text-vino-300"><Icono lslug={p.lslug} className="h-14 w-14" /></div>
         )}
+        <span className="absolute left-3 top-3 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-vino-800 backdrop-blur">{p.categoria}</span>
       </div>
-      <div className="flex flex-1 flex-col p-3 sm:p-4">
-        <span className="mb-1 text-[10px] font-bold uppercase tracking-wide text-vino-600">{p.categoria}</span>
-        <h4 className="line-clamp-2 min-h-[2.5rem] text-sm font-bold leading-snug text-stone-900 sm:text-base"><Link href={`/producto/${p.id}`} className="after:absolute after:inset-0 hover:text-vino-700">{p.nombre}</Link></h4>
-        <div className="mt-1">
+      <div className="flex flex-1 flex-col p-4">
+        <h4 className="font-semibold leading-snug text-stone-900"><Link href={`/producto/${p.id}`} className="after:absolute after:inset-0 hover:text-vino-700">{p.nombre}</Link></h4>
+        <div className="mt-3">
           {menor ? (
             <p className="flex flex-wrap items-baseline gap-x-1.5">
-              <span className="text-lg font-extrabold text-vino-800 sm:text-xl">{menor}</span>
+              <span className="text-xl font-extrabold text-vino-800">{menor}</span>
               <span className="text-xs text-stone-500">{'por ' + unidadDe(p.unidad)}</span>
             </p>
           ) : (
             <span className="rounded-lg bg-stone-100 px-2 py-1 text-xs text-stone-500">Consultar precio</span>
           )}
           {mayor && (
-            <p className="mt-1 rounded-lg bg-vino-50 px-2 py-1 text-[11px] leading-snug text-vino-800">
+            <p className="mt-2 rounded-lg bg-oro-200/50 px-2.5 py-1.5 text-xs leading-snug text-amber-900">
               {p.mayor_desde != null && Number(p.mayor_desde) > 0 ? 'Desde ' + cantidadDe(p.mayor_desde, p.unidad) + ': ' : 'Por mayor: '}
               <b>{mayor}</b> {porUnidad(p.unidad)}
             </p>
@@ -88,8 +69,8 @@ function Card({ p, qty, onAdd }) {
               <button onClick={() => onAdd(p, st)} aria-label="Agregar" className="grid h-9 w-9 place-items-center rounded-full hover:bg-white/15"><Plus size={16} /></button>
             </div>
           ) : (
-            <button onClick={() => onAdd(p, st)} className="flex min-h-10 w-full items-center justify-center gap-1 rounded-xl bg-vino-800 px-1 py-2 text-xs font-bold text-white transition hover:bg-vino-700 active:scale-95 sm:gap-2 sm:text-sm">
-              <Plus size={16} /> <span className="sm:hidden">Agregar</span><span className="hidden sm:inline">Agregar al pedido</span>
+            <button onClick={() => onAdd(p, st)} className="flex w-full items-center justify-center gap-2 rounded-full bg-vino-800 py-2.5 text-sm font-bold text-white transition hover:bg-vino-700 active:scale-95">
+              <Plus size={16} /> Agregar al pedido
             </button>
           )}
         </div>
@@ -543,14 +524,14 @@ export default function Catalogo({ productos, wa, negocio }) {
         )}
         {orden === 'catalogo' ? grupos.map((l) => (
           <div key={l.linea} className="mb-12">
-            <h2 className="mb-4 font-sans text-2xl font-extrabold tracking-tight text-vino-900 sm:text-3xl">{l.linea}</h2>
+            <h2 className="mb-5 font-serif text-3xl font-extrabold text-vino-800">{l.linea}</h2>
             {l.cats.map((c) => (
               <div key={l.linea + c.nombre} className="mb-9">
-                <h3 className="mb-3 flex items-center gap-2 text-base font-bold text-stone-800 sm:text-lg">
+                <h3 className="mb-4 flex items-center gap-3 text-lg font-bold text-stone-800">
                   <span className="h-6 w-1.5 rounded bg-oro-400" /> {c.nombre}
                   <span className="text-sm font-normal text-stone-400">{c.items.length}</span>
                 </h3>
-                <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {c.items.map((p) => (
                     <Card key={p.id} p={p} qty={cart[p.id]?.qty} onAdd={add} />
                   ))}
@@ -559,7 +540,7 @@ export default function Catalogo({ productos, wa, negocio }) {
             ))}
           </div>
         )) : (
-          <div className="grid grid-cols-1 gap-3 min-[360px]:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filtrados.map((p) => (
               <Card key={p.id} p={p} qty={cart[p.id]?.qty} onAdd={add} />
             ))}
