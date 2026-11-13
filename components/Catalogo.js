@@ -41,7 +41,7 @@ function Card({ p, qty, onAdd, sinCat = false }) {
       <Link
         href={`/producto/${p.id}`}
         aria-label={`Ver detalle de ${p.nombre}`}
-        className="relative block aspect-[3/4] w-full overflow-hidden border-b border-stone-100 bg-white sm:aspect-[4/5] lg:aspect-square"
+        className="relative block aspect-square w-full overflow-hidden border-b border-stone-100 bg-white"
       >
         {p.img ? (
           <img
@@ -51,7 +51,7 @@ function Card({ p, qty, onAdd, sinCat = false }) {
             alt={p.nombre}
             loading="lazy"
             decoding="async"
-            className="absolute inset-0 block h-full w-full object-contain"
+            className="absolute inset-0 block h-full w-full object-cover object-center"
           />
         ) : (
           <span className="absolute inset-0 grid place-items-center text-vino-300">
