@@ -738,43 +738,90 @@ export default function Catalogo({ productos, wa, negocio }) {
               role="dialog"
               aria-modal="true"
               aria-label="Revisar mi pedido"
-              className="max-h-[92dvh] w-full max-w-lg overflow-y-auto overscroll-contain rounded-t-3xl bg-white p-4 shadow-2xl md:max-h-[88dvh] md:rounded-3xl md:p-6"
+              className="flex max-h-[92dvh] w-full max-w-lg flex-col overflow-hidden rounded-t-3xl bg-white shadow-2xl md:max-h-[88dvh] md:rounded-3xl"
             >
-              <div className="mb-4 flex items-center justify-between">
-                <h3 className="font-serif text-2xl font-extrabold text-vino-800">Mi pedido</h3>
-                <button onClick={() => setOpen(false)} aria-label="Cerrar pedido" className="grid h-11 w-11 place-items-center rounded-full bg-stone-100"><X size={18} /></button>
+              <div className="shrink-0 border-b border-stone-100 px-4 pb-3 pt-3 md:px-6">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-xl font-extrabold text-vino-800">Mi pedido</h3>
+                    <p className="text-xs text-stone-500">
+                      {count} {count === 1 ? 'producto' : 'productos'}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setOpen(false)}
+                    aria-label="Cerrar pedido"
+                    className="grid h-10 w-10 place-items-center rounded-full bg-stone-100"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                <div className="mt-3 grid grid-cols-2 gap-1 rounded-full bg-stone-100 p-1 text-xs font-semibold sm:text-sm">
+                  {[['menor', 'Al por menor'], ['mayor', 'Al por mayor']].map(([v, t]) => (
+                    <button
+                      key={v}
+                      onClick={() => setTipo(v)}
+                      aria-pressed={tipo === v}
+                      className={`min-h-10 rounded-full px-2 py-2 transition ${tipo === v ? 'bg-vino-800 text-white shadow' : 'text-stone-600'}`}
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              <div className="mb-4 grid grid-cols-2 gap-1 rounded-full bg-stone-100 p-1 text-sm font-semibold">
-                {[['menor', 'Al por menor'], ['mayor', 'Al por mayor']].map(([v, t]) => (
-                  <button key={v} onClick={() => setTipo(v)} aria-pressed={tipo === v} className={`min-h-11 rounded-full px-2 py-2 transition ${tipo === v ? 'bg-vino-800 text-white shadow' : 'text-stone-600'}`}>{t}</button>
-                ))}
-              </div>
-
+              <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 md:px-6">
               <ul className="space-y-2">
                 {detalle.map(({ p, qty, precio, subtotal, mayorDesde, mayorAplicado }) => (
-                  <li key={p.id} className="rounded-2xl bg-crema p-3">
+                  <li
+                    key={p.id}
+                    className="rounded-xl border border-stone-100 bg-crema px-3 py-2.5"
+                  >
                     <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0 flex-1">
-                        <p className="font-semibold text-stone-900">{p.nombre}</p>
-                        <p className="mt-1 text-xs text-stone-600">
-                          {cantidadDe(qty, p.unidad)} x {precio === null ? 'Consultar precio' : bs(precio)}
-                        </p>
-                        {tipo === 'mayor' && !mayorAplicado && mayorDesde > 0 && p.precio_mayor != null && qty < mayorDesde && (
-                          <p className="mt-1 text-xs text-amber-800">
-                            Precio mayor desde {cantidadDe(mayorDesde, p.unidad)}
-                          </p>
-                        )}
-                      </div>
-                      <strong className="shrink-0 text-vino-800">
+                      <p className="min-w-0 flex-1 text-sm font-bold leading-snug text-stone-900">
+                        {p.nombre}
+                      </p>
+                      <strong className="shrink-0 text-sm font-extrabold text-vino-800">
                         {subtotal === null ? 'Consultar' : bs(subtotal)}
                       </strong>
                     </div>
-                    <div className="mt-2 flex justify-end gap-2">
-                      <button onClick={() => add(p, -stepOf(p.unidad))} aria-label="Quitar" className="grid h-11 w-11 place-items-center rounded-full bg-white shadow"><Minus size={14} /></button>
-                      <button onClick={() => add(p, stepOf(p.unidad))} aria-label="Agregar" className="grid h-11 w-11 place-items-center rounded-full bg-white shadow"><Plus size={14} /></button>
-                      <button onClick={() => add(p, -qty)} aria-label="Eliminar" className="grid h-11 w-11 place-items-center rounded-full text-red-600"><Trash2 size={16} /></button>
+
+                    <div className="mt-1.5 flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-xs text-stone-600">
+                        {cantidadDe(qty, p.unidad)} x {precio === null ? 'Consultar precio' : bs(precio)}
+                      </span>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => add(p, -stepOf(p.unidad))}
+                          aria-label={`Disminuir cantidad de ${p.nombre}`}
+                          className="grid h-10 w-10 place-items-center rounded-lg bg-white shadow-sm"
+                        >
+                          <Minus size={16} />
+                        </button>
+                        <button
+                          onClick={() => add(p, stepOf(p.unidad))}
+                          aria-label={`Aumentar cantidad de ${p.nombre}`}
+                          className="grid h-10 w-10 place-items-center rounded-lg bg-white shadow-sm"
+                        >
+                          <Plus size={16} />
+                        </button>
+                        <button
+                          onClick={() => add(p, -qty)}
+                          aria-label={`Eliminar ${p.nombre}`}
+                          className="grid h-10 w-10 place-items-center rounded-lg text-red-600"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
                     </div>
+
+                    {tipo === 'mayor' && !mayorAplicado && mayorDesde > 0 && p.precio_mayor != null && qty < mayorDesde && (
+                      <p className="mt-1 text-xs text-amber-800">
+                        Precio mayor desde {cantidadDe(mayorDesde, p.unidad)}
+                      </p>
+                    )}
                   </li>
                 ))}
               </ul>
@@ -785,7 +832,10 @@ export default function Catalogo({ productos, wa, negocio }) {
                 placeholder="Nota (opcional): hora de entrega, zona, etc."
                 className="mt-4 w-full rounded-2xl border border-stone-200 p-3 text-sm outline-none focus:border-vino-500"
               />
-              <div className="mt-3 flex items-center justify-between border-t border-stone-200 py-3">
+              </div>
+
+              <div className="shrink-0 border-t border-stone-200 bg-white px-4 pb-3 pt-3 md:px-6">
+                <div className="flex items-center justify-between gap-3">
                 <span className="font-semibold text-stone-700">
                   Total {sinPrecio ? 'parcial' : 'estimado'}
                 </span>
@@ -800,7 +850,7 @@ export default function Catalogo({ productos, wa, negocio }) {
               </p>
 
               <button type="button" onClick={guardarPedido} disabled={enviandoPedido}
-                className="mt-4 flex min-h-12 items-center justify-center gap-2 rounded-xl bg-green-600 px-4 py-3 font-bold text-white shadow-lg transition hover:bg-green-700">
+                className="mt-2 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-green-600 px-3 py-2 text-sm font-bold text-white shadow-lg transition hover:bg-green-700 sm:text-base">
                 <WhatsApp size={22} /> {enviandoPedido
                   ? 'Registrando pedido...'
                   : 'Registrar pedido y abrir WhatsApp'}
@@ -818,7 +868,8 @@ export default function Catalogo({ productos, wa, negocio }) {
                   </a>
                 </div>
               )}
-              <button onClick={() => { setCart({}); setOpen(false); }} className="mt-2 min-h-11 w-full rounded-xl text-sm font-medium text-stone-600 hover:bg-stone-50">Vaciar pedido</button>
+              <button onClick={() => { setCart({}); setOpen(false); }} className="mt-1 min-h-10 w-full rounded-xl text-xs font-medium text-stone-600 hover:bg-stone-50">Vaciar pedido</button>
+              </div>
             </motion.div>
           </motion.div>
         )}
