@@ -41,7 +41,7 @@ function Card({ p, qty, onAdd, sinCat = false }) {
       <Link
         href={`/producto/${p.id}`}
         aria-label={`Ver detalle de ${p.nombre}`}
-        className="relative block aspect-square w-full overflow-hidden bg-[#f7f9fc]"
+        className="relative block aspect-[3/4] w-full overflow-hidden border-b border-stone-100 bg-white sm:aspect-[4/5] lg:aspect-square"
       >
         {p.img ? (
           <img
@@ -51,7 +51,7 @@ function Card({ p, qty, onAdd, sinCat = false }) {
             alt={p.nombre}
             loading="lazy"
             decoding="async"
-            className="absolute inset-0 block h-full w-full object-contain p-1.5 sm:p-3"
+            className="absolute inset-0 block h-full w-full object-contain"
           />
         ) : (
           <span className="absolute inset-0 grid place-items-center text-vino-300">
@@ -351,7 +351,7 @@ export default function Catalogo({ productos, wa, negocio }) {
     Number(cat !== 'all') +
     Number(precioMax !== 'todos');
 
-  const rejilla = 'grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4';
+  const rejilla = 'grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4';
 
   const limpiar = () => {
     setQ('');
