@@ -78,8 +78,8 @@ export default async function Home() {
             {N.slogan && (
               <span className="inline-block rounded-full border border-oro-300/40 bg-white/5 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.2em] text-oro-300">{N.slogan}</span>
             )}
-            <h1 className="mt-5 font-serif text-3xl font-extrabold leading-tight sm:text-4xl md:text-6xl">{N.titulo}</h1>
-            {N.subtitulo && <p className="mx-auto mt-5 max-w-xl text-lg text-vino-100">{N.subtitulo}</p>}
+            <h1 className="mt-5 text-3xl font-extrabold leading-tight tracking-tight sm:text-4xl md:text-5xl">{N.titulo}</h1>
+            {N.subtitulo && <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-vino-100 sm:text-lg">{N.subtitulo}</p>}
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <a href="#catalogo" className="rounded-full bg-oro-400 px-8 py-3.5 font-bold text-vino-950 shadow-lift transition hover:bg-oro-300">Ver catálogo</a>
               {(N.direccion || N.mapa) && (

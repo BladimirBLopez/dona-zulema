@@ -30,7 +30,7 @@ export default function Ofertas({ banners, wa }) {
                   {b.img ? <img src={b.img} alt="" className="absolute inset-0 h-full w-full object-cover" /> : <div className="absolute inset-0 bg-gradient-to-r from-vino-900 to-vino-600" />}
                   <div className="absolute inset-0 bg-gradient-to-r from-vino-950/85 via-vino-950/50 to-transparent" />
                   <div className="relative max-w-md p-6 text-white md:p-10">
-                    <h3 className="font-serif text-2xl font-extrabold leading-tight md:text-4xl">{b.titulo}</h3>
+                    <h3 className="text-2xl font-bold leading-tight tracking-tight md:text-3xl">{b.titulo}</h3>
                     {b.texto && <p className="mt-2 text-sm text-vino-100 md:text-base">{b.texto}</p>}
                     <a href={`https://wa.me/${wa}?text=${encodeURIComponent('Hola, me interesa: ' + b.titulo)}`}
                       className="mt-4 inline-flex items-center gap-2 rounded-full bg-oro-400 px-6 py-2.5 text-sm font-bold text-vino-950 shadow transition hover:bg-oro-300">

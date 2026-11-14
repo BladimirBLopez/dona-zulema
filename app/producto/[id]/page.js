@@ -109,14 +109,14 @@ export default async function Producto({ params }) {
               {p.categoria}
             </span>
 
-            <h1 className="mt-3 text-2xl font-extrabold leading-tight tracking-tight text-stone-900 sm:text-3xl">
+            <h1 className="mt-3 text-2xl font-bold leading-tight tracking-tight text-stone-900 sm:text-3xl">
               {p.nombre}
             </h1>
 
             <div className="mt-4 space-y-3">
               {menor && (
                 <div className="flex flex-wrap items-baseline gap-2">
-                  <strong className="text-3xl font-extrabold tracking-tight text-vino-800">
+                  <strong className="text-3xl font-extrabold tracking-tight tabular-nums text-vino-800">
                     {menor}
                   </strong>
                   <span className="text-sm font-medium text-stone-500">
@@ -179,7 +179,7 @@ export default async function Producto({ params }) {
         </section>
         {rel.length > 0 && (
           <section className="mt-10">
-            <h2 className="mb-4 font-serif text-xl font-extrabold text-vino-800">También te puede gustar</h2>
+            <h2 className="mb-4 text-xl font-bold tracking-tight text-vino-800">También te puede gustar</h2>
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               {rel.map((r) => (
                 <Link key={r.id} href={`/producto/${r.id}`} className="overflow-hidden rounded-2xl bg-white shadow-card">

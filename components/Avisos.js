@@ -41,7 +41,7 @@ export default function Avisos() {
               <span className={`mx-auto grid h-14 w-14 place-items-center rounded-full ${d.peligro ? 'bg-red-50 text-red-600' : 'bg-vino-50 text-vino-800'}`}>
                 {d.peligro ? <TriangleAlert size={26} /> : <CircleHelp size={26} />}
               </span>
-              <h2 id="conf-t" className="mt-4 font-serif text-xl font-extrabold text-vino-900">{d.titulo}</h2>
+              <h2 id="conf-t" className="mt-4 text-xl font-bold tracking-tight text-vino-900">{d.titulo}</h2>
               {d.texto && <p id="conf-d" className="mt-1.5 text-sm leading-relaxed text-stone-500">{d.texto}</p>}
               <div className="mt-6 grid grid-cols-2 gap-3">
                 <button type="button" autoFocus onClick={() => cerrar(false)} className="h-12 rounded-full bg-stone-100 font-bold text-stone-700 transition active:scale-95">{d.cancelar || 'Cancelar'}</button>

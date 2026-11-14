@@ -5,7 +5,7 @@ import { RedLink } from '@/components/RedesIcons';
 const H2 = ({ eyebrow, children, sub }) => (
   <div className="mb-10 text-center">
     {eyebrow && <p className="mb-2 text-xs font-bold uppercase tracking-[0.25em] text-oro-600">{eyebrow}</p>}
-    <h2 className="font-serif text-3xl font-extrabold text-vino-800 md:text-4xl">{children}</h2>
+    <h2 className="text-2xl font-bold tracking-tight text-vino-800 md:text-3xl">{children}</h2>
     {sub && <p className="mx-auto mt-3 max-w-xl text-stone-600">{sub}</p>}
   </div>
 );
@@ -67,7 +67,7 @@ export function Info({ n, wa }) {
             {PASOS.map(([Icon, t, d], i) => (
               <Reveal key={t} delay={i * 0.1}>
                 <div className="relative h-full rounded-3xl bg-white p-6 shadow-card">
-                  <span className="absolute right-5 top-4 font-serif text-5xl font-extrabold text-vino-100">{i + 1}</span>
+                  <span className="absolute right-5 top-4 text-5xl font-extrabold text-vino-100">{i + 1}</span>
                   <span className="mb-4 grid h-12 w-12 place-items-center rounded-2xl bg-oro-400 text-vino-950"><Icon size={22} /></span>
                   <h3 className="font-bold">{t}</h3>
                   <p className="mt-1 text-sm text-stone-600">{d}</p>
@@ -83,7 +83,7 @@ export function Info({ n, wa }) {
           <div className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-oro-400/20 blur-3xl" />
           <Reveal className="relative mx-auto flex max-w-5xl flex-col items-center gap-5 px-4 text-center md:flex-row md:text-left">
             <div className="flex-1">
-              <h2 className="font-serif text-2xl font-extrabold md:text-3xl">{n.mayor_titulo}</h2>
+              <h2 className="text-2xl font-bold tracking-tight md:text-3xl">{n.mayor_titulo}</h2>
               <p className="mt-2 text-vino-100">{n.mayor_texto}</p>
             </div>
             <a href={wa('Hola, quiero cotizar una compra al por mayor')} className="rounded-full bg-oro-400 px-8 py-3.5 font-bold text-vino-950 shadow-lift transition hover:bg-oro-300">

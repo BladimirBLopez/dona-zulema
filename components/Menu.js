@@ -42,7 +42,7 @@ export default function Menu({ items, pedido }) {
           <button type="button" aria-label="Cerrar menú" onClick={cerrar} className="absolute inset-0 h-full w-full bg-black/60 backdrop-blur-[2px]" />
           <nav id="menu-tienda" aria-label="Navegación principal" className="absolute inset-y-0 left-0 h-[100dvh] w-80 max-w-[88vw] overflow-y-auto bg-vino-950 p-5 text-white shadow-2xl">
             <div className="mb-5 flex items-center justify-between gap-3 border-b border-white/10 pb-4">
-              <p className="text-lg font-extrabold">Explorar tienda</p>
+              <p className="text-lg font-bold">Explorar tienda</p>
               <button ref={cerrarRef} type="button" onClick={cerrar} aria-label="Cerrar menú" className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-white/10 hover:bg-white/20">
                 <X size={22} />
               </button>

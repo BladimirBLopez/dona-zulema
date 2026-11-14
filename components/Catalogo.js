@@ -62,14 +62,14 @@ function Card({ p, qty, onAdd, sinCat = false }) {
 
       <div className="flex flex-1 flex-col px-3 pb-3 pt-2.5 sm:px-4 sm:pb-4">
         {!sinCat && (
-          <p className="mb-1 truncate text-[10px] font-semibold uppercase tracking-wide text-vino-600">
+          <p className="mb-1 truncate text-[11px] font-semibold uppercase tracking-wide text-vino-600">
             {p.categoria}
           </p>
         )}
 
         <Link
           href={`/producto/${p.id}`}
-          className="line-clamp-2 min-h-[2.25rem] text-[13px] font-bold leading-snug text-stone-900 hover:text-vino-800 sm:text-[15px]"
+          className="line-clamp-2 min-h-10 text-sm font-semibold leading-5 text-stone-900 hover:text-vino-800 sm:text-[15px]"
         >
           {p.nombre}
         </Link>
@@ -78,7 +78,7 @@ function Card({ p, qty, onAdd, sinCat = false }) {
           {menor ? (
             <>
               <p className="flex flex-wrap items-baseline gap-x-1">
-                <strong className="text-[19px] font-extrabold leading-tight tracking-tight text-vino-800 sm:text-[22px]">
+                <strong className="text-[20px] font-extrabold leading-tight tracking-tight tabular-nums text-vino-800 sm:text-[22px]">
                   {menor}
                 </strong>
                 <span className="text-[10px] text-stone-500">
@@ -93,7 +93,7 @@ function Card({ p, qty, onAdd, sinCat = false }) {
           )}
 
           {mayor && (
-            <div className="mt-2 rounded-lg bg-oro-200/50 px-2 py-1.5 text-[11px] leading-snug text-vino-950">
+            <div className="mt-2 rounded-lg bg-oro-200/50 px-2 py-1.5 text-xs leading-snug text-vino-950">
               <p className="font-bold">
                 Mayorista: {mayor}{' '}
                 <span className="font-normal">{porUnidad(p.unidad)}</span>
@@ -118,7 +118,7 @@ function Card({ p, qty, onAdd, sinCat = false }) {
               </button>
               <span className="min-w-0 flex-1 text-center text-xs font-bold leading-tight">
                 {qty}
-                <span className="block text-[9px] font-normal opacity-80">
+                <span className="block text-[11px] font-normal opacity-80">
                   {p.unidad}
                 </span>
               </span>
@@ -136,7 +136,7 @@ function Card({ p, qty, onAdd, sinCat = false }) {
               type="button"
               onClick={() => onAdd(p, paso)}
               aria-label={`Agregar ${p.nombre} al carrito`}
-              className="flex min-h-11 w-full items-center justify-center gap-1 rounded-xl bg-vino-800 px-1.5 py-2 text-center text-[11px] font-bold leading-tight text-white transition hover:bg-vino-700 active:scale-95 sm:gap-2 sm:text-sm"
+              className="flex min-h-11 w-full items-center justify-center gap-1 rounded-xl bg-vino-800 px-1.5 py-2 text-center text-xs font-semibold leading-tight text-white transition hover:bg-vino-700 active:scale-95 sm:gap-2 sm:text-sm"
             >
               <ShoppingBag size={15} className="shrink-0" />
               <span>Agregar al carrito</span>
@@ -603,7 +603,7 @@ export default function Catalogo({ productos, wa, negocio }) {
         )}
         {orden === 'catalogo' ? grupos.map((l) => (
           <div key={l.linea} className="mb-12">
-            {grupos.length > 1 && <h2 className="mb-5 font-serif text-3xl font-extrabold text-vino-800">{l.linea}</h2>}
+            {grupos.length > 1 && <h2 className="mb-5 text-2xl font-bold tracking-tight text-vino-800 sm:text-3xl">{l.linea}</h2>}
             {l.cats.map((c) => (
               <div key={l.linea + c.nombre} className="mb-9">
                 <h3 className="mb-4 flex items-center gap-3 text-lg font-bold text-stone-800">
@@ -648,7 +648,7 @@ export default function Catalogo({ productos, wa, negocio }) {
             >
               <div className="flex items-center justify-between border-b border-stone-100 p-5">
                 <div>
-                  <h3 className="font-serif text-xl font-extrabold text-vino-900">Filtrar productos</h3>
+                  <h3 className="text-xl font-bold tracking-tight text-vino-900">Filtrar productos</h3>
                   <p className="text-xs text-stone-500">Encuentra exactamente lo que buscas</p>
                 </div>
                 <button type="button" onClick={() => setFiltrosAbiertos(false)} aria-label="Cerrar filtros" className="grid h-10 w-10 place-items-center rounded-full bg-stone-100">
