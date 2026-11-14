@@ -520,7 +520,7 @@ export default function Catalogo({ productos, wa, negocio }) {
             />
           </div>
           {lineas.length > 1 && (
-          <div className="no-scrollbar flex gap-2 overflow-x-auto">
+          <div className="no-scrollbar -mx-1 flex items-center gap-2 overflow-x-auto px-1 py-2">
             <button onClick={() => pickLinea('all')} className={tab(linea === 'all')}>Todo</button>
             {lineas.map(([s, n]) => (
               <button key={s} onClick={() => pickLinea(s)} className={tab(linea === s)}>{n}</button>
@@ -528,7 +528,7 @@ export default function Catalogo({ productos, wa, negocio }) {
           </div>
           )}
           {cats.length > 1 && (
-            <div className="no-scrollbar flex gap-2 overflow-x-auto">
+            <div className="no-scrollbar -mx-1 flex items-center gap-2 overflow-x-auto px-1 py-2">
               <button onClick={() => setCat('all')} className={catChip(cat === 'all')}>Todas</button>
               {cats.map((c) => (
                 <button key={c} onClick={() => setCat(c)} className={catChip(cat === c)}>{c}</button>
