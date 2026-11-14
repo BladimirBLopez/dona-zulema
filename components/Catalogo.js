@@ -81,9 +81,7 @@ function Card({ p, qty, onAdd, sinCat = false }) {
                 <strong className="text-[20px] font-extrabold leading-tight tracking-tight tabular-nums text-vino-800 sm:text-[22px]">
                   {menor}
                 </strong>
-                <span className="text-[10px] text-stone-500">
-                  {porUnidad(p.unidad)}
-                </span>
+                {porUnidad(p.unidad) !== "c/u" && (<span className="text-[10px] text-stone-500">{porUnidad(p.unidad)}</span>)}
               </p>
             </>
           ) : (
@@ -96,7 +94,7 @@ function Card({ p, qty, onAdd, sinCat = false }) {
             <div className="mt-2 rounded-lg bg-oro-200/50 px-2 py-1.5 text-xs leading-snug text-vino-950">
               <p className="font-bold">
                 Mayorista: {mayor}{' '}
-                <span className="font-normal">{porUnidad(p.unidad)}</span>
+                {porUnidad(p.unidad) !== "c/u" && (<span className="font-normal">{porUnidad(p.unidad)}</span>)}
               </p>
               <p className="mt-0.5 text-[10px]">
                 {desde ? `Desde ${desde}` : 'Al seleccionar compra por mayor'}
