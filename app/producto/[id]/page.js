@@ -71,62 +71,108 @@ export default async function Producto({ params }) {
         <Link href="/#catalogo" className="inline-flex items-center gap-2 text-sm font-semibold text-vino-800">
           <ArrowLeft size={18} /> Volver al catálogo
         </Link>
-        <section className="mt-5 grid gap-6 overflow-hidden rounded-3xl bg-white p-4 shadow-card md:grid-cols-2 md:p-6">
-          <div className="aspect-square overflow-hidden rounded-2xl bg-[#f5f7fb] ring-1 ring-stone-100">
+        <section className="mt-4 overflow-hidden rounded-3xl border border-stone-100 bg-white shadow-card md:grid md:grid-cols-2 md:gap-6 md:p-5">
+
+          <div className="relative aspect-[4/3] overflow-hidden bg-vino-50 sm:aspect-[5/4] md:aspect-square md:rounded-2xl">
             {p.imagen_url ? (
-              <img
-                src={thumb(p.imagen_url, 900)}
-                srcSet={`${thumb(p.imagen_url, 480)} 480w, ${thumb(p.imagen_url, 900)} 900w`}
-                sizes="(min-width: 768px) 45vw, 100vw"
-                width={900}
-                height={900}
-                fetchPriority="high"
-                decoding="async"
-                alt={p.nombre}
-                className="h-full w-full object-contain p-2"
-              />
+              <>
+                <img
+                  src={thumb(p.imagen_url, 900)}
+                  srcSet={`${thumb(p.imagen_url, 480)} 480w, ${thumb(p.imagen_url, 900)} 900w`}
+                  sizes="(min-width: 768px) 45vw, 100vw"
+                  width={900}
+                  height={900}
+                  fetchPriority="high"
+                  decoding="async"
+                  alt={p.nombre}
+                  className="block h-full w-full object-cover object-center"
+                />
+                <a
+                  href={p.imagen_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="absolute bottom-3 right-3 rounded-full bg-white/95 px-3 py-2 text-xs font-semibold text-vino-900 shadow-md"
+                  aria-label={`Ver foto completa de ${p.nombre}`}
+                >
+                  Ver foto completa
+                </a>
+              </>
             ) : (
-              <span className="text-sm font-medium text-stone-500">
+              <div className="flex h-full items-center justify-center text-sm font-medium text-stone-500">
                 Imagen no disponible
-              </span>
+              </div>
             )}
           </div>
-          <div className="flex flex-col">
-            <span className="w-fit rounded-full bg-vino-50 px-3 py-1 text-xs font-semibold text-vino-800">{p.categoria}</span>
-            <h1 className="mt-3 font-serif text-3xl font-extrabold text-vino-800">{p.nombre}</h1>
-            <div className="mt-4 flex flex-wrap gap-2 text-sm">
+
+          <div className="flex flex-col px-4 pb-5 pt-5 sm:px-5 md:px-0 md:py-1">
+            <span className="w-fit rounded-full bg-vino-50 px-3 py-1 text-xs font-semibold text-vino-800">
+              {p.categoria}
+            </span>
+
+            <h1 className="mt-3 text-2xl font-extrabold leading-tight tracking-tight text-stone-900 sm:text-3xl">
+              {p.nombre}
+            </h1>
+
+            <div className="mt-4 space-y-3">
               {menor && (
-                <span className="rounded-xl bg-vino-50 px-4 py-2 text-vino-800">
-                  Menor <b className="text-2xl font-extrabold">{menor}</b>/{u}
-                </span>
+                <div className="flex flex-wrap items-baseline gap-2">
+                  <strong className="text-3xl font-extrabold tracking-tight text-vino-800">
+                    {menor}
+                  </strong>
+                  <span className="text-sm font-medium text-stone-500">
+                    {u === 'unidad' || u === 'unidades' ? 'c/u' : `/${u}`}
+                  </span>
+                </div>
               )}
+
               {mayor && (
-                <span className="rounded-lg bg-oro-200/50 px-3 py-1.5 text-amber-900">
-                  Mayor <b className="text-lg font-extrabold">{mayor}</b>/{u}
-                  {mayorDesde ? ` · desde ${mayorDesde} ${u}` : ' · mínimo a consultar'}
-                </span>
+                <div className="rounded-xl bg-oro-200/50 px-3 py-3 text-vino-950">
+                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                    <span className="text-sm font-semibold">
+                      Mayorista:
+                    </span>
+                    <strong className="text-xl font-extrabold">
+                      {mayor}
+                    </strong>
+                    <span className="text-xs">
+                      {u === 'unidad' || u === 'unidades' ? 'c/u' : `/${u}`}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-xs font-medium">
+                    {mayorDesde
+                      ? `Desde ${mayorDesde} ${u === 'unidad' || u === 'unidades' ? (mayorDesde === 1 ? 'unidad' : 'unidades') : u}`
+                      : 'Cantidad mínima a consultar'}
+                  </p>
+                </div>
               )}
+
               {!menor && !mayor && (
-                <span className="rounded-lg bg-stone-100 px-3 py-1.5 text-stone-500">
+                <p className="text-base font-semibold text-stone-600">
                   Consultar precio
-                </span>
+                </p>
               )}
             </div>
-            <p className="mt-4 text-sm text-stone-600">El precio final se confirma al momento del pedido.</p>
-            <div className="mt-auto space-y-3 pt-4">
+
+            <p className="mt-4 text-xs leading-relaxed text-stone-500">
+              El precio final se confirma al realizar el pedido.
+            </p>
+
+            <div className="mt-5 flex flex-col gap-2.5 md:mt-auto md:pt-5">
               <Link
                 href={`/?agregar=${p.id}#catalogo`}
-                className="flex min-h-12 items-center justify-center gap-2 rounded-full bg-vino-800 px-5 py-3 text-center font-bold text-white shadow transition hover:bg-vino-700"
+                className="flex min-h-12 items-center justify-center rounded-xl bg-vino-800 px-4 py-3 text-center text-sm font-bold text-white shadow-sm transition hover:bg-vino-700 sm:text-base"
               >
-                Agregar al pedido
+                Agregar al carrito
               </Link>
+
               <a
                 href={wa(`Hola, quisiera consultar por ${p.nombre}.`)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex min-h-11 items-center justify-center gap-2 rounded-full border border-green-600 px-4 py-2 text-center text-sm font-bold text-green-700 hover:bg-green-50"
+                className="flex min-h-11 items-center justify-center gap-2 rounded-xl border border-green-600 px-4 py-2 text-center text-sm font-semibold text-green-700 transition hover:bg-green-50"
               >
-                <WhatsApp size={20} /> Consultar por WhatsApp
+                <WhatsApp size={20} />
+                Consultar por WhatsApp
               </a>
             </div>
           </div>
@@ -137,8 +183,8 @@ export default async function Producto({ params }) {
             <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
               {rel.map((r) => (
                 <Link key={r.id} href={`/producto/${r.id}`} className="overflow-hidden rounded-2xl bg-white shadow-card">
-                  <div className="aspect-[4/3] bg-vino-100">
-                    {r.imagen_url && <img src={thumb(r.imagen_url, 400)} alt={r.nombre} loading="lazy" decoding="async" className="h-full w-full object-cover" />}
+                  <div className="aspect-square overflow-hidden bg-vino-100">
+                    {r.imagen_url && <img src={thumb(r.imagen_url, 400)} alt={r.nombre} loading="lazy" decoding="async" className="block h-full w-full object-cover object-center" />}
                   </div>
                   <div className="p-3">
                     <p className="text-sm font-semibold text-stone-900">{r.nombre}</p>
