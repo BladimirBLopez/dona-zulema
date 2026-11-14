@@ -36,7 +36,7 @@ function Card({ p, qty, onAdd, sinCat = false }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '-30px' }}
       transition={{ duration: 0.25 }}
-      className="flex h-full min-w-0 flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition-shadow hover:shadow-card"
+      className="flex min-w-0 flex-col self-start overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm transition-shadow hover:shadow-card"
     >
       <Link
         href={`/producto/${p.id}`}
@@ -60,7 +60,7 @@ function Card({ p, qty, onAdd, sinCat = false }) {
         )}
       </Link>
 
-      <div className="flex flex-1 flex-col px-3 pb-3 pt-2.5 sm:px-4 sm:pb-4">
+      <div className="flex flex-col px-3 pb-3 pt-2.5 sm:px-4 sm:pb-4">
         {!sinCat && (
           <p className="mb-1 truncate text-[11px] font-semibold uppercase tracking-wide text-vino-600">
             {p.categoria}
@@ -103,7 +103,7 @@ function Card({ p, qty, onAdd, sinCat = false }) {
           )}
         </div>
 
-        <div className="relative z-10 mt-auto pt-2.5">
+        <div className="relative z-10 mt-2.5">
           {qty ? (
             <div className="flex min-h-11 items-center justify-between rounded-xl bg-vino-800 text-white">
               <button
